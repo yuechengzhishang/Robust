@@ -5,6 +5,14 @@ public class Old {
 
     private String test = "old test";
 
+    public Old(){
+
+    }
+
+    public Old(String hello){
+        System.err.println("old " + hello);
+    }
+
     public void method1(){
         if (null != oldPatch){
             oldPatch.method1();

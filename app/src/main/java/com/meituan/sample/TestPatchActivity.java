@@ -9,6 +9,11 @@ import android.support.v7.app.AppCompatActivity;
  */
 
 public class TestPatchActivity extends AppCompatActivity{
+    public TestPatchActivity(){
+        super();
+        System.err.println("TestPatchActivity constructor");
+        System.err.println("TestPatchActivity constructor");
+    }
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

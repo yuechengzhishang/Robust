@@ -1,11 +1,50 @@
 package com.meituan.sample.demo;
 
+import android.util.Log;
+import android.view.View;
+
+import com.meituan.robust.ChangeQuickRedirect;
+
 /**
  * Created by hedingxu on 17/7/7.
  */
 
 public class OldPatch extends Old {
+
+    public OldPatch(){
+        super();
+    }
+    public OldPatch(String hello,String xx){
+        super(hello);
+        Log.e("robust","hello click");
+        Log.e("robust","hello click");
+        Log.e("robust","hello click");
+    }
     private String test = "old patch test";
+    private int testint1 = 1;
+    public int testint2 = 2;
+    public static int testint3 = 3;
+    public String testString = "string";
+    private String testString2 = "string2";
+    private static String testString3 = "string3";
+    private static ChangeQuickRedirect changeQuickRedirect ;
+    private View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Log.e("robust","hello click");
+        }
+    };
+
+    private Bean bean = new Bean();
+
+    public static void setChangeQuickRedirect(ChangeQuickRedirect changeQuickRedirect) {
+        OldPatch.changeQuickRedirect = changeQuickRedirect;
+    }
+
+    public void setBean(Bean bean){
+        this.bean = bean;
+    }
+
 
     public void method1() {
         //source code 1 patch

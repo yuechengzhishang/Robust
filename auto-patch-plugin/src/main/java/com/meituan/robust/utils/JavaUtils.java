@@ -25,6 +25,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.CtNewConstructor;
 import javassist.NotFoundException;
+import javassist.bytecode.AccessFlag;
 
 import static com.meituan.robust.Constants.ORIGINCLASS;
 
@@ -46,19 +47,20 @@ public class JavaUtils {
 
     public static void main(String[] args) {
         String path_waimai = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap_waimai.robust";
-        parseRobustMethodsMap2File(path_waimai, new File(path_waimai + ".bak"));
+//        parseRobustMethodsMap2File(path_waimai, new File(path_waimai + ".bak"));
 
-        if (true){
-            return;
-        }
         String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap.robust";
+        path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap (5).robust";
 //        String path1 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap-11.robust";
 //        String path2 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap-12.robust";
 //        HashMap<String, String> hashMap1 = getMapFromZippedFile(path1);
 //        HashMap<String, String> hashMap2 = getMapFromZippedFile(path2);
 //        System.err.println(hashMap1.equals(hashMap2));
 
-//        parseRobustMethodsMap2File(path0, new File("/Users/hedingxu/robust-github/Robust/app/robust/methodsMap0_bak.robust"));
+        parseRobustMethodsMap2File(path0, new File("/Users/hedingxu/robust-github/Robust/app/robust/methodsMap0_bak.robust"));
+        if (true){
+            return;
+        }
 
 //        long currentTime = System.currentTimeMillis();
 //        MethodInfo methodInfo = getMethodInfo(getMapFromZippedFile(path0), "3a14784fc776abddcbc524a840f8378a");
@@ -70,14 +72,14 @@ public class JavaUtils {
 
         HashMap<String, String> robustMethodsMap = getMapFromZippedFile(path0);
         Set<String> keySet = robustMethodsMap.keySet();
-        for (String key :keySet) {
+        for (String key : keySet) {
             String methodSignature = key.trim();
             MethodInfo methodInfo = new MethodInfo(methodSignature);
 
 //            if (methodInfo.paramTypes.length>0){
 //                methodInfo.paramTypes[0] = methodInfo.paramTypes[0] + "222";
 //            }
-            String methodId = getMethodId(robustMethodsMap,methodInfo.className,methodInfo.methodName ,methodInfo.paramTypes);
+            String methodId = getMethodId(robustMethodsMap, methodInfo.className, methodInfo.methodName, methodInfo.paramTypes);
             System.err.println("methodId : " + methodId + " ,methodString : " + methodSignature);
         }
 
@@ -145,7 +147,7 @@ public class JavaUtils {
             int paramEnd = originalMethodStr.indexOf(rightBrace);
             if (paramEnd > 0 & paramStart > 0 & paramEnd > paramStart) {
                 String paramTypesStr = this.originalMethodStr.substring(paramStart + 1, paramEnd);//java.lang.String,java.lang.Object
-                if (!paramTypesStr.trim().equals("")){
+                if (!paramTypesStr.trim().equals("")) {
                     this.paramTypes = paramTypesStr.trim().split(comma);//[java.lang.String,java.lang.Object]
                 }
                 String classAndMethod = originalMethodStr.substring(0, paramStart);//com.meituan.sample.SecondActivity.getReflectField
@@ -189,7 +191,7 @@ public class JavaUtils {
         methodSignature.append(".");
         methodSignature.append(methodName);
         methodSignature.append("(");
-        if (null != parameterTypes){
+        if (null != parameterTypes) {
             for (int i = 0; i < parameterTypes.length; i++) {
                 methodSignature.append(parameterTypes[i].trim());
                 if (i != parameterTypes.length - 1) {
@@ -366,9 +368,14 @@ public class JavaUtils {
         try {
             CtField originField = new CtField(sourceClass, ORIGINCLASS, patchClass);
             patchClass.addField(originField);
+            originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
+
+//            CtField originClassField = new CtField(patchClass.getClassPool().get("java.long.Class"), ORIGINCLASS + "Type", patchClass);
+//            patchClass.addField(originClassField);
+
             StringBuilder patchClassConstruct = new StringBuilder();
-            patchClassConstruct.append(" public Patch(Object o) {");
-            patchClassConstruct.append(ORIGINCLASS + "=(" + sourceClass.getName() + ")o;");
+            patchClassConstruct.append(" public Patch(" + sourceClass.getName()+ " originalObj) {");
+            patchClassConstruct.append(ORIGINCLASS + "= originalObj;");
             patchClassConstruct.append("}");
             CtConstructor constructor = CtNewConstructor.make(patchClassConstruct.toString(), patchClass);
             patchClass.addConstructor(constructor);

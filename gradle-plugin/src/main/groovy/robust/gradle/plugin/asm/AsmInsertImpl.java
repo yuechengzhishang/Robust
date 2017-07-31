@@ -4,6 +4,7 @@ import com.android.utils.AsmUtils;
 import com.meituan.robust.ChangeQuickRedirect;
 import com.meituan.robust.Constants;
 import com.meituan.robust.RobustMethodId;
+import com.sun.javafx.application.PlatformImpl;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -11,6 +12,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -46,12 +48,12 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
     @Override
     protected void insertCode(List<CtClass> box, File jarFile) throws IOException, CannotCompileException {
-        ZipOutputStream outStream=new JarOutputStream(new FileOutputStream(jarFile));
-        for(CtClass ctClass:box) {
+        ZipOutputStream outStream = new JarOutputStream(new FileOutputStream(jarFile));
+        for (CtClass ctClass : box) {
             ctClass.setModifiers(AccessFlag.setPublic(ctClass.getModifiers()));
-            if(isNeedInsertClass(ctClass.getName())&&!(ctClass.isInterface() || ctClass.getDeclaredMethods().length < 1)) {
+            if (isNeedInsertClass(ctClass.getName()) && !(ctClass.isInterface() || ctClass.getDeclaredMethods().length < 1)) {
                 zipFile(transformCode(ctClass.toBytecode(), ctClass.getName().replaceAll("\\.", "/")), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
-            }else {
+            } else {
                 zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
 
             }
@@ -59,68 +61,114 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         outStream.close();
     }
 
-   private class InsertMethodBodyAdapter extends ClassVisitor implements Opcodes {
+    public static void insertRobsutProxyCode(GeneratorAdapter mv, String className, String desc, Type returnType, boolean isStatic){
+
+    }
+
+    private class InsertMethodBodyAdapter extends ClassVisitor implements Opcodes {
 
         public InsertMethodBodyAdapter() {
             super(Opcodes.ASM5);
         }
+
         ClassWriter classWriter;
         private String className;
         //this maybe change in the future
-       private Map <String,Boolean>methodInstructionTypeMap;
-        public InsertMethodBodyAdapter(ClassWriter cw,String className, Map<String,Boolean> methodInstructionTypeMap) {
-            super(Opcodes.ASM5,cw);
-            this.classWriter =cw;
-            this.className=className;
-            this.methodInstructionTypeMap=methodInstructionTypeMap;
-            classWriter.visitField(Opcodes.ACC_PUBLIC|Opcodes.ACC_STATIC, Constants.INSERT_FIELD_NAME, Type.getDescriptor(ChangeQuickRedirect.class), null, null);
+        private Map<String, Boolean> methodInstructionTypeMap;
+
+        public InsertMethodBodyAdapter(ClassWriter cw, String className, Map<String, Boolean> methodInstructionTypeMap) {
+            super(Opcodes.ASM5, cw);
+            this.classWriter = cw;
+            this.className = className;
+            this.methodInstructionTypeMap = methodInstructionTypeMap;
+            classWriter.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.INSERT_FIELD_NAME, Type.getDescriptor(ChangeQuickRedirect.class), null, null);
         }
 
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if(isProtect(access)) {
+            if (isProtect(access)) {
                 access = setPublic(access);
             }
             //
             MethodVisitor mv = super.visitMethod(access, name,
                     desc, signature, exceptions);
 
-            if (!isQualifiedMethod(access,name,desc,methodInstructionTypeMap)) {
+            if (AsmUtils.CONSTRUCTOR.equals(name)) {
+                final int tempAccess = access;
+                final String tempDesc = desc;
+                final String tempName = name;
+                // TODO: 17/8/7 已经完成构造函数的插桩，需要测试一下
+                mv = new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
+                    @Override
+                    protected void onMethodEnter() {
+                        super.onMethodEnter();
+                        StringBuilder parameters = new StringBuilder();
+                        Type[] types = Type.getArgumentTypes(tempDesc);
+                        for (Type type : types) {
+                            parameters.append(type.getClassName()).append(",");
+                        }
+                        if (parameters.length() > 0 && parameters.charAt(parameters.length() - 1) == ',') {
+                            parameters.deleteCharAt(parameters.length() - 1);
+                        }
+
+                        String key = className.replace('/', '.') + "." + tempName + "(" + parameters.toString() + ")";
+                        String methodId = RobustMethodId.getMethodId(key);
+                        methodMap.put(key, methodId);
+
+                        List<Type> paramsTypeClass = new ArrayList<>();
+                        Type returnType = Type.getReturnType(tempDesc);
+                        Type[] argsType = Type.getArgumentTypes(tempDesc);
+                        for (Type type : argsType) {
+                            paramsTypeClass.add(type);
+                        }
+
+                        new MethodBodyInsertor(mv, className, tempDesc, isStatic(tempAccess), methodId, tempName, tempAccess).visitCode();
+                    }
+                };
                 return mv;
             }
-            StringBuilder parameters=new StringBuilder();
-            Type[]types=Type.getArgumentTypes(desc);
-            for(Type type:types){
-                parameters.append(type.getClassName()).append(",");
-            }
-            if(parameters.length() > 0 && parameters.charAt(parameters.length()-1)==','){
-                parameters.deleteCharAt(parameters.length()-1);
+
+            if (!isQualifiedMethod(access, name, desc, methodInstructionTypeMap)) {
+                return mv;
             }
 
-            String key = className.replace('/','.')+"."+name+"("+parameters.toString()+")";
+
+
+            StringBuilder parameters = new StringBuilder();
+            Type[] types = Type.getArgumentTypes(desc);
+            for (Type type : types) {
+                parameters.append(type.getClassName()).append(",");
+            }
+            if (parameters.length() > 0 && parameters.charAt(parameters.length() - 1) == ',') {
+                parameters.deleteCharAt(parameters.length() - 1);
+            }
+
+            String key = className.replace('/', '.') + "." + name + "(" + parameters.toString() + ")";
             String methodId = RobustMethodId.getMethodId(key);
             methodMap.put(key, methodId);
 
-            return new MethodBodyInsertor(mv,className,desc,isStatic(access), methodId,name,access);
+            return new MethodBodyInsertor(mv, className, desc, isStatic(access), methodId, name, access);
         }
 
-       private boolean isProtect(int access) {
-           return (access & Opcodes.ACC_PROTECTED) != 0;
-       }
 
-       private int setPublic(int access){
-           return (access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) | Opcodes.ACC_PUBLIC;
-       }
-        private boolean isQualifiedMethod(int access, String name, String desc,Map<String,Boolean> methodInstructionTypeMap) {
+        private boolean isProtect(int access) {
+            return (access & Opcodes.ACC_PROTECTED) != 0;
+        }
+
+        private int setPublic(int access) {
+            return (access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) | Opcodes.ACC_PUBLIC;
+        }
+
+        private boolean isQualifiedMethod(int access, String name, String desc, Map<String, Boolean> methodInstructionTypeMap) {
             //类初始化函数和构造函数过滤
-            if(AsmUtils.CLASS_INITIALIZER.equals(name)||AsmUtils.CONSTRUCTOR.equals(name)){
+            if (AsmUtils.CLASS_INITIALIZER.equals(name) || AsmUtils.CONSTRUCTOR.equals(name)) {
                 return false;
             }
             //@warn 这部分代码请重点review一下，判断条件写错会要命
             //这部分代码请重点review一下，判断条件写错会要命
             // synthetic 方法暂时不aop 比如AsyncTask 会生成一些同名 synthetic方法,对synthetic 以及private的方法也插入的代码，主要是针对lambda表达式
-            if(((access& Opcodes.ACC_SYNTHETIC) != 0)&&((access & Opcodes.ACC_PRIVATE)==0)){
+            if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
                 return false;
             }
             if ((access & Opcodes.ACC_ABSTRACT) != 0) {
@@ -154,10 +202,10 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 }
             }
 
-            boolean isMethodInvoke=methodInstructionTypeMap.getOrDefault(name+desc,false);
+            boolean isMethodInvoke = methodInstructionTypeMap.getOrDefault(name + desc, false);
 //            System.out.println("isQualifiedMethod instructionType "+isMethodInvoke);
             //遍历指令类型，
-            if(!isMethodInvoke){
+            if (!isMethodInvoke) {
                 return false;
             }
 
@@ -165,87 +213,95 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
         }
 
+
+
+
         class MethodBodyInsertor extends GeneratorAdapter implements Opcodes {
             private String className;
             private Type[] argsType;
             private Type returnType;
-            List<Type> paramsTypeClass=new ArrayList();
+            List<Type> paramsTypeClass = new ArrayList();
             boolean isStatic;
             //目前methodid是int类型的，未来可能会修改为String类型的，这边进行了一次强转
             String methodId;
 
-            public MethodBodyInsertor(MethodVisitor mv,String className, String desc, boolean isStatic,String methodId,String name,int access) {
+            public MethodBodyInsertor(MethodVisitor mv, String className, String desc, boolean isStatic, String methodId, String name, int access) {
                 super(Opcodes.ASM5, mv, access, name, desc);
-                this.className=className;
-                this.returnType =Type.getReturnType(desc);
+                this.className = className;
+                this.returnType = Type.getReturnType(desc);
                 Type[] argsType = Type.getArgumentTypes(desc);
                 for (Type type : argsType) {
                     paramsTypeClass.add(type);
                 }
-                this.isStatic=isStatic;
-                this.methodId =methodId;
+                this.isStatic = isStatic;
+                this.methodId = methodId;
             }
 
 
             @Override
             public void visitCode() {
-                RobustAsmUtils.createInsertCode(this,className,paramsTypeClass, returnType,isStatic,methodId);
+                RobustAsmUtils.createInsertCode(this, className, paramsTypeClass, returnType, isStatic, methodId);
             }
 
+
         }
-        private boolean isStatic(int access){
-            return (access & Opcodes.ACC_STATIC) != 0;
-        }
+
 
 
 
     }
-    public  byte [] transformCode2(byte []b1, String className) throws IOException {
+
+    public static boolean isStatic(int access) {
+        return (access & Opcodes.ACC_STATIC) != 0;
+    }
+
+    public byte[] transformCode2(byte[] b1, String className) throws IOException {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        InsertMethodBodyAdapter insertMethodBodyAdapter=new InsertMethodBodyAdapter(cw,className,new HashMap());
+        InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, new HashMap());
         ClassReader cr = new ClassReader(b1);
-        cr.accept(insertMethodBodyAdapter,ClassReader.EXPAND_FRAMES);
+        cr.accept(insertMethodBodyAdapter, ClassReader.EXPAND_FRAMES);
         return cw.toByteArray();
     }
 
-    public  byte [] transformCode(byte []b1, String className) throws IOException {
+    public byte[] transformCode(byte[] b1, String className) throws IOException {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         ClassReader cr = new ClassReader(b1);
 
         ClassNode classNode = new ClassNode();
-        Map<String,Boolean> methodInstructionTypeMap=new HashMap<>();
-        cr.accept(classNode,0);
+        Map<String, Boolean> methodInstructionTypeMap = new HashMap<>();
+        cr.accept(classNode, 0);
         final List<MethodNode> methods = classNode.methods;
-        for(MethodNode m: methods){
+        for (MethodNode m : methods) {
             InsnList inList = m.instructions;
-            boolean isMethodInvoke=false;
-            for(int i = 0; i< inList.size(); i++) {
-                if(inList.get(i).getType()==AbstractInsnNode.METHOD_INSN) {
-                    isMethodInvoke=true;
+            boolean isMethodInvoke = false;
+            for (int i = 0; i < inList.size(); i++) {
+                if (inList.get(i).getType() == AbstractInsnNode.METHOD_INSN) {
+                    isMethodInvoke = true;
                 }
             }
             methodInstructionTypeMap.put(m.name + m.desc, isMethodInvoke);
         }
 //        printlnMap(methodInstructionTypeMap);
 
-        InsertMethodBodyAdapter insertMethodBodyAdapter=new InsertMethodBodyAdapter(cw,className,methodInstructionTypeMap);
-        cr.accept(insertMethodBodyAdapter,ClassReader.EXPAND_FRAMES);
+        InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, methodInstructionTypeMap);
+        cr.accept(insertMethodBodyAdapter, ClassReader.EXPAND_FRAMES);
         return cw.toByteArray();
     }
 
 
-    public static void  main(String []args) throws IOException {
+    public static void main(String[] args) throws IOException {
 
-        AsmInsertImpl asmInsert=new AsmInsertImpl(null,null,null,null,false,false);
+        AsmInsertImpl asmInsert = new AsmInsertImpl(null, null, null, null, false, false);
 //        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Downloads/asm-5.2/asm/com/meituan/robust/PatchProxy.class"));
 //        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Downloads/asm-5.2/com/meituan/robust/Patch.class"));
-        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People.class"));
+        byte[] bytes = org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People.class"));
 //        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Downloads/asm-5.2/asm/com/meituan/robust/PatchProxy2.class"),asmInsert.transformCode2(bytes,"com.meituan.robust.PatchProxy","1231"));
 //        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Downloads/asm-5.2/com/meituan/robust/Patch2.class"),asmInsert.transformCode2(bytes,"com.meituan.robust.Patch","1231"));
-        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People2.class"),asmInsert.transformCode2(bytes,"com.meituan.sample.robusttest.People"));
+        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People2.class"), asmInsert.transformCode2(bytes, "com.meituan.sample.robusttest.People"));
     }
-    private void printlnMap(Map <String ,Boolean>map){
-        for (Map.Entry<String ,Boolean> entry : map.entrySet()) {
+
+    private void printlnMap(Map<String, Boolean> map) {
+        for (Map.Entry<String, Boolean> entry : map.entrySet()) {
             System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
 
         }

@@ -2,6 +2,7 @@ package robust.gradle.plugin
 
 import com.meituan.robust.tools.aapt.AaptResourceCollector
 import com.meituan.robust.tools.aapt.AaptUtil
+import com.meituan.robust.tools.aapt.BundleResourcesSpliter
 import com.meituan.robust.tools.aapt.PatchUtil
 import com.meituan.robust.tools.aapt.RDotTxtEntry
 /**
@@ -44,6 +45,8 @@ class KeepResourceId {
 
         List<String> resourceDirectoryList = new ArrayList<String>()
         resourceDirectoryList.add(resDir)
+
+        BundleResourcesSpliter.splitAllBundleResources(resDir)
 
         Map<RDotTxtEntry.RType, Set<RDotTxtEntry>> rTypeResourceMap = PatchUtil.readRTxt(RDotTxtPath)
 

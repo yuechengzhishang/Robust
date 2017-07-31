@@ -42,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        System.err.println("hello change mainActivity onCreate method ");
         setContentView(R.layout.activity_main);
         PatchProxy.register(new LogExtension());
 
@@ -190,7 +193,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void runRobust() {
+        testAdd("nn");
         new PatchExecutor(getApplicationContext(), new PatchManipulateImp(), new Callback()).start();
+    }
+
+    public void testAdd(String ll){
+        System.err.println("it is : " + ll);
     }
 
 

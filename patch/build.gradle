@@ -32,6 +32,7 @@ configurations.all {
 dependencies {
 //    compile 'com.meituan.robust:autopatchbase:' + VERSION_NAME
     compile project(':autopatchbase')
+    compile 'com.android.tools:annotations:25.1.0'
 }
 
 apply from: '../gradle_mvn_push.gradle'

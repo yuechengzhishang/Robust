@@ -3,6 +3,7 @@ package robust.gradle.plugin
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
+import com.meituan.robust.common.FileUtil
 import javassist.ClassPool
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -58,6 +59,7 @@ class RobustTransform extends Transform implements Plugin<Project> {
             if (!isDebugTask) {
                 project.android.registerTransform(this)
                 project.afterEvaluate(new RobustApkHashAction())
+                project.afterEvaluate(new RobustStoreClassAction())
                 logger.quiet "Register robust transform successful !!!"
             }
             if (null != robust.switch.turnOnRobust && !"true".equals(String.valueOf(robust.switch.turnOnRobust))) {
@@ -66,6 +68,7 @@ class RobustTransform extends Transform implements Plugin<Project> {
         } else {
             project.android.registerTransform(this)
             project.afterEvaluate(new RobustApkHashAction())
+            project.afterEvaluate(new RobustStoreClassAction())
         }
     }
 
@@ -163,6 +166,11 @@ class RobustTransform extends Transform implements Plugin<Project> {
         insertcodeStrategy.insertCode(box, jarFile);
         writeMap2File(insertcodeStrategy.methodMap, Constants.METHOD_MAP_OUT_PATH)
 
+        //拷贝插桩完成的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
+        File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
+        File storeMainJarFile = new File(robustOutDirFile,"robust_main_apk.jar")
+        FileUtil.copyFile(jarFile,storeMainJarFile)
+        //拷贝插桩完成的main.jar end
         cost = (System.currentTimeMillis() - startTime) / 1000
         logger.quiet "robust cost $cost second"
         logger.quiet '================robust   end================'
