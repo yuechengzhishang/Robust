@@ -39,11 +39,12 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     TextView tipsTextView;
+    private String stata;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
+        Log.e("change","test change");
         System.err.println("hello change mainActivity onCreate method ");
         setContentView(R.layout.activity_main);
         PatchProxy.register(new LogExtension());

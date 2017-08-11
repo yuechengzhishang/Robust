@@ -58,7 +58,7 @@ public class JavaUtils {
 //        System.err.println(hashMap1.equals(hashMap2));
 
         parseRobustMethodsMap2File(path0, new File("/Users/hedingxu/robust-github/Robust/app/robust/methodsMap0_bak.robust"));
-        if (true){
+        if (true) {
             return;
         }
 
@@ -333,10 +333,11 @@ public class JavaUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        boolean hh = (methodSignure.toString() instanceof String);
         return methodSignure.toString();
     }
 
-    public static String getRealParamtersBody() {
+    public static String getRealParamtersBody(String patchClassFullName) {
         StringBuilder realParameterBuilder = new StringBuilder();
         realParameterBuilder.append("public  Object[] " + Constants.GET_REAL_PARAMETER + " (Object[] args){");
         realParameterBuilder.append("if (args == null || args.length < 1) {");
@@ -344,7 +345,7 @@ public class JavaUtils {
         realParameterBuilder.append("}");
         realParameterBuilder.append(" Object[] realParameter = new Object[args.length];");
         realParameterBuilder.append("for (int i = 0; i < args.length; i++) {");
-        realParameterBuilder.append("if (args[i] ==this) {");
+        realParameterBuilder.append("if (args[i] instanceof " + patchClassFullName + ") {");
         realParameterBuilder.append(" realParameter[i] =this." + ORIGINCLASS + ";");
         realParameterBuilder.append("} else {");
         realParameterBuilder.append(" realParameter[i] = args[i];");
@@ -374,7 +375,7 @@ public class JavaUtils {
 //            patchClass.addField(originClassField);
 
             StringBuilder patchClassConstruct = new StringBuilder();
-            patchClassConstruct.append(" public Patch(" + sourceClass.getName()+ " originalObj) {");
+            patchClassConstruct.append(" public Patch(" + sourceClass.getName() + " originalObj) {");
             patchClassConstruct.append(ORIGINCLASS + "= originalObj;");
             patchClassConstruct.append("}");
             CtConstructor constructor = CtNewConstructor.make(patchClassConstruct.toString(), patchClass);

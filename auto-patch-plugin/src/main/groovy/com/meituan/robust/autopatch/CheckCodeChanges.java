@@ -8,6 +8,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
+import static com.meituan.robust.Constants.File_SEPARATOR;
 import static com.meituan.robust.Constants.ORIGINCLASS;
 
 /**
@@ -41,7 +43,6 @@ public class CheckCodeChanges {
     public static ClassPool classPool = new ClassPool();
 
     public static HashMap<String, HashSet<String>> changedClassAndItsAnonymousInnerClass = new HashMap<String, HashSet<String>>();
-
 
     private static void main1() throws IOException {
         File backupJar = new File("/Users/hedingxu/robust-github/Robust/app/robust/retrolambda.jar");
@@ -60,7 +61,7 @@ public class CheckCodeChanges {
 //                        , InstantRunVerifier.getClassNode(new File(newClass)));
 
 //        System.err.println(status.toString());
-        InstantRunVerifierStatus resultSoFar = processChangedJar(backupJarFile, jarFile);
+        InstantRunVerifierStatus resultSoFar = processChangedJar(backupJarFile, jarFile, new ArrayList<String>());
     }
 
     public static void main(String[] args) throws IOException, NotFoundException, CannotCompileException {
@@ -171,7 +172,7 @@ public class CheckCodeChanges {
                         new ExprEditor() {
                             public void edit(FieldAccess f) throws CannotCompileException {
 
-                                if (true){
+                                if (true) {
                                     return;
                                 }
 
@@ -219,21 +220,21 @@ public class CheckCodeChanges {
                             public void edit(MethodCall m) throws CannotCompileException {
 
                                 //// TODO: 17/8/7  how  to judge is super method
-                                if (m.isSuper()){
-                                    System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: "  + m.isSuper());
+                                if (m.isSuper()) {
+                                    System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
                                     return;
                                 }
-                                if (true){
+                                if (true) {
                                     try {
                                         CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 
 //                                        System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceClass.getName());
-                                        if (sourceClass.subclassOf(methodTargetClass)){
+                                        if (sourceClass.subclassOf(methodTargetClass)) {
                                             //// TODO: 17/8/7 判断是否父类方法 或者本类方法
                                             System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
 
                                         } else {
-                                            System.err.println("" + methodTargetClass.getName() + "#"+ m.getMethod().getName() /* + sourceClass.getName() + " is not sub class of "*/ );
+                                            System.err.println("" + methodTargetClass.getName() + "#" + m.getMethod().getName() /* + sourceClass.getName() + " is not sub class of "*/);
 
                                         }
                                     } catch (NotFoundException e) {
@@ -262,21 +263,21 @@ public class CheckCodeChanges {
                                         CtClass[] paramTypes = m.getMethod().getParameterTypes();
                                         StringBuilder stringBuilder = new StringBuilder();
 
-                                        if (null != paramTypes ){
+                                        if (null != paramTypes) {
                                             int index = 0;
                                             for (CtClass ctClass : paramTypes) {
-                                                index ++;
+                                                index++;
                                                 //MainActivityPatch contains MainActivity and MainActivityPatch
                                                 if (ctClass.getName().startsWith(sourceClass.getName())) {
                                                     //this ????// TODO: 17/8/7
                                                     isContainThis = true;
-                                                    stringBuilder.append("$"+index +"= $"+index +"."+Constants.ORIGINCLASS + ";");
+                                                    stringBuilder.append("$" + index + "= $" + index + "." + Constants.ORIGINCLASS + ";");
                                                 }
                                             }
 
                                         }
 
-                                        if (isContainThis){
+                                        if (isContainThis) {
                                             stringBuilder.append("$_ = $proceed($$);");
                                             stringBuilder.toString();
                                         }
@@ -297,7 +298,7 @@ public class CheckCodeChanges {
                                 }
 
                                 try {
-                                    if (m.getMethod().getName().contains("getApplicationContext")){
+                                    if (m.getMethod().getName().contains("getApplicationContext")) {
                                         System.err.println("getApplicationContext method");
 
                                     }
@@ -351,11 +352,9 @@ public class CheckCodeChanges {
         }
 
         patchClass.writeFile(patchClassDir);
-
-
     }
 
-    private static InstantRunVerifierStatus processChangedJar(JarFile backupJar, JarFile newJar)
+    public static InstantRunVerifierStatus processChangedJar(JarFile backupJar, JarFile newJar, List<String> hotfixPackageList)
             throws IOException {
 
         Map<String, JarEntry> backupEntries = new HashMap<String, JarEntry>();
@@ -364,17 +363,46 @@ public class CheckCodeChanges {
             JarEntry jarEntry = backupJarEntries.nextElement();
             backupEntries.put(jarEntry.getName(), jarEntry);
         }
+        //只考虑newClass 与 changedClass即可，删除的class不用管（不需要处理)
         // go through the jar file, entry by entry.
         Enumeration<JarEntry> jarEntries = newJar.entries();
         while (jarEntries.hasMoreElements()) {
             JarEntry jarEntry = jarEntries.nextElement();
-            if (jarEntry.getName().endsWith(".class")) {
+            String className = jarEntry.getName();
+
+
+            boolean isRSubClass = false;
+            int index = className.lastIndexOf('/');
+            if (index != -1 &&
+                    className.startsWith("R$", index + 1)) {
+                isRSubClass = true;
+            }
+            String RClassStr2 = "R.class";
+            if (isRSubClass || className.endsWith(RClassStr2) || className.endsWith("/r.class") || className.endsWith(".r.class")) {
+//                System.err.println("is R dot class : " + className);
+                continue;
+            }
+
+            boolean isHotfixPackageClass = false;
+            if (hotfixPackageList != null) {
+                for (String packageName : hotfixPackageList) {
+                    if (!className.startsWith("com/meituan/robust")) {
+                        if (className.startsWith(packageName) || className.startsWith(packageName.replace(".", File_SEPARATOR))) {
+                            isHotfixPackageClass = true;
+                        }
+                    }
+                }
+            }
+
+            //&& !className.endsWith("R.class")
+            if (isHotfixPackageClass && className.endsWith(".class")) {
 //                System.err.println(jarEntry.getName());
 //                if (jarEntry.getName().contains("com/meituan/sample/")){
 //                    System.err.println("");
 //                    System.err.println("=======");
 //                    System.err.println("wanted class : " + jarEntry.getName());
 //                }
+                System.err.println("target classes : " + className);
                 JarEntry backupEntry = backupEntries.get(jarEntry.getName());
                 if (backupEntry != null) {
                     byte[] oldClassBytes =
@@ -388,6 +416,16 @@ public class CheckCodeChanges {
                     List<com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus> status =
                             InstantRunVerifier.runByClassNode(oldClassNode
                                     , newClassNode);
+
+                    if (status.contains(InstantRunVerifierStatus.METHOD_CHANGED)
+                            || status.contains(InstantRunVerifierStatus.METHOD_ADDED)
+                            || status.contains(InstantRunVerifierStatus.FIELD_ADDED)){
+                        System.err.println(className + " has changed");
+                        Config.modifiedClassNameList.add(className.replace(".class","").replace(File_SEPARATOR,"."));
+                    }
+
+                } else {
+                    Config.newlyAddedClassNameList.add(className.replace(File_SEPARATOR,"."));
                 }
 
             }

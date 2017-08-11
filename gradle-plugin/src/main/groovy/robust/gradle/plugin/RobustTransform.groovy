@@ -5,13 +5,16 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
 import com.meituan.robust.common.FileUtil
 import javassist.ClassPool
+import javassist.CtClass
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 import robust.gradle.plugin.asm.AsmInsertImpl
 import robust.gradle.plugin.javaassist.JavaAssistInsertImpl
 
+import java.util.jar.JarOutputStream
 import java.util.zip.GZIPOutputStream
+import java.util.zip.ZipOutputStream
 /**
  * Created by mivanzhang on 16/11/3.
  *
@@ -156,6 +159,21 @@ class RobustTransform extends Transform implements Plugin<Project> {
         }
 
         def box = ConvertUtils.toCtClasses(inputs, classPool)
+
+        //todo 在混淆task后，dex task之前 :aimeituan:transformClassesWithDexForPreloadedRelease
+        //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
+        File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
+        File storeMainJarFile = new File(robustOutDirFile,"robust_main.jar")
+        FileUtil.createFile(storeMainJarFile.absolutePath)
+        ZipOutputStream outStream= new JarOutputStream(new FileOutputStream(storeMainJarFile));
+        for(CtClass ctClass:box) {
+            InsertcodeStrategy.zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
+            ctClass.defrost()
+        }
+        outStream.close();
+//        FileUtil.copyFile(jarFile,storeMainJarFile)
+        //拷贝插桩完成的main.jar end
+
         def cost = (System.currentTimeMillis() - startTime) / 1000
 //        logger.quiet "check all class cost $cost second, class count: ${box.size()}"
         if(useASM){
@@ -166,11 +184,6 @@ class RobustTransform extends Transform implements Plugin<Project> {
         insertcodeStrategy.insertCode(box, jarFile);
         writeMap2File(insertcodeStrategy.methodMap, Constants.METHOD_MAP_OUT_PATH)
 
-        //拷贝插桩完成的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
-        File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
-        File storeMainJarFile = new File(robustOutDirFile,"robust_main_apk.jar")
-        FileUtil.copyFile(jarFile,storeMainJarFile)
-        //拷贝插桩完成的main.jar end
         cost = (System.currentTimeMillis() - startTime) / 1000
         logger.quiet "robust cost $cost second"
         logger.quiet '================robust   end================'

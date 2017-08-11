@@ -56,6 +56,7 @@ import static com.android.build.gradle.internal2.incremental.InstantRunVerifierS
 import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.INSTANT_RUN_DISABLED;
 import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.METHOD_ADDED;
 import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.METHOD_ANNOTATION_CHANGE;
+import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.METHOD_CHANGED;
 import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.METHOD_DELETED;
 import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.PARENT_CLASS_CHANGED;
 import static com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus.REFLECTION_USED;
@@ -239,32 +240,35 @@ public class InstantRunVerifier {
         List<InstantRunVerifierStatus> statuses = new ArrayList<>(10);
         if (!originalClass.superName.equals(updatedClass.superName)) {
             statuses.add(PARENT_CLASS_CHANGED) ;
+            System.out.println("PARENT_CLASS_CHANGED");
         }
 
         if (diffList(originalClass.interfaces, updatedClass.interfaces,
                 STRING_COMPARATOR) != Diff.NONE) {
             statuses.add( IMPLEMENTED_INTERFACES_CHANGE);
+            System.out.println("IMPLEMENTED_INTERFACES_CHANGE");
         }
 
         if (diffList(originalClass.visibleAnnotations, updatedClass.visibleAnnotations,
                 ANNOTATION_COMPARATOR) != Diff.NONE) {
             statuses.add( CLASS_ANNOTATION_CHANGE);
+            System.out.println("CLASS_ANNOTATION_CHANGE");
         }
 
-        // check if the class is InstantRunDisabled.
-        List<AnnotationNode> invisibleAnnotations = originalClass.invisibleAnnotations;
-        if (invisibleAnnotations!=null) {
-            for (AnnotationNode annotationNode : invisibleAnnotations) {
-
-                if (annotationNode.desc.equals(
-                        IncrementalVisitor.DISABLE_ANNOTATION_TYPE.getDescriptor())) {
-                    // potentially, we could try to see if anything has really changed between
-                    // the two classes but the fact that we got an updated class means so far that
-                    // we have a new version and should restart.
-                    statuses.add(INSTANT_RUN_DISABLED);
-                }
-            }
-        }
+//        // check if the class is InstantRunDisabled.
+//        List<AnnotationNode> invisibleAnnotations = originalClass.invisibleAnnotations;
+//        if (invisibleAnnotations!=null) {
+//            for (AnnotationNode annotationNode : invisibleAnnotations) {
+//
+//                if (annotationNode.desc.equals(
+//                        IncrementalVisitor.DISABLE_ANNOTATION_TYPE.getDescriptor())) {
+//                    // potentially, we could try to see if anything has really changed between
+//                    // the two classes but the fact that we got an updated class means so far that
+//                    // we have a new version and should restart.
+//                    statuses.add(INSTANT_RUN_DISABLED);
+//                }
+//            }
+//        }
 
         InstantRunVerifierStatus fieldChange = verifyFields(originalClass, updatedClass);
         if (fieldChange != COMPATIBLE) {
@@ -410,9 +414,10 @@ public class InstantRunVerifier {
         //// TODO: 17/7/29 检查两个方法体是否一样
         boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod);
         if (isEqual){
-
-        }else {
-            System.err.println(methodNode.name + " method body is equal :" + isEqual);
+        } else {
+            System.err.println(methodNode.name + " method body is not equal ");
+            System.err.println(methodNode.desc + " method body is not equal ");
+            return METHOD_CHANGED;
         }
         // either disabled or using blacklisted APIs, let it through only if the method
         // implementation is unchanged.

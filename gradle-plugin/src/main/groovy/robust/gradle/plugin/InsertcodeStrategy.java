@@ -54,7 +54,7 @@ public abstract class InsertcodeStrategy {
         return false;
     }
 
-    protected void zipFile(byte[] classBytesArray, ZipOutputStream zos, String entryName){
+    public static void zipFile(byte[] classBytesArray, ZipOutputStream zos, String entryName){
         try {
             ZipEntry entry = new ZipEntry(entryName);
             zos.putNextEntry(entry);

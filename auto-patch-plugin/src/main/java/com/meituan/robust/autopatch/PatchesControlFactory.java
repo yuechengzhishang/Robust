@@ -12,7 +12,7 @@ import static com.meituan.robust.autopatch.Config.classPool;
 
 /**
  * Created by mivanzhang on 17/2/9.
- *
+ * <p>
  * create patch control classes,which dispatch patch methods
  */
 
@@ -23,7 +23,7 @@ public class PatchesControlFactory {
 
     }
 
-    private CtClass createControlClass(CtClass modifiedClass) throws Exception {
+    private static CtClass createControlClass(CtClass modifiedClass) throws Exception {
         CtClass patchClass = classPool.get(NameManger.getInstance().getPatchName(modifiedClass.getName()));
         patchClass.defrost();
         CtClass controlClass = classPool.getAndRename(Constants.PATCH_TEMPLATE_FULL_NAME, NameManger.getInstance().getPatchControlName(modifiedClass.getSimpleName()));
@@ -31,9 +31,10 @@ public class PatchesControlFactory {
         getRealParameterMethodBody.append("public Object getRealParameter(Object parameter) {");
         getRealParameterMethodBody.append("if(parameter instanceof " + modifiedClass.getName() + "){");
         getRealParameterMethodBody.
-                append("return new " + patchClass.getName() + "(parameter);");
+                append("return new " + patchClass.getName() + "(" + "(" + modifiedClass.getName() + ")" + "parameter);");
         getRealParameterMethodBody.append("}");
         getRealParameterMethodBody.append("return parameter;}");
+        //// TODO: 17/8/10 注释掉了 ， 后面恢复
         controlClass.addMethod(CtMethod.make(getRealParameterMethodBody.toString(), controlClass));
         controlClass.getDeclaredMethod("accessDispatch").insertBefore(getAccessDispatchMethodBody(patchClass, modifiedClass.getName()));
         controlClass.getDeclaredMethod("isSupport").insertBefore(getIsSupportMethodBody(patchClass, modifiedClass.getName()));
@@ -44,7 +45,7 @@ public class PatchesControlFactory {
     private
     static String getAccessDispatchMethodBody(CtClass patchClass, String modifiedClassName) throws NotFoundException {
         StringBuilder accessDispatchMethodBody = new StringBuilder();
-        if(Config.catchReflectException){
+        if (Config.catchReflectException) {
             accessDispatchMethodBody.append("try{");
         }
         if (Constants.isLogging) {
@@ -58,7 +59,7 @@ public class PatchesControlFactory {
         if (Constants.isLogging) {
             accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"keyToValueRelation not contain\" );");
         }
-        accessDispatchMethodBody.append("patch=new " + patchClass.getName() + "(paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
+        accessDispatchMethodBody.append("patch=new " + patchClass.getName() + "(("+ modifiedClassName+")paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
         accessDispatchMethodBody.append(" keyToValueRelation.put(paramArrayOfObject[paramArrayOfObject.length - 1], patch);\n");
         accessDispatchMethodBody.append("}else{");
         accessDispatchMethodBody.append("patch=(" + patchClass.getName() + ") keyToValueRelation.get(paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
@@ -134,7 +135,7 @@ public class PatchesControlFactory {
                 accessDispatchMethodBody.append("));}\n");
             }
         }
-        if(Config.catchReflectException){
+        if (Config.catchReflectException) {
             accessDispatchMethodBody.append(" } catch (Throwable e) {");
             accessDispatchMethodBody.append(" e.printStackTrace();}");
         }
@@ -170,7 +171,7 @@ public class PatchesControlFactory {
 
 
     public static CtClass createPatchesControl(CtClass modifiedClass) throws Exception {
-        return patchesControlFactory.createControlClass(modifiedClass);
+        return createControlClass(modifiedClass);
     }
 
 }

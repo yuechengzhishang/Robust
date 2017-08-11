@@ -4,8 +4,8 @@ import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
+import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
-import com.meituan.robust.utils.SmaliTool
 import javassist.CannotCompileException
 import javassist.CtClass
 import javassist.CtMethod
@@ -15,6 +15,8 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -146,7 +148,49 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         File buildDir = project.getBuildDir();
         String patchPath = buildDir.getAbsolutePath() + File.separator + Constants.ROBUST_GENERATE_DIRECTORY + File.separator;
         clearPatchPath(patchPath);
-        ReadAnnotation.readAnnotation(box, logger);
+        if (false) {
+            //todo 不需要注解了
+            ReadAnnotation.readAnnotation(box, logger);
+        } else {
+
+            //1. get last class.jar
+            File robustOutDirFile = new File(ROBUST_DIR);
+            File storeMainJarFile = new File(robustOutDirFile, "robust_main.jar")
+
+            //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
+            //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
+            File robustDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
+            File newJarFile = new File(robustDirFile, "new_robust_main.jar")
+            FileUtil.createFile(newJarFile.absolutePath)
+            ZipOutputStream outStream = new JarOutputStream(new FileOutputStream(newJarFile));
+            for (CtClass ctClass : box) {
+                zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
+                ctClass.defrost()
+            }
+            outStream.close();
+
+            //3. is changed
+            JarFile originalJarFile = new JarFile(storeMainJarFile);
+            JarFile currentJarFile = new JarFile(newJarFile);
+
+            //todo 删除方法（可以忽略，但是如果是有super的调用，则需要处理一下新方法调用super方法即可)
+            CheckCodeChanges.processChangedJar(originalJarFile, currentJarFile, Config.hotfixPackageList)
+
+
+            println("modifiedClassNameList is ：")
+            JavaUtils.printList(Config.modifiedClassNameList)
+
+            for (String modifiedClassName : Config.modifiedClassNameList) {
+                CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
+                modifiedCtClass.defrost();
+                Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
+            }
+
+            println("newlyAddedClassNameList is ：")
+            JavaUtils.printList(Config.newlyAddedClassNameList)
+        }
+
+
         if (Config.supportProGuard) {
             ReadMapping.getInstance().initMappingInfo();
         }
@@ -156,7 +200,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         zipPatchClassesFile()
         executeCommand(jar2DexCommand)
         executeCommand(dex2SmaliCommand)
-        SmaliTool.getInstance().dealObscureInSmali();
+//        SmaliTool.getInstance().dealObscureInSmali();
         executeCommand(smali2DexCommand)
         //package patch.dex to patch.apk
         packagePatchDex2Apk()
@@ -206,15 +250,16 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
 
     def generatePatch(List<CtClass> box, String patchPath) {
         if (!Config.isManual) {
-            if (Config.patchMethodSignatureSet.size() < 1) {
+            if (Config.modifiedClassNameList.size() < 1) {
                 if (Config.isResourceFix) {
                     logger.warn(" patch method is empty ,please check your Modify annotation or use RobustModify.modify() to mark modified methods")
                     return;
                 }
                 throw new RuntimeException(" patch method is empty ,please check your Modify annotation or use RobustModify.modify() to mark modified methods")
             }
-            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
-            InlineClassFactory.dealInLineClass(patchPath, Config.newlyAddedClassNameList)
+//            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
+//            InlineClassFactory.dealInLineClass(patchPath, Config.newlyAddedClassNameList)
+            JavaUtils.printList(Config.modifiedClassNameList)
             initSuperMethodInClass(Config.modifiedClassNameList);
             //auto generate all class
             for (String fullClassName : Config.modifiedClassNameList) {
@@ -225,9 +270,9 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 createControlClass(patchPath, ctClass)
             }
             createPatchesInfoClass(patchPath);
-            if (Config.methodNeedPatchSet.size() > 0) {
-                throw new RuntimeException(" some methods haven't patched,see unpatched method list : " + Config.methodNeedPatchSet.toListString())
-            }
+//            if (Config.methodNeedPatchSet.size() > 0) {
+//                throw new RuntimeException(" some methods haven't patched,see unpatched method list : " + Config.methodNeedPatchSet.toListString())
+//            }
         } else {
             autoPatchManually(box, patchPath);
         }
@@ -265,13 +310,13 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             //检查当前修改类中使用到类，并加入mapping信息
             modifiedCtClass = Config.classPool.get(modifiedFullClassName);
             modifiedCtClass.defrost();
-            modifiedCtClass.declaredMethods.findAll {
-                return Config.patchMethodSignatureSet.contains(it.longName) || InlineClassFactory.allInLineMethodLongname.contains(it.longName);
-            }.each { behavior ->
+
+            modifiedCtClass.declaredMethods.each { behavior ->
                 behavior.instrument(new ExprEditor() {
                     @Override
                     void edit(MethodCall m) throws CannotCompileException {
                         if (m.isSuper()) {
+                            System.err.println("class: " + modifiedCtClass.name + " , method :" + m.method.name)
                             if (!invokeSuperMethodList.contains(m.method)) {
                                 invokeSuperMethodList.add(m.method);
                             }
@@ -323,6 +368,18 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         fis.close();
         zos.closeEntry();
         zos.flush();
+    }
+
+    public static void zipFile(byte[] classBytesArray, ZipOutputStream zos, String entryName) {
+        try {
+            ZipEntry entry = new ZipEntry(entryName);
+            zos.putNextEntry(entry);
+            zos.write(classBytesArray, 0, classBytesArray.length);
+            zos.closeEntry();
+            zos.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 

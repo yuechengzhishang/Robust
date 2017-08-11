@@ -45,7 +45,7 @@ public class SmaliTool {
 
     }
 
-    public void dealObscureInSmali() {
+    public  void dealObscureInSmali() {
         File diretory = new File(Config.robustGenerateDirectory + "classout" + File.separator + Config.patchPackageName.replaceAll("\\.", Matcher.quoteReplacement(File.separator)));
         if (!diretory.isDirectory() || diretory == null) {
             throw new RuntimeException(Config.robustGenerateDirectory + Config.patchPackageName.replaceAll(".", Matcher.quoteReplacement(File.separator)) + " contains no smali file error!! ");
