@@ -33,10 +33,11 @@ class PatchesFactory {
 //                if ((!patchMethodSignureSet.contains(method.getLongName()) || (!isInline && Config.methodMap.get(modifiedClass.getName() + "." + JavaUtils.getJavaMethodSignure(method)) == null))) {
 //                    methodNoNeedPatchList.add(method);
 //                } else {
-                    Config.methodNeedPatchSet.remove(method.getLongName());
+//                    Config.methodNeedPatchSet.remove(method.getLongName());
 //                }
             }
 //        }
+        String originalClassName = modifiedClass.getName()
 
         CtClass temPatchClass = cloneClass(modifiedClass, patchName, methodNoNeedPatchList);
         if (temPatchClass.getDeclaredMethods().length == 0) {
@@ -44,6 +45,8 @@ class PatchesFactory {
 //            throw new RuntimeException("all methods in patch class are deteted,cannot find patchMethod in class " + temPatchClass.getName());
         }
 
+        modifiedClass = Config.classPool.get(originalClassName);
+        modifiedClass.defrost()
         JavaUtils.addPatchConstruct(temPatchClass, modifiedClass);
         CtMethod reaLParameterMethod = CtMethod.make(JavaUtils.getRealParamtersBody(temPatchClass.name), temPatchClass);
         temPatchClass.addMethod(reaLParameterMethod);
@@ -60,7 +63,7 @@ class PatchesFactory {
         for (CtMethod method : temPatchClass.getDeclaredMethods()) {
             if (!Config.addedSuperMethodList.contains(method) && !reaLParameterMethod.equals(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
                 method.instrument(
-                        new RobustMethodExprEditor(modifiedClass,temPatchClass)
+                        new RobustMethodExprEditor(modifiedClass,temPatchClass,method)
                 );
 //                method.instrument(
 //                        new ExprEditor() {
@@ -132,8 +135,9 @@ class PatchesFactory {
             }
         }
         //remove static code block,pay attention to the  class created by cloneClassWithoutFields which construct's
-        CtClass patchClass = cloneClassWithoutFields(temPatchClass, patchName, null);
-        patchClass = JavaUtils.addPatchConstruct(patchClass, modifiedClass);
+//        CtClass patchClass = cloneClassWithoutFields(temPatchClass, patchName, null);
+//        patchClass = JavaUtils.addPatchConstruct(patchClass, modifiedClass);
+        CtClass patchClass = temPatchClass;
         return patchClass;
     }
 
@@ -156,6 +160,23 @@ class PatchesFactory {
 
     public
     static CtClass cloneClass(CtClass sourceClass, String patchName, List<CtMethod> exceptMethodList) throws CannotCompileException, NotFoundException {
+
+        if (true){
+            CtClass targetClass = Config.classPool.getOrNull(patchName);
+            if (targetClass != null) {
+                targetClass.defrost();
+            }
+
+            CtClass sourceClassTemp = sourceClass;
+            sourceClassTemp.setName(patchName);
+            try {
+                sourceClassTemp.writeFile(Config.robustGenerateDirectory);
+            } catch (CannotCompileException e) {
+                e.printStackTrace();
+            }
+            sourceClassTemp.defrost()
+            return sourceClassTemp;
+        }
         CtClass targetClass = Config.classPool.getOrNull(patchName);
         if (targetClass != null) {
             targetClass.defrost();

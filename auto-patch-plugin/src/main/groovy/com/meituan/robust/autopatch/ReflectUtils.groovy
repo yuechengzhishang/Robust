@@ -280,7 +280,7 @@ class ReflectUtils {
     }
 
     def
-    static String getMethodCallString(MethodCall methodCall, Map memberMappingInfo, CtClass patchClass, boolean isInStaticMethod, boolean inline) {
+    static String getMethodCallString(MethodCall methodCall,  CtClass patchClass, boolean isInStaticMethod) {
         String signatureBuilder = getParameterClassString(methodCall.method.parameterTypes);
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
@@ -328,7 +328,6 @@ class ReflectUtils {
             }
 
         } else {
-
             if (!isInStaticMethod) {
                 //在非static method中使用非static method
                 stringBuilder.append(" if(\$0 == this ){");

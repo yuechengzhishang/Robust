@@ -372,16 +372,19 @@ public class JavaUtils {
             originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
 
 //            CtField originClassField = new CtField(patchClass.getClassPool().get("java.long.Class"), ORIGINCLASS + "Type", patchClass);
-//            patchClass.addField(originClassField);
+//            patchClass.addFid(originClassField);
 
+            String patchClassName = patchClass.getSimpleName();
+            System.err.println("patchClassName : "+ patchClassName);
             StringBuilder patchClassConstruct = new StringBuilder();
-            patchClassConstruct.append(" public Patch(" + sourceClass.getName() + " originalObj) {");
+            patchClassConstruct.append(" public " +patchClassName+"(" + sourceClass.getName() + " originalObj) {");
             patchClassConstruct.append(ORIGINCLASS + "= originalObj;");
             patchClassConstruct.append("}");
             CtConstructor constructor = CtNewConstructor.make(patchClassConstruct.toString(), patchClass);
             patchClass.addConstructor(constructor);
         } catch (Exception e) {
             e.printStackTrace();
+
             throw new RuntimeException();
         }
         return patchClass;

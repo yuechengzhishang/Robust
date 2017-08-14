@@ -7,6 +7,7 @@ import com.meituan.robust.autopatch.*
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
 import javassist.CannotCompileException
+import javassist.ClassMap
 import javassist.CtClass
 import javassist.CtMethod
 import javassist.expr.ExprEditor
@@ -258,18 +259,19 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 throw new RuntimeException(" patch method is empty ,please check your Modify annotation or use RobustModify.modify() to mark modified methods")
             }
 //            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
-//            InlineClassFactory.dealInLineClass(patchPath, Config.newlyAddedClassNameList)
             JavaUtils.printList(Config.modifiedClassNameList)
-            initSuperMethodInClass(Config.modifiedClassNameList);
+            handleSuperMethodInClass(Config.modifiedClassNameList);
             //auto generate all class
             for (String fullClassName : Config.modifiedClassNameList) {
                 CtClass ctClass = Config.classPool.get(fullClassName)
                 CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
                 patchClass.writeFile(patchPath)
-                patchClass.defrost();
-                createControlClass(patchPath, ctClass)
+                patchClass.defrost()
+                CtClass sourceClass = Config.classPool.get(fullClassName)
+                createControlClass(patchPath, sourceClass)
             }
             createPatchesInfoClass(patchPath);
+            handleAnonymousInnerClass();
 //            if (Config.methodNeedPatchSet.size() > 0) {
 //                throw new RuntimeException(" some methods haven't patched,see unpatched method list : " + Config.methodNeedPatchSet.toListString())
 //            }
@@ -277,6 +279,44 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             autoPatchManually(box, patchPath);
         }
 
+    }
+
+    def handleAnonymousInnerClass() {
+        //处理匿名内部类 todo
+        //rename to ~patch
+        JavaUtils.printList(Config.newlyAddedClassNameList)
+//        for (String className : Config.newlyAddedClassNameList) {
+//            CtClass newAddCtClass = Config.classPool.get(className)
+//            newAddCtClass.replaceClassName(className, className + "Patch")
+//            newAddCtClass.writeFile(Config.robustGenerateDirectory)
+//        }
+
+        Config.classPool.appendClassPath(Config.robustGenerateDirectory)
+        for(String originalClassName :Config.modifiedClassNameList){
+            CtClass sourceClass = Config.classPool.get(originalClassName)
+            CtClass[] ctClasses = sourceClass.getNestedClasses();
+            ClassMap classMap = new ClassMap()
+            for (CtClass nestedCtClass : ctClasses) {
+                boolean  isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
+                System.err.println("nestedCtClass :" + nestedCtClass.getName())
+                if (isAnonymousInnerClass){
+                    nestedCtClass.defrost()
+                    String oldName = nestedCtClass.getName()
+                    String newName = nestedCtClass.getName().replace(originalClassName,originalClassName + "Patch")
+                    nestedCtClass.replaceClassName(oldName,newName)
+                    nestedCtClass.writeFile(Config.robustGenerateDirectory)
+                    classMap.put(oldName,newName)
+                    System.err.println("isAnonymousInnerClass :" + nestedCtClass.getName())
+                }
+            }
+
+            System.err.println("replaceClassName :" + originalClassName)
+
+            CtClass patchClass = Config.classPool.get(NameManger.getInstance().getPatchNamWithoutRecord(originalClassName))
+            patchClass.defrost()
+            patchClass.replaceClassName(classMap)
+            patchClass.writeFile(Config.robustGenerateDirectory)
+        }
     }
 
     def deleteTmpFiles() {
@@ -303,7 +343,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     }
 
 
-    def initSuperMethodInClass(List originClassList) {
+    def handleSuperMethodInClass(List originClassList) {
         CtClass modifiedCtClass;
         for (String modifiedFullClassName : originClassList) {
             List<CtMethod> invokeSuperMethodList = Config.invokeSuperMethodMap.getOrDefault(modifiedFullClassName, new ArrayList());

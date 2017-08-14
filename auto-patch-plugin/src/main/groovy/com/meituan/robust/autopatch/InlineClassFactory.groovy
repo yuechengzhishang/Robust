@@ -92,7 +92,7 @@ class InlineClassFactory {
     }
 
     public static void dealInLineClass(String patchPath, List list) {
-        inlineClassFactory.dealInLineClass(patchPath);
+//        inlineClassFactory.dealInLineClass(patchPath);
         inlineClassFactory.dealInLineMethodInNewAddClass(patchPath, list);
     }
     /**

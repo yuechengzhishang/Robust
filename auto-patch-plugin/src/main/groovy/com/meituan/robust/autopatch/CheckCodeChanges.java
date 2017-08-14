@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -190,27 +189,13 @@ public class CheckCodeChanges {
                                 }
                             }
 
-
                             @Override
                             public void edit(NewExpr e) throws CannotCompileException {
                                 //inner class in the patched class ,not all inner class
                                 if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
                                     return;
                                 }
-
-                                String newExprClassName = e.getClassName();
-
-                                if (isAnonymousInnerClass(newExprClassName)) {
-                                    HashSet<String> anonymousInnerClasses = changedClassAndItsAnonymousInnerClass.get(patchClass.getName());
-                                    if (anonymousInnerClasses == null) {
-                                        anonymousInnerClasses = new LinkedHashSet<String>();
-                                    }
-                                    anonymousInnerClasses.add(newExprClassName);
-                                    //记录需要变更的匿名内部类，需要处理匿名内部类里面的匿名内部类?
-                                    changedClassAndItsAnonymousInnerClass.put(patchClass.getName(), anonymousInnerClasses);
-                                    return;
-                                }
-
+                                //需要处理参数为this的情况
 
                                 //其他情况不用处理(// TODO: 17/8/3 需要将所有新增的class都设置成public的
                                 //需要处理 package访问属性的method,直接在插桩的时候改成public好了(同样的，把那个字段的也改了，这里就可以少很多代码了）
@@ -219,7 +204,7 @@ public class CheckCodeChanges {
                             @Override
                             public void edit(MethodCall m) throws CannotCompileException {
 
-                                //// TODO: 17/8/7  how  to judge is super method
+                                //super方法使用Assistant class解决
                                 if (m.isSuper()) {
                                     System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
                                     return;
@@ -288,34 +273,25 @@ public class CheckCodeChanges {
 
                                 }
 
-                                //methods no need reflect
-                                try {
-                                    if (Config.noNeedReflectClassSet.contains(m.getMethod().getDeclaringClass().getName())) {
-                                        return;
-                                    }
-                                } catch (NotFoundException e) {
-                                    e.printStackTrace();
-                                }
-
-                                try {
-                                    if (m.getMethod().getName().contains("getApplicationContext")) {
-                                        System.err.println("getApplicationContext method");
-
-                                    }
-                                    String methodDeclaringClassName = m.getMethod().getDeclaringClass().getName();
-                                    if (isAnonymousInnerClass(methodDeclaringClassName)) {
-                                        HashSet<String> anonymousInnerClasses = changedClassAndItsAnonymousInnerClass.get(patchClass.getName());
-                                        if (anonymousInnerClasses == null) {
-                                            anonymousInnerClasses = new LinkedHashSet<String>();
-                                        }
-                                        anonymousInnerClasses.add(methodDeclaringClassName);
-                                        //记录需要变更的匿名内部类，需要处理匿名内部类里面的匿名内部类?
-                                        changedClassAndItsAnonymousInnerClass.put(patchClass.getName(), anonymousInnerClasses);
-                                        return;
-                                    }
-                                } catch (NotFoundException e) {
-                                    e.printStackTrace();
-                                }
+//                                try {
+//                                    if (m.getMethod().getName().contains("getApplicationContext")) {
+//                                        System.err.println("getApplicationContext method");
+//
+//                                    }
+//                                    String methodDeclaringClassName = m.getMethod().getDeclaringClass().getName();
+//                                    if (isAnonymousInnerClass(methodDeclaringClassName)) {
+//                                        HashSet<String> anonymousInnerClasses = changedClassAndItsAnonymousInnerClass.get(patchClass.getName());
+//                                        if (anonymousInnerClasses == null) {
+//                                            anonymousInnerClasses = new LinkedHashSet<String>();
+//                                        }
+//                                        anonymousInnerClasses.add(methodDeclaringClassName);
+//                                        //记录需要变更的匿名内部类，需要处理匿名内部类里面的匿名内部类?
+//                                        changedClassAndItsAnonymousInnerClass.put(patchClass.getName(), anonymousInnerClasses);
+//                                        return;
+//                                    }
+//                                } catch (NotFoundException e) {
+//                                    e.printStackTrace();
+//                                }
 
                                 //可能会出现一个class，被修改多次，这时候如何预警？？？
                                 //有一种问题，就是
@@ -548,7 +524,7 @@ public class CheckCodeChanges {
 
     public static boolean isAnonymousInnerClass(String className) {
         String newExprClassName = className;
-        if (newExprClassName.endsWith("$")) {
+        if (newExprClassName.contains("$")) {
             String[] splits = newExprClassName.split("\\$");
             int length = splits.length;
             String checkStr = splits[length - 1];
