@@ -87,12 +87,13 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if (isProtect(access)) {
+            if (isProtect(access) || isACCSYNTHETIC(access) || AsmUtils.CONSTRUCTOR.equals(name)) {
                 access = setPublic(access);
             }
             //
             MethodVisitor mv = super.visitMethod(access, name,
                     desc, signature, exceptions);
+
 
             if (AsmUtils.CONSTRUCTOR.equals(name)) {
                 final int tempAccess = access;
@@ -155,6 +156,11 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         private boolean isProtect(int access) {
             return (access & Opcodes.ACC_PROTECTED) != 0;
         }
+
+        private boolean isACCSYNTHETIC(int access) {
+            return (access & Opcodes.ACC_SYNTHETIC) != 0;
+        }
+
 
         private int setPublic(int access) {
             return (access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) | Opcodes.ACC_PUBLIC;

@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
-//apply plugin: 'robust'
-apply plugin: 'auto-patch-plugin'
-apply plugin: 'keep-resource-id'
+apply plugin: 'robust'
+//apply plugin: 'auto-patch-plugin'
+//apply plugin: 'keep-resource-id'
 
 android {
     compileSdkVersion 25
@@ -30,7 +30,7 @@ android {
             signingConfig signingConfigs.meituan
         }
         debug {
-            minifyEnabled true
+            minifyEnabled false
 //            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

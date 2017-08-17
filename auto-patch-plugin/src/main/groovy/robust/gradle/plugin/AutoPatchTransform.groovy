@@ -6,10 +6,8 @@ import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
-import javassist.CannotCompileException
-import javassist.ClassMap
-import javassist.CtClass
-import javassist.CtMethod
+import javassist.*
+import javassist.bytecode.AccessFlag
 import javassist.expr.ExprEditor
 import javassist.expr.MethodCall
 import org.gradle.api.Plugin
@@ -201,7 +199,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         zipPatchClassesFile()
         executeCommand(jar2DexCommand)
         executeCommand(dex2SmaliCommand)
-//        SmaliTool.getInstance().dealObscureInSmali();
+        com.meituan.robust.utils.SmaliTool.getInstance().dealObscureInSmali();
         executeCommand(smali2DexCommand)
         //package patch.dex to patch.apk
         packagePatchDex2Apk()
@@ -261,8 +259,10 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
 //            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
             JavaUtils.printList(Config.modifiedClassNameList)
             handleSuperMethodInClass(Config.modifiedClassNameList);
+
             //auto generate all class
             for (String fullClassName : Config.modifiedClassNameList) {
+                setAnonymousInnerClassPublic(fullClassName)
                 CtClass ctClass = Config.classPool.get(fullClassName)
                 CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
                 patchClass.writeFile(patchPath)
@@ -270,8 +270,8 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 CtClass sourceClass = Config.classPool.get(fullClassName)
                 createControlClass(patchPath, sourceClass)
             }
-            createPatchesInfoClass(patchPath);
             handleAnonymousInnerClass();
+            createPatchesInfoClass(patchPath);
 //            if (Config.methodNeedPatchSet.size() > 0) {
 //                throw new RuntimeException(" some methods haven't patched,see unpatched method list : " + Config.methodNeedPatchSet.toListString())
 //            }
@@ -284,7 +284,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     def handleAnonymousInnerClass() {
         //处理匿名内部类 todo
         //rename to ~patch
-        JavaUtils.printList(Config.newlyAddedClassNameList)
+//        JavaUtils.printList(Config.newlyAddedClassNameList)
 //        for (String className : Config.newlyAddedClassNameList) {
 //            CtClass newAddCtClass = Config.classPool.get(className)
 //            newAddCtClass.replaceClassName(className, className + "Patch")
@@ -301,6 +301,10 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 System.err.println("nestedCtClass :" + nestedCtClass.getName())
                 if (isAnonymousInnerClass){
                     nestedCtClass.defrost()
+                    nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))
+                    for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()){
+                        ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
+                    }
                     String oldName = nestedCtClass.getName()
                     String newName = nestedCtClass.getName().replace(originalClassName,originalClassName + "Patch")
                     nestedCtClass.replaceClassName(oldName,newName)
@@ -315,7 +319,23 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             CtClass patchClass = Config.classPool.get(NameManger.getInstance().getPatchNamWithoutRecord(originalClassName))
             patchClass.defrost()
             patchClass.replaceClassName(classMap)
+            patchClass.setModifiers(AccessFlag.setPublic(patchClass.getModifiers()))
             patchClass.writeFile(Config.robustGenerateDirectory)
+        }
+    }
+
+    def setAnonymousInnerClassPublic(String originalClassName){
+        CtClass sourceClass = Config.classPool.get(originalClassName)
+        CtClass[] ctClasses = sourceClass.getNestedClasses();
+        for (CtClass nestedCtClass : ctClasses) {
+            boolean  isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
+            if (isAnonymousInnerClass){
+                nestedCtClass.defrost()
+                nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))
+                for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()){
+                    ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
+                }
+            }
         }
     }
 

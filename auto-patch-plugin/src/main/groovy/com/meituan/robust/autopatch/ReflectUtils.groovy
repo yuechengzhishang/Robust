@@ -101,6 +101,47 @@ class ReflectUtils {
     }
 
     public
+    static String setFieldString2(CtField field, String patchClassName, String modifiedClassName) {
+        boolean isStatic = isStatic(field.modifiers)
+        StringBuilder stringBuilder = new StringBuilder("{");
+        if (isStatic) {
+            println("setFieldString static field " + field.getName() + "  declaringClass   " + field.declaringClass.name)
+            if (AccessFlag.isPublic(field.modifiers)) {
+                stringBuilder.append("\$_ = \$proceed(\$\$);");
+            } else {
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class,\$1);");
+                } else {
+                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.name + "\"," + field.declaringClass.name + ".class,\$1);");
+                }
+            }
+            if (Constants.isLogging) {
+                stringBuilder.append("  android.util.Log.d(\"robust\",\"set static  value is \" +\"" + (field.getName()) + " ${getCoutNumber()}\");");
+            }
+        } else {
+            stringBuilder.append("java.lang.Object instance;");
+            stringBuilder.append("java.lang.Class clazz;");
+            stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+            stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
+            stringBuilder.append("}else{");
+            stringBuilder.append("instance=\$0;");
+            stringBuilder.append("}");
+            if (field.declaringClass.name.equals(patchClassName)) {
+                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.name + "\",instance,\$1,${modifiedClassName}.class);");
+            } else {
+                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.name + "\",instance,\$1,${field.declaringClass.name}.class);");
+            }
+
+            if (Constants.isLogging) {
+                stringBuilder.append("  android.util.Log.d(\"robust\",\"set value is \" + \"" + (field.getName()) + "    ${getCoutNumber()}\");");
+            }
+        }
+        stringBuilder.append("}")
+//        println field.getName() + "  set  field repalce  by  " + stringBuilder.toString()
+        return stringBuilder.toString();
+    }
+
+    public
     static String getFieldString(CtField field, Map memberMappingInfo, String patchClassName, String modifiedClassName) {
 
         boolean isStatic = isStatic(field.modifiers);
@@ -136,6 +177,57 @@ class ReflectUtils {
             stringBuilder.append("}");
 
             stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\",instance,${field.declaringClass.name}.class);");
+            if (Constants.isLogging) {
+                stringBuilder.append("  android.util.Log.d(\"robust\",\"get value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
+            }
+        }
+        stringBuilder.append("}");
+//        println field.getName() + "  get field repalce  by  " + stringBuilder.toString() + "\n"
+        return stringBuilder.toString();
+    }
+
+
+    public
+    static String getFieldString2(CtField field, String patchClassName, String modifiedClassName) {
+
+        boolean isStatic = isStatic(field.modifiers);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("{");
+        if (isStatic) {
+            if (AccessFlag.isPublic(field.modifiers)) {
+                //deal with android R file
+                if (INLINE_R_FILE && isRFile(field.declaringClass.name)) {
+                    println("getFieldString static field " + field.getName() + "   is R file macthed   " + field.declaringClass.name)
+                    stringBuilder.append("\$_ = " + field.constantValue + ";");
+                } else {
+                    stringBuilder.append("\$_ = \$proceed(\$\$);");
+                }
+            } else {
+
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class);");
+
+                } else {
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + field.declaringClass.name + ".class);");
+                }
+            }
+            if (Constants.isLogging) {
+                stringBuilder.append("  android.util.Log.d(\"robust\",\"get static  value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
+            }
+        } else {
+            stringBuilder.append("java.lang.Object instance;");
+            stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+            stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
+            stringBuilder.append("}else{");
+            stringBuilder.append("instance=\$0;");
+            stringBuilder.append("}");
+
+            if (field.declaringClass.name.equals(patchClassName)) {
+                stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${modifiedClassName}.class);");
+            } else {
+                stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
+            }
+
             if (Constants.isLogging) {
                 stringBuilder.append("  android.util.Log.d(\"robust\",\"get value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
             }
@@ -311,9 +403,9 @@ class ReflectUtils {
                     stringBuilder.append("\$_ = \$proceed(\$\$);");
                 } else {
                     if (signatureBuilder.toString().length() > 1) {
-                        stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\"," + methodCall.method.declaringClass.name + ".class,\$args,new Class[]{" + signatureBuilder.toString() + "});");
+                        stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\"," + methodCall.method.declaringClass.name + ".class,\$args,new Class[]{" + signatureBuilder.toString() + "});");
                     } else
-                        stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\"," + methodCall.method.declaringClass.name + ".class,\$args,null);");
+                        stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\"," + methodCall.method.declaringClass.name + ".class,\$args,null);");
                 }
                 if (Constants.isLogging) {
                     stringBuilder.append("  android.util.Log.d(\"robust\",\"invoke static  method is      ${getCoutNumber()}  \" +\"" + methodCall.methodName + "\");");
@@ -322,9 +414,9 @@ class ReflectUtils {
                 //在非static method中使用static method
                 stringBuilder.append("java.lang.Object parameters[]=" + Constants.GET_REAL_PARAMETER + "(\$args);");
                 if (signatureBuilder.toString().length() > 1) {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\"," + methodCall.method.declaringClass.name + ".class,parameters,new Class[]{" + signatureBuilder.toString() + "});");
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\"," + methodCall.method.declaringClass.name + ".class,parameters,new Class[]{" + signatureBuilder.toString() + "});");
                 } else
-                    stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\"," + methodCall.method.declaringClass.name + ".class,parameters,null);");
+                    stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\"," + methodCall.method.declaringClass.name + ".class,parameters,null);");
             }
 
         } else {
@@ -337,9 +429,9 @@ class ReflectUtils {
                 stringBuilder.append("}");
                 if (signatureBuilder.toString().length() > 1) {
                     stringBuilder.append("java.lang.Object parameters[]=" + Constants.GET_REAL_PARAMETER + "(\$args);");
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\",instance,parameters,new Class[]{" + signatureBuilder.toString() + "},${methodCall.method.declaringClass.name}.class);");
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\",instance,parameters,new Class[]{" + signatureBuilder.toString() + "},${methodCall.method.declaringClass.name}.class);");
                 } else
-                    stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\",instance,\$args,null,${methodCall.method.declaringClass.name}.class);");
+                    stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\",instance,\$args,null,${methodCall.method.declaringClass.name}.class);");
                 if (Constants.isLogging) {
                     stringBuilder.append("  android.util.Log.d(\"robust\",\"invoke  method is      ${getCoutNumber()} \" +\"" + methodCall.methodName + "\");");
                 }
@@ -347,9 +439,9 @@ class ReflectUtils {
                 stringBuilder.append("instance=(" + methodCall.method.declaringClass.name + ")\$0;");
                 //在static method中使用非static method
                 if (signatureBuilder.toString().length() > 1) {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\",instance,\$args,new Class[]{" + signatureBuilder.toString() + "},${methodCall.method.declaringClass.name}.class);");
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\",instance,\$args,new Class[]{" + signatureBuilder.toString() + "},${methodCall.method.declaringClass.name}.class);");
                 } else
-                    stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getMappingValue(getJavaMethodSignureWithReturnType(methodCall.method), memberMappingInfo) + "\",instance,\$args,null,${methodCall.method.declaringClass.name}.class);");
+                    stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\",instance,\$args,null,${methodCall.method.declaringClass.name}.class);");
 
             }
         }

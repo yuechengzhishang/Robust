@@ -61,6 +61,8 @@ public class JavaAssistInsertImpl extends InsertcodeStrategy {
                             ctField.setModifiers(AccessFlag.PUBLIC | AccessFlag.STATIC);
                             ctClass.addField(ctField);
                         }
+                        //将所有package方法改成public
+                        changeMethodPackage2Public(ctBehavior);
                         if(!isQualifiedMethod(ctBehavior)){
                             continue;
                         }
@@ -150,6 +152,16 @@ public class JavaAssistInsertImpl extends InsertcodeStrategy {
             }
         }
         return !isHotfixMethodLevel;
+    }
+
+
+    private void changeMethodPackage2Public(CtBehavior it){
+        if (it.getMethodInfo().isMethod()) {
+            if (AccessFlag.isPackage(it.getModifiers())) {
+                System.err.println("change package to public method: " + it.getName());
+                it.setModifiers(AccessFlag.setPublic(it.getModifiers()));
+            }
+        }
     }
 
      private String getParametersClassType(CtMethod method) throws NotFoundException {

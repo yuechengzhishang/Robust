@@ -44,20 +44,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.e("change","test change");
+        Log.e("change","test change222");
         System.err.println("hello change mainActivity onCreate method ");
         setContentView(R.layout.activity_main);
         PatchProxy.register(new LogExtension());
 
+        Log.e("change","11111");
         tipsTextView = (TextView) findViewById(R.id.tips_text);
         StringBuilder tipsStringBuilder = new StringBuilder();
+        Log.e("change","151515");
         tipsStringBuilder.append("Tips:");
         tipsStringBuilder.append("\n1.please click JUMP_PATCH_ACTIVITY button to see the origin and go back here");
         tipsStringBuilder.append("\n2.please click patch button to apply patch");
         tipsStringBuilder.append("\n3.please click JUMP_PATCH_ACTIVITY button to see how effective");
-
+        Log.e("change","2222");
         tipsTextView.setText(tipsStringBuilder.toString());
+        Log.e("change","2.5.5.");
         Button patch = (Button) findViewById(R.id.patch);
+        Log.e("change","3333");
         patch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Log.e("change","4444");
         findViewById(R.id.jump_second_activity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Log.e("change","5555");
+
         findViewById(R.id.jump_patch_activity).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,6 +128,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Log.e("change","6666");
     }
 
     //patch  data report
