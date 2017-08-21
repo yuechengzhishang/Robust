@@ -56,6 +56,9 @@ public class NameManger {
 
     public String getPatchNamWithoutRecord(String className) {
         String patchName = Config.patchPackageName + "." + className.substring(className.lastIndexOf(".") + 1) + Constants.PATCH_SUFFIX;
+        if (true){
+            patchName = className + Constants.PATCH_SUFFIX;
+        }
         return patchName;
     }
 
@@ -67,4 +70,7 @@ public class NameManger {
         patchNameMap.put(s + Constants.ROBUST_ASSIST_SUFFIX, s + Constants.ROBUST_ASSIST_SUFFIX);
         return s + Constants.ROBUST_ASSIST_SUFFIX;
     }
+
+
+
 }

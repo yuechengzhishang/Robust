@@ -4,7 +4,6 @@ import com.android.utils.AsmUtils;
 import com.meituan.robust.ChangeQuickRedirect;
 import com.meituan.robust.Constants;
 import com.meituan.robust.RobustMethodId;
-import com.sun.javafx.application.PlatformImpl;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -288,6 +287,11 @@ public class AsmInsertImpl extends InsertcodeStrategy {
             methodInstructionTypeMap.put(m.name + m.desc, isMethodInvoke);
         }
 //        printlnMap(methodInstructionTypeMap);
+
+
+        if (RobustActivityUtils.isActivityClass()){
+
+        }
 
         InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, methodInstructionTypeMap);
         cr.accept(insertMethodBodyAdapter, ClassReader.EXPAND_FRAMES);

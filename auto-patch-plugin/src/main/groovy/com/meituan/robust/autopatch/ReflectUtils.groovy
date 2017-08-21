@@ -554,6 +554,10 @@ class ReflectUtils {
     }
 
     def static getJavaMethodSignureWithReturnType(CtMethod ctMethod) {
+        //不考虑proguard的情况，这么干
+        if (true){
+            return ctMethod.name;
+        }
         StringBuilder methodSignure = new StringBuilder();
         methodSignure.append(ctMethod.returnType.name)
         methodSignure.append(" ")

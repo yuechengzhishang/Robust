@@ -58,8 +58,14 @@ class PatchesFactory {
 //        }
         List<CtMethod> invokeSuperMethodList = Config.invokeSuperMethodMap.getOrDefault(modifiedClass.getName(), new ArrayList<>());
 
-        createPublicMethodForPrivate(temPatchClass);
+        if (true){
+            //把所有的方法访问属性都改成public
+            changeMethodToPublicAndUnAbstract(temPatchClass)
+        } else {
+            createPublicMethodForPrivate(temPatchClass);
+        }
 
+        //执行替换
         for (CtMethod method : temPatchClass.getDeclaredMethods()) {
             if (!Config.addedSuperMethodList.contains(method) && !reaLParameterMethod.equals(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
                 method.instrument(
@@ -145,7 +151,7 @@ class PatchesFactory {
      * @param sourceClass
      * @param targetClassName
      * @return targetClass
-     * @description targetClassis created by copy methods ,not by name
+     * @description targetClasses created by copy methods ,not by name
      */
     private
     static CtClass cloneClassWithoutFields(CtClass sourceClass, String patchName, List<CtMethod> exceptMethodList) throws NotFoundException, CannotCompileException {
@@ -287,6 +293,20 @@ class PatchesFactory {
             ctClass.addMethod(CtMethod.make(private2PublicMethod.toString(), ctClass));
         }
 
+    }
+
+    public static void changeMethodToPublicAndUnAbstract(CtClass ctClass){
+        //方法访问属性转为public;并去掉abstract
+        CtMethod[] ctMethods = ctClass.getDeclaredMethods();
+        if (null == ctMethods || 0 == ctMethods.length){
+            return;
+        }
+        for (CtMethod method : ctMethods) {
+            int originModifiers = method.getModifiers();
+            int publicModifiers = AccessFlag.setPublic(originModifiers);
+            int unAbstractModifiers = AccessFlag.clear(publicModifiers,AccessFlag.ABSTRACT);
+            method.setModifiers(unAbstractModifiers);
+        }
     }
 
     private static String getMethodStatic(CtMethod method) {
