@@ -211,4 +211,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+
+    private static String staticMethod(String str){
+        Log.e("xx","xx");
+        if (true){
+            str = "true";
+        } else {
+            str = "false";
+        }
+        return str;
+    }
+
+    private String xx = "xx";
+    private String getter(){
+        return xx;
+    }
+
+    private void setter(String zz){
+        this.xx = zz;
+    }
+
+    private void noNeedInsertMethod(String nn){
+        nn = nn +getter();
+        setter(nn);
+    }
+
+    @Override
+    protected void onDestroy() {
+//        super.onDestroy();
+    }
 }

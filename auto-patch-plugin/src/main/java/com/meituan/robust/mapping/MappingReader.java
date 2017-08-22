@@ -27,19 +27,11 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 
 
-/**
- * This class can parse mapping files and invoke a processor for each of the
- * mapping entries.
- *
- * @author Eric Lafortune
- */
-public class MappingReader
-{
+public class MappingReader {
     private final File mappingFile;
 
 
-    public MappingReader(File mappingFile)
-    {
+    public MappingReader(File mappingFile) {
         this.mappingFile = mappingFile;
     }
 
@@ -48,58 +40,48 @@ public class MappingReader
      * Reads the mapping file, presenting all of the encountered mapping entries
      * to the given processor.
      */
-    public void pump(MappingProcessor mappingProcessor) throws IOException
-    {
+    public void pump(MappingProcessor mappingProcessor) throws IOException {
         LineNumberReader reader = new LineNumberReader(
                 new BufferedReader(
                         new FileReader(mappingFile)));
-        try
-        {
+        try {
             String className = null;
-
+            String newClassName = null;
             // Read the subsequent class mappings and class member mappings.
-            while (true)
-            {
+            while (true) {
                 String line = reader.readLine();
 
-                if (line == null)
-                {
+                if (line == null) {
                     break;
                 }
 
                 line = line.trim();
 
                 // Is it a non-comment line?
-                if (!line.startsWith("#"))
-                {
+                if (!line.startsWith("#")) {
                     // Is it a class mapping or a class member mapping?
-                    if (line.endsWith(":"))
-                    {
+                    if (line.endsWith(":")) {
                         // Process the class mapping and remember the class's
                         // old name.
-                        className = processClassMapping(line, mappingProcessor);
-                    }
-                    else if (className != null)
-                    {
+                        String[] classNames = processClassMapping(line, mappingProcessor);
+                        if (classNames == null) {
+                            continue;
+                        }
+                        className = classNames[0];
+                        newClassName = classNames[1];
+                    } else if (className != null) {
                         // Process the class member mapping, in the context of
                         // the current old class name.
-                        processClassMemberMapping(className, line, mappingProcessor);
+                        processClassMemberMapping(className, newClassName, line, mappingProcessor);
                     }
                 }
             }
-        }
-        catch (IOException ex)
-        {
+        } catch (IOException ex) {
             throw new IOException("Can't process mapping file (" + ex.getMessage() + ")");
-        }
-        finally
-        {
-            try
-            {
+        } finally {
+            try {
                 reader.close();
-            }
-            catch (IOException ex)
-            {
+            } catch (IOException ex) {
                 // This shouldn't happen.
             }
         }
@@ -111,32 +93,29 @@ public class MappingReader
      * results with the given mapping processor. Returns the old class name,
      * or null if any subsequent class member lines can be ignored.
      */
-    private String processClassMapping(String           line,
-                                       MappingProcessor mappingProcessor)
-    {
+    private String[] processClassMapping(String line,
+                                         MappingProcessor mappingProcessor) {
         // See if we can parse "___ -> ___:", containing the original
         // class name and the new class name.
 
         int arrowIndex = line.indexOf("->");
-        if (arrowIndex < 0)
-        {
+        if (arrowIndex < 0) {
             return null;
         }
 
         int colonIndex = line.indexOf(':', arrowIndex + 2);
-        if (colonIndex < 0)
-        {
+        if (colonIndex < 0) {
             return null;
         }
 
         // Extract the elements.
-        String className    = line.substring(0, arrowIndex).trim();
+        String className = line.substring(0, arrowIndex).trim();
         String newClassName = line.substring(arrowIndex + 2, colonIndex).trim();
 
         // Process this class name mapping.
         boolean interested = mappingProcessor.processClassMapping(className, newClassName);
 
-        return interested ? className : null;
+        return interested ? new String[]{className, newClassName} : null;
     }
 
 
@@ -144,10 +123,10 @@ public class MappingReader
      * Parses the given line with a class member mapping and processes the
      * results with the given mapping processor.
      */
-    private void processClassMemberMapping(String           className,
-                                           String           line,
-                                           MappingProcessor mappingProcessor)
-    {
+    private void processClassMemberMapping(String className,
+                                           String newClassName,
+                                           String line,
+                                           MappingProcessor mappingProcessor) {
         // See if we can parse one of
         //     ___ ___ -> ___
         //     ___:___:___ ___(___) -> ___
@@ -158,69 +137,61 @@ public class MappingReader
         // numbers, and the new field/method name. The original field/method
         // name may contain an original class name "___.___".
 
-        int colonIndex1    =                           line.indexOf(':');
-        int colonIndex2    = colonIndex1    < 0 ? -1 : line.indexOf(':', colonIndex1    + 1);
-        int spaceIndex     =                           line.indexOf(' ', colonIndex2    + 2);
-        int argumentIndex1 =                           line.indexOf('(', spaceIndex     + 1);
+        int colonIndex1 = line.indexOf(':');
+        int colonIndex2 = colonIndex1 < 0 ? -1 : line.indexOf(':', colonIndex1 + 1);
+        int spaceIndex = line.indexOf(' ', colonIndex2 + 2);
+        int argumentIndex1 = line.indexOf('(', spaceIndex + 1);
         int argumentIndex2 = argumentIndex1 < 0 ? -1 : line.indexOf(')', argumentIndex1 + 1);
-        int colonIndex3    = argumentIndex2 < 0 ? -1 : line.indexOf(':', argumentIndex2 + 1);
-        int colonIndex4    = colonIndex3    < 0 ? -1 : line.indexOf(':', colonIndex3    + 1);
-        int arrowIndex     =                           line.indexOf("->", (colonIndex4    >= 0 ? colonIndex4    :
-                colonIndex3    >= 0 ? colonIndex3    :
+        int colonIndex3 = argumentIndex2 < 0 ? -1 : line.indexOf(':', argumentIndex2 + 1);
+        int colonIndex4 = colonIndex3 < 0 ? -1 : line.indexOf(':', colonIndex3 + 1);
+        int arrowIndex = line.indexOf("->", (colonIndex4 >= 0 ? colonIndex4 :
+                colonIndex3 >= 0 ? colonIndex3 :
                         argumentIndex2 >= 0 ? argumentIndex2 :
                                 spaceIndex) + 1);
 
         if (spaceIndex < 0 ||
-                arrowIndex < 0)
-        {
+                arrowIndex < 0) {
             return;
         }
 
         // Extract the elements.
-        String type    = line.substring(colonIndex2 + 1, spaceIndex).trim();
-        String name    = line.substring(spaceIndex + 1, argumentIndex1 >= 0 ? argumentIndex1 : arrowIndex).trim();
+        String type = line.substring(colonIndex2 + 1, spaceIndex).trim();
+        String name = line.substring(spaceIndex + 1, argumentIndex1 >= 0 ? argumentIndex1 : arrowIndex).trim();
         String newName = line.substring(arrowIndex + 2).trim();
 
         // Does the method name contain an explicit original class name?
-        String newClassName = className;
+//        String newClassName = className;
         int dotIndex = name.lastIndexOf('.');
-        if (dotIndex >= 0)
-        {
+        if (dotIndex >= 0) {
             className = name.substring(0, dotIndex);
-            name      = name.substring(dotIndex + 1);
+            name = name.substring(dotIndex + 1);
         }
 
         // Process this class member mapping.
-        if (type.length()    > 0 &&
-                name.length()    > 0 &&
-                newName.length() > 0)
-        {
+        if (type.length() > 0 &&
+                name.length() > 0 &&
+                newName.length() > 0) {
             // Is it a field or a method?
-            if (argumentIndex2 < 0)
-            {
+            if (argumentIndex2 < 0) {
                 mappingProcessor.processFieldMapping(className,
                         type,
                         name,
                         newClassName,
                         newName);
-            }
-            else
-            {
+            } else {
                 int firstLineNumber = 0;
-                int lastLineNumber  = 0;
+                int lastLineNumber = 0;
                 int newFirstLineNumber = 0;
-                int newLastLineNumber  = 0;
+                int newLastLineNumber = 0;
 
-                if (colonIndex2 >= 0)
-                {
+                if (colonIndex2 >= 0) {
                     firstLineNumber = newFirstLineNumber = Integer.parseInt(line.substring(0, colonIndex1).trim());
-                    lastLineNumber  = newLastLineNumber  = Integer.parseInt(line.substring(colonIndex1 + 1, colonIndex2).trim());
+                    lastLineNumber = newLastLineNumber = Integer.parseInt(line.substring(colonIndex1 + 1, colonIndex2).trim());
                 }
 
-                if (colonIndex3 >= 0)
-                {
+                if (colonIndex3 >= 0) {
                     firstLineNumber = Integer.parseInt(line.substring(colonIndex3 + 1, colonIndex4 > 0 ? colonIndex4 : arrowIndex).trim());
-                    lastLineNumber  = colonIndex4 < 0 ? firstLineNumber :
+                    lastLineNumber = colonIndex4 < 0 ? firstLineNumber :
                             Integer.parseInt(line.substring(colonIndex4 + 1, arrowIndex).trim());
                 }
 
@@ -240,3 +211,5 @@ public class MappingReader
         }
     }
 }
+
+

@@ -1,40 +1,49 @@
 package robust.gradle.plugin
 
+import com.meituan.robust.Constants
+import com.meituan.robust.common.FileUtil
 import org.gradle.api.Action
 import org.gradle.api.Project
 /**
  * Created by hedex on 17/2/14.
  */
-class RobustStoreClassAction implements Action<Project> {
+public class RobustStoreClassAction implements Action<Project> {
     @Override
     void execute(Project project) {
-        project.android.applicationVariants.each { variant ->
+        project.android.applicationVariants.all { variant ->
 
-//            def dexTask = project.tasks.findByName("transformClassesWithDexFor${variant.name.capitalize()}")
-//            if (dexTask == null) {
-//                return
-//            }
-//
-//            dexTask.doFirst {
-//                TaskInputs taskInputs = dexTask.getInputs()
-//                // Gather a full list of all inputs.
-//                List<JarInput> jarInputs = Lists.newArrayList();
-//                List<DirectoryInput> directoryInputs = Lists.newArrayList();
-//                for (TransformInput input : taskInputs) {
-//                    jarInputs.addAll(input.getJarInputs());
-//                    directoryInputs.addAll(input.getDirectoryInputs());
-//                }
-//                project.logger.info("JarInputs %s", Joiner.on(",").join(jarInputs));
-//                project.logger.info("DirInputs %s", Joiner.on(",").join(directoryInputs));
-//
-////                project.logger.quiet("===start compute robust apk hash===")
-////                def startTime = System.currentTimeMillis()
-//
-////                def cost = (System.currentTimeMillis() - startTime) / 1000
-////                logger.quiet "robust apk hash is $robustHash"
-////                logger.quiet "compute robust apk hash cost $cost second"
-////                project.logger.quiet("===compute robust apk hash end===")
-//            }
+            if (isProguardOpen(variant)) {
+
+                def proGuardTask = project.tasks.findByName(GradleUtils.getProGuardTaskName(project, variant));
+                def dexTask = project.tasks.findByName(GradleUtils.getDexTaskName(project, variant));
+
+                def jarMergingTask = null;
+                if (!GradleUtils.getJarMergingTaskName(project, variant).isEmpty()) {
+                    jarMergingTask = project.tasks.findByName(GradleUtils.getJarMergingTaskName(project, variant));
+                }
+
+                dexTask.doFirst {
+                    File proGuardJar;
+                    if (proGuardTask != null) {
+                        proGuardJar = GradleUtils.getProGuardTaskOutputJar(project, variant, dexTask);
+                    } else if (jarMergingTask != null) {
+                        proGuardJar = GradleUtils.getJarMergingOutputJar(project, variant, dexTask);
+                    }
+
+                    if (proGuardJar != null && proGuardJar.exists()) {
+                        File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
+                        File storeMainJarFile = new File(robustOutDirFile, "proguard_main.jar")
+                        FileUtil.copyFile(proGuardJar, storeMainJarFile)
+                    } else {
+                        println("The proguard's jar doesn't exist.");
+                    }
+                }
+
+            }
         }
+    }
+
+    boolean isProguardOpen(def variant) {
+        return variant.getBuildType().buildType.minifyEnabled;
     }
 }

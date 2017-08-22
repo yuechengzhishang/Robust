@@ -47,17 +47,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage());
         }
-//        try {
-//            if (f.isStatic()) {
-//
-//            } else if (f.isWriter()) {
-//                f.replace(setFieldString(f.getField(), patchClass, sourceClass));
-//            } else if (f.isReader()) {
-//
-//            }
-//        } catch (NotFoundException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override

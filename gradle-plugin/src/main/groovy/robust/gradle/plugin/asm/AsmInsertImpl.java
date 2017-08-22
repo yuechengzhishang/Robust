@@ -60,7 +60,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         outStream.close();
     }
 
-    public static void insertRobsutProxyCode(GeneratorAdapter mv, String className, String desc, Type returnType, boolean isStatic){
+    public static void insertRobsutProxyCode(GeneratorAdapter mv, String className, String desc, Type returnType, boolean isStatic) {
 
     }
 
@@ -73,20 +73,22 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         ClassWriter classWriter;
         private String className;
         //this maybe change in the future
-        private Map<String, Boolean> methodInstructionTypeMap;
+        private Map<String, Boolean> isNeedInsertCodeMethodMap;
 
-        public InsertMethodBodyAdapter(ClassWriter cw, String className, Map<String, Boolean> methodInstructionTypeMap) {
+        public InsertMethodBodyAdapter(ClassWriter cw, String className, Map<String, Boolean> isNeedInsertCodeMethodMap) {
             super(Opcodes.ASM5, cw);
             this.classWriter = cw;
             this.className = className;
-            this.methodInstructionTypeMap = methodInstructionTypeMap;
+            this.isNeedInsertCodeMethodMap = isNeedInsertCodeMethodMap;
             classWriter.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, Constants.INSERT_FIELD_NAME, Type.getDescriptor(ChangeQuickRedirect.class), null, null);
         }
 
 
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-            if (isProtect(access) || isACCSYNTHETIC(access) || AsmUtils.CONSTRUCTOR.equals(name)) {
+            int originAccess = access;
+            //把所有的package方法都改成public
+            if (isProtect(access) || isACCSYNTHETIC(access) || AsmUtils.CONSTRUCTOR.equals(name) || AccessUtils.isPackage(access)) {
                 access = setPublic(access);
             }
             //
@@ -129,26 +131,32 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 return mv;
             }
 
-            if (!isQualifiedMethod(access, name, desc, methodInstructionTypeMap)) {
+            boolean needInsertCode;
+            if (isStatic(originAccess)) {
+                //静态方法必须插桩
+                needInsertCode = true;
+            } else {
+                needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
+            }
+            if (needInsertCode) {
+                StringBuilder parameters = new StringBuilder();
+                Type[] types = Type.getArgumentTypes(desc);
+                for (Type type : types) {
+                    parameters.append(type.getClassName()).append(",");
+                }
+                if (parameters.length() > 0 && parameters.charAt(parameters.length() - 1) == ',') {
+                    parameters.deleteCharAt(parameters.length() - 1);
+                }
+
+                String key = className.replace('/', '.') + "." + name + "(" + parameters.toString() + ")";
+                String methodId = RobustMethodId.getMethodId(key);
+                methodMap.put(key, methodId);
+
+                return new MethodBodyInsertor(mv, className, desc, isStatic(access), methodId, name, access);
+            } else {
                 return mv;
             }
 
-
-
-            StringBuilder parameters = new StringBuilder();
-            Type[] types = Type.getArgumentTypes(desc);
-            for (Type type : types) {
-                parameters.append(type.getClassName()).append(",");
-            }
-            if (parameters.length() > 0 && parameters.charAt(parameters.length() - 1) == ',') {
-                parameters.deleteCharAt(parameters.length() - 1);
-            }
-
-            String key = className.replace('/', '.') + "." + name + "(" + parameters.toString() + ")";
-            String methodId = RobustMethodId.getMethodId(key);
-            methodMap.put(key, methodId);
-
-            return new MethodBodyInsertor(mv, className, desc, isStatic(access), methodId, name, access);
         }
 
 
@@ -165,14 +173,15 @@ public class AsmInsertImpl extends InsertcodeStrategy {
             return (access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED)) | Opcodes.ACC_PUBLIC;
         }
 
-        private boolean isQualifiedMethod(int access, String name, String desc, Map<String, Boolean> methodInstructionTypeMap) {
-            //类初始化函数和构造函数过滤
+        //非静态方法走这个逻辑
+        private boolean isMethodNeedInsertCode(int access, String name, String desc, Map<String, Boolean> isNeedInsertCodeMethodMap) {
+            //类初始化函数和构造函数过滤,构造函数前面已经完成代码插入了
+            //对于类CLASS_INITIALIZER方法需要单独插桩 TODO
             if (AsmUtils.CLASS_INITIALIZER.equals(name) || AsmUtils.CONSTRUCTOR.equals(name)) {
                 return false;
             }
-            //@warn 这部分代码请重点review一下，判断条件写错会要命
-            //这部分代码请重点review一下，判断条件写错会要命
             // synthetic 方法暂时不aop 比如AsyncTask 会生成一些同名 synthetic方法,对synthetic 以及private的方法也插入的代码，主要是针对lambda表达式
+            // 桥方法、编译器自动生成方法不插桩 这里的access已经在之前改成Opcodes.ACC_PUBLIC了
             if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
                 return false;
             }
@@ -186,11 +195,12 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 return false;
             }
 
-            if ((access & Opcodes.ACC_DEPRECATED) != 0) {
-                return false;
-            }
 
-            //方法过滤
+            /*if ((access & Opcodes.ACC_DEPRECATED) != 0) {
+                return false;
+            }*/
+
+            //过滤不需要patch的方法
             if (isExceptMethodLevel && exceptMethodList != null) {
                 for (String item : exceptMethodList) {
                     if (name.matches(item)) {
@@ -199,6 +209,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 }
             }
 
+            //指定需要patch的方法
             if (isHotfixMethodLevel && hotfixMethodList != null) {
                 for (String item : hotfixMethodList) {
                     if (name.matches(item)) {
@@ -207,18 +218,26 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 }
             }
 
-            boolean isMethodInvoke = methodInstructionTypeMap.getOrDefault(name + desc, false);
-//            System.out.println("isQualifiedMethod instructionType "+isMethodInvoke);
+            //如果proguard了，则需要过滤getter setter isBool等方法 // TODO: 17/8/22
+
+            //如果没有proguard，则无需过滤getter setter isBool等方法
+
+
+            //如果是override方法，插桩 // TODO: 17/8/22  
+            System.err.println("isMethodNeedInsertCode -> " + " name: " + name +", desc: " + desc);
+            //如果是空方法?
+
+            //// TODO: 17/8/22 diff getter setter isbool ...
+
+            boolean isMethodInvoke = isNeedInsertCodeMethodMap.getOrDefault(name + desc, true);
+//            System.out.println("isMethodNeedInsertCode instructionType "+isMethodInvoke);
             //遍历指令类型，
-            if (!isMethodInvoke) {
+            if (isMethodInvoke) {
+                return true;
+            } else {
                 return false;
             }
-
-            return !isHotfixMethodLevel;
-
         }
-
-
 
 
         class MethodBodyInsertor extends GeneratorAdapter implements Opcodes {
@@ -252,8 +271,6 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         }
 
 
-
-
     }
 
     public static boolean isStatic(int access) {
@@ -273,27 +290,35 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         ClassReader cr = new ClassReader(b1);
 
         ClassNode classNode = new ClassNode();
-        Map<String, Boolean> methodInstructionTypeMap = new HashMap<>();
+        Map<String, Boolean> isNeedInsertCodeMethodMap = new HashMap<>();
         cr.accept(classNode, 0);
         final List<MethodNode> methods = classNode.methods;
         for (MethodNode m : methods) {
             InsnList inList = m.instructions;
-            boolean isMethodInvoke = false;
-            for (int i = 0; i < inList.size(); i++) {
-                if (inList.get(i).getType() == AbstractInsnNode.METHOD_INSN) {
-                    isMethodInvoke = true;
+            if (ShouldInsertCodeMethod.isNeedInsertCode(m.name)){
+                //// TODO: 17/8/22 应该判断override
+                isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
+            } else if (m.maxStack > 2 || inList.size() > 20) {//普通getter setter 方法大概在12-15行
+                isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
+            } else {
+                boolean isMethodInvoke = false;
+                for (int i = 0; i < inList.size(); i++) {
+                    if (inList.get(i).getType() == AbstractInsnNode.METHOD_INSN) {
+                        isMethodInvoke = true;
+                    }
                 }
+                // TODO: 17/8/22 getter setter isbool ...
+                isNeedInsertCodeMethodMap.put(m.name + m.desc, isMethodInvoke);
             }
-            methodInstructionTypeMap.put(m.name + m.desc, isMethodInvoke);
         }
-//        printlnMap(methodInstructionTypeMap);
+//        printlnMap(isNeedInsertCodeMethodMap);
 
 
-        if (RobustActivityUtils.isActivityClass()){
+        if (RobustActivityUtils.isActivityClass()) {
 
         }
 
-        InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, methodInstructionTypeMap);
+        InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, isNeedInsertCodeMethodMap);
         cr.accept(insertMethodBodyAdapter, ClassReader.EXPAND_FRAMES);
         return cw.toByteArray();
     }

@@ -155,7 +155,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             //1. get last class.jar
             File robustOutDirFile = new File(ROBUST_DIR);
             File storeMainJarFile = new File(robustOutDirFile, "robust_main.jar")
-
+            File oldProGuardJarFile = new File(robustOutDirFile,"proguard_main.jar")
             //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
             //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
             File robustDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
