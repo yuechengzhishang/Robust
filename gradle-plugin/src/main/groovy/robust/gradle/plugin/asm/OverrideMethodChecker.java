@@ -7,8 +7,8 @@ import java.util.List;
  * Created by hedingxu on 17/8/22.
  */
 
-public class ShouldInsertCodeMethod {
-    private ShouldInsertCodeMethod(){
+public class OverrideMethodChecker {
+    private OverrideMethodChecker(){
 
     }
     //由于class name会被混淆，这里不判断class name了
@@ -23,7 +23,8 @@ public class ShouldInsertCodeMethod {
             ,"onCreate","onViewCreated","onActivityCreated", "onStart","onResume","onStop","onDestroy","onDetach"
     );
 
-    public static boolean isNeedInsertCode(String methodName){
+    public static boolean isOverrideMethod(String methodName){
+        ////// TODO: 17/8/22 应该判断override
         return SHOULD_INSERT_CODE_METHODS.contains(methodName);
     }
 }

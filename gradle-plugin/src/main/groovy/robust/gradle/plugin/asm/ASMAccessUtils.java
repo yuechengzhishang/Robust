@@ -5,9 +5,9 @@ package robust.gradle.plugin.asm;
  */
 import org.objectweb.asm.Opcodes;
 
-public class AccessUtils {
+public class ASMAccessUtils {
 
-    private AccessUtils() {}
+    private ASMAccessUtils() {}
 
     public static boolean isProtected(int access) {
         return (access & Opcodes.ACC_PROTECTED) == Opcodes.ACC_PROTECTED;

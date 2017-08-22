@@ -88,7 +88,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             int originAccess = access;
             //把所有的package方法都改成public
-            if (isProtect(access) || isACCSYNTHETIC(access) || AsmUtils.CONSTRUCTOR.equals(name) || AccessUtils.isPackage(access)) {
+            if (isProtect(access) || isACCSYNTHETIC(access) || AsmUtils.CONSTRUCTOR.equals(name) || ASMAccessUtils.isPackage(access)) {
                 access = setPublic(access);
             }
             //
@@ -224,7 +224,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
 
             //如果是override方法，插桩 // TODO: 17/8/22  
-            System.err.println("isMethodNeedInsertCode -> " + " name: " + name +", desc: " + desc);
+            System.err.println("isMethodNeedInsertCode -> " + " name: " + name + ", desc: " + desc);
             //如果是空方法?
 
             //// TODO: 17/8/22 diff getter setter isbool ...
@@ -295,9 +295,10 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         final List<MethodNode> methods = classNode.methods;
         for (MethodNode m : methods) {
             InsnList inList = m.instructions;
-            if (ShouldInsertCodeMethod.isNeedInsertCode(m.name)){
-                //// TODO: 17/8/22 应该判断override
+            if (OverrideMethodChecker.isOverrideMethod(m.name)) {
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
+            } else if (FieldGetterChecker.isGetterMethod(classNode, m)) {
+                isNeedInsertCodeMethodMap.put(m.name + m.desc, false);
             } else if (m.maxStack > 2 || inList.size() > 20) {//普通getter setter 方法大概在12-15行
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
             } else {
@@ -307,7 +308,6 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                         isMethodInvoke = true;
                     }
                 }
-                // TODO: 17/8/22 getter setter isbool ...
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, isMethodInvoke);
             }
         }
