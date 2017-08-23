@@ -77,7 +77,7 @@ public class PatchesControlFactory {
             accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"assemble method number  is  \" + methodNo);");
         }
 
-//        patchClass.declaredMethods.each {
+//        outerClass.declaredMethods.each {
         for (CtMethod method : patchClass.getDeclaredMethods()) {
             CtClass[] parametertypes = method.getParameterTypes();
             String methodSignure = JavaUtils.getJavaMethodSignure(method).replaceAll(patchClass.getName(), modifiedClassName);

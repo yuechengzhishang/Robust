@@ -4,6 +4,7 @@ import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
+import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
 import javassist.*
@@ -307,10 +308,20 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                     }
                     String oldName = nestedCtClass.getName()
                     String newName = nestedCtClass.getName().replace(originalClassName,originalClassName + "Patch")
+                    //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
                     nestedCtClass.replaceClassName(oldName,newName)
                     nestedCtClass.writeFile(Config.robustGenerateDirectory)
+
+                    Config.classPool.appendClassPath(Config.robustGenerateDirectory)
+                    CtClass anonymousInnerClass = Config.classPool.get(nestedCtClass.getName())
+                    anonymousInnerClass.defrost()
+                    //handle access$100 todo 还得考虑普通内部类 比较头疼的内部类里面有内部类 8-23 需要测试
+                    AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass,originalClassName,originalClassName + "Patch")
+//                    nestedCtClass.
+                    anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
                     classMap.put(oldName,newName)
-                    System.err.println("isAnonymousInnerClass :" + nestedCtClass.getName())
+                    System.err.println("isAnonymousInnerClass :" + anonymousInnerClass.getName())
+
                 }
             }
 

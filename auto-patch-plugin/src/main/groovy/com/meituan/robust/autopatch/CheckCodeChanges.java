@@ -104,7 +104,7 @@ public class CheckCodeChanges {
 
         patchClass.defrost();
 //        if (true) {
-//            CtClass[] ctClasses = sourceClass.getNestedClasses();
+//            CtClass[] ctClasses = anonymousInnerClass.getNestedClasses();
 //            for (CtClass ctClass : ctClasses) {
 ////              case: com.dianping.ad.view.BannerAdView$$Lambda$1
 ////              case: com.meituan.sample.MainActivity$3
@@ -112,7 +112,7 @@ public class CheckCodeChanges {
 ////              case: android.support.design.widget.AppBarLayout$Behavior$SavedState$1 跟普通匿名内部类一样
 ////              case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
 //                String nestedClassName = ctClass.getName();
-//                String shortClassName = nestedClassName.replace(sourceClass.getName(), "");
+//                String shortClassName = nestedClassName.replace(anonymousInnerClass.getName(), "");
 //                String numberStr = shortClassName.replace("$$Lambda", "");
 ////                numberStr = numberStr.replace("","");
 //                numberStr = numberStr.replace("$", "");
@@ -143,7 +143,7 @@ public class CheckCodeChanges {
 //            return;
 //        }
 
-//        JavaUtils.addPatchConstruct(patchClass, sourceClass);
+//        JavaUtils.addPatchConstruct(outerClass, anonymousInnerClass);
 
         CtField originField = new CtField(sourceClass, ORIGINCLASS, patchClass);
         originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
@@ -213,13 +213,13 @@ public class CheckCodeChanges {
                                     try {
                                         CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 
-//                                        System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceClass.getName());
+//                                        System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + anonymousInnerClass.getName());
                                         if (sourceClass.subclassOf(methodTargetClass)) {
                                             //// TODO: 17/8/7 判断是否父类方法 或者本类方法
                                             System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
 
                                         } else {
-                                            System.err.println("" + methodTargetClass.getName() + "#" + m.getMethod().getName() /* + sourceClass.getName() + " is not sub class of "*/);
+                                            System.err.println("" + methodTargetClass.getName() + "#" + m.getMethod().getName() /* + anonymousInnerClass.getName() + " is not sub class of "*/);
 
                                         }
                                     } catch (NotFoundException e) {
@@ -280,13 +280,13 @@ public class CheckCodeChanges {
 //                                    }
 //                                    String methodDeclaringClassName = m.getMethod().getDeclaringClass().getName();
 //                                    if (isAnonymousInnerClass(methodDeclaringClassName)) {
-//                                        HashSet<String> anonymousInnerClasses = changedClassAndItsAnonymousInnerClass.get(patchClass.getName());
+//                                        HashSet<String> anonymousInnerClasses = changedClassAndItsAnonymousInnerClass.get(outerClass.getName());
 //                                        if (anonymousInnerClasses == null) {
 //                                            anonymousInnerClasses = new LinkedHashSet<String>();
 //                                        }
 //                                        anonymousInnerClasses.add(methodDeclaringClassName);
 //                                        //记录需要变更的匿名内部类，需要处理匿名内部类里面的匿名内部类?
-//                                        changedClassAndItsAnonymousInnerClass.put(patchClass.getName(), anonymousInnerClasses);
+//                                        changedClassAndItsAnonymousInnerClass.put(outerClass.getName(), anonymousInnerClasses);
 //                                        return;
 //                                    }
 //                                } catch (NotFoundException e) {
@@ -303,7 +303,7 @@ public class CheckCodeChanges {
 //                                if (m.getMethodName().contains("access$")) {
 //                                    //method contain
 //
-//                                    m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), patchClass.getName(), ReflectUtils.isStatic(method.getModifiers()), /*getClassValue(*/m.getClassName()));
+//                                    m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), outerClass.getName(), ReflectUtils.isStatic(method.getModifiers()), /*getClassValue(*/m.getClassName()));
 //                                    return;
 //                                }
 
@@ -317,7 +317,7 @@ public class CheckCodeChanges {
 //                                try {
 //                                    if (!repalceInlineMethod(m, method, false)) {
 //                                        Map memberMappingInfo = new HashMap();
-//                                        m.replace(ReflectUtils.getMethodCallString(m, memberMappingInfo, patchClass, ReflectUtils.isStatic(method.getModifiers()), false));
+//                                        m.replace(ReflectUtils.getMethodCallString(m, memberMappingInfo, outerClass, ReflectUtils.isStatic(method.getModifiers()), false));
 //                                    }
 //                                } catch (Throwable e) {
 //                                    e.printStackTrace();

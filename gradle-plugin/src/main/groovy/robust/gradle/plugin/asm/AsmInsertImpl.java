@@ -133,8 +133,12 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
             boolean needInsertCode;
             if (isStatic(originAccess)) {
-                //静态方法必须插桩
-                needInsertCode = true;
+                //静态方法必须插桩 , access$000 是静态方法，需要排除
+                if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
+                    needInsertCode = false;
+                } else {
+                    needInsertCode = true;
+                }
             } else {
                 needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
             }

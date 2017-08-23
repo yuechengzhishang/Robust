@@ -18,6 +18,7 @@ import com.meituan.robust.PatchProxy;
 import com.meituan.robust.RobustCallBack;
 import com.meituan.sample.extension.LogExtension;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -62,9 +63,17 @@ public class MainActivity extends AppCompatActivity {
         Log.e("change","2.5.5.");
         Button patch = (Button) findViewById(R.id.patch);
         Log.e("change","3333");
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Log.e("robust","getCurrentProcessNameByReflect new Thread :"+getCurrentProcessNameByReflect());
+            }
+        }).start();
         patch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.e("robust","getCurrentProcessNameByReflect main Thread :"+getCurrentProcessNameByReflect());
+
                 Toast.makeText(getApplicationContext(), "patch start...", Toast.LENGTH_SHORT).show();
                 if (isGrantSDCardReadPermission()) {
                     runRobust();
@@ -80,7 +89,10 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, SecondActivity.class);
                 startActivity(intent);
-
+                String zz = getter();
+                setter(zz);
+                setter(xx);
+                staticMethod();
                 //========just add complexity =========
                 boolean isMainThread = false;
 
@@ -236,8 +248,30 @@ public class MainActivity extends AppCompatActivity {
         setter(nn);
     }
 
+    private static void staticMethod(){
+        String xx = "xx";
+        System.err.println(xx);
+    }
+
     @Override
     protected void onDestroy() {
-//        super.onDestroy();
+        super.onDestroy();
+    }
+
+    //主线程能拿到，其他线程拿不到？
+    private static String getCurrentProcessNameByReflect() {
+        try {
+            Class clazz = Class.forName("android.app.ActivityThread");
+            Method tCurrentActivityThreadMethod = clazz.getDeclaredMethod("currentActivityThread");
+            tCurrentActivityThreadMethod.setAccessible(true);
+            Object tCurrentActivityThread = tCurrentActivityThreadMethod.invoke(null);
+
+            Method tGetProcessNameMethod = clazz.getDeclaredMethod("getProcessName");
+            tGetProcessNameMethod.setAccessible(true);
+            return  (String) tGetProcessNameMethod.invoke(tCurrentActivityThread);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -377,9 +377,9 @@ class ReflectUtils {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
         // public method or methods in patched classes
-//        if (!inline && isPatchClassMethod(methodCall, patchClass)) {
+//        if (!inline && isPatchClassMethod(methodCall, outerClass)) {
 //            //todo 目前对有所方法进行反射
-////        if (AccessFlag.isPublic(methodCall.method.modifiers) || isPatchClassMethod(methodCall.method, patchClass)) {
+////        if (AccessFlag.isPublic(methodCall.method.modifiers) || isPatchClassMethod(methodCall.method, outerClass)) {
 //            println("in  getMethodCallString  before     isInStaticMethod is   " + isInStaticMethod + "  methodCall.className  " + methodCall.className + " linenumber " + methodCall.lineNumber)
 //            if (isInStaticMethod) {
 //                stringBuilder.append("\$_ = \$proceed(\$\$);");
@@ -388,7 +388,7 @@ class ReflectUtils {
 //                if (isStatic(methodCall.method.modifiers)) {
 //                    stringBuilder.append("\$_ = \$proceed(" + getParameters(methodCall.method.parameterTypes) + ");");
 //                } else {
-//                    stringBuilder.append("\$_ =(\$r)((" + patchClass.name + ")(\$0) " + ")." + methodCall.methodName + "(" + getParameters(methodCall.method.parameterTypes) + ");");
+//                    stringBuilder.append("\$_ =(\$r)((" + outerClass.name + ")(\$0) " + ")." + methodCall.methodName + "(" + getParameters(methodCall.method.parameterTypes) + ");");
 //                }
 //
 //            }

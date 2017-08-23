@@ -141,8 +141,8 @@ class PatchesFactory {
             }
         }
         //remove static code block,pay attention to the  class created by cloneClassWithoutFields which construct's
-//        CtClass patchClass = cloneClassWithoutFields(temPatchClass, patchName, null);
-//        patchClass = JavaUtils.addPatchConstruct(patchClass, modifiedClass);
+//        CtClass outerClass = cloneClassWithoutFields(temPatchClass, patchName, null);
+//        outerClass = JavaUtils.addPatchConstruct(outerClass, modifiedClass);
         CtClass patchClass = temPatchClass;
         return patchClass;
     }

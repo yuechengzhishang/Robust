@@ -2,6 +2,9 @@ package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
@@ -9,283 +12,106 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.expr.ExprEditor;
-import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
-import javassist.expr.NewArray;
 import javassist.expr.NewExpr;
 
 import static com.meituan.robust.Constants.ORIGINCLASS;
 
 /**
  * Created by hedingxu on 17/7/23.
+ * handle access$100
  */
 
-public class RobustMethodExprEditor extends ExprEditor {
-    public CtClass sourceClass;
-    public CtClass patchClass;
+public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
+    public CtClass anonymousInnerClass;
+    public String outerSourceClassName;
+    public String outerPatchClassName;
     public CtMethod ctMethod;
 
-    public RobustMethodExprEditor(CtClass sourceClass, CtClass patchClass, CtMethod ctMethod) {
-        this.sourceClass = sourceClass;
-        this.patchClass = patchClass;
+    public AnonymousInnerClassMethodExprEditor(CtClass anonymousInnerClass, String outerSourceClassName, String outerPatchClassName, CtMethod ctMethod) {
+        this.anonymousInnerClass = anonymousInnerClass;
+        this.outerSourceClassName = outerSourceClassName;
+        this.outerPatchClassName = outerPatchClassName;
         this.ctMethod = ctMethod;
     }
 
-    public void edit(FieldAccess f) throws CannotCompileException {
-
-        if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
-            return;
-        }
-
+    private boolean isAccessMethod(MethodCall methodCall) {
+//        static synthetic access$000
         try {
-            if (f.isReader()) {
-                f.replace(ReflectUtils.getFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
-            } else if (f.isWriter()) {
-                f.replace(ReflectUtils.setFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
+            int modifiers = methodCall.getMethod().getModifiers();
+            if (isStatic(modifiers)){
+                if ((modifiers & AccessFlag.SYNTHETIC) != 0){
+                    if (methodCall.getMethodName().matches("access\\$[0-9]{1,10}")){
+                        return true;
+                    }
+                }
             }
-        } catch (NotFoundException e) {
+        } catch (NotFoundException e){
             e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
         }
+        return false;
     }
 
-    @Override
-    public void edit(NewArray a) throws CannotCompileException {
-
-    }
-
-    @Override
-    public void edit(NewExpr e) throws CannotCompileException {
-//        if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
-//            return;
-//        }
-
-
-        boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
-        if (outerMethodIsStatic) {
-            return;
-            //外部方法是static，则没有this这个概念了
+    public static void main(String[] args){
+        if ("access$000".matches("access\\$[0-9]{1,5}")){
+            System.err.println("it is access method");
         }
-//        else {
-//            try {
-//                replaceParamThisToOriginalClassInstance2(e);
-//            } catch (NotFoundException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//        }
-
-        String newExprClassName = e.getClassName();
-
-        int paramsCount = 0;
-        if (true) {
-
-            try {
-
-                paramsCount = new RobustNewExprParamsCount().replace(e);
-                System.err.println("RobustNewExprParamsCount: "+ paramsCount);
-            } catch (NotFoundException e1) {
-                e1.printStackTrace();
-            }
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("{");
-//            stringBuilder.append(NewExprParamsReplaceThisMethod(paramsCount));
-//            stringBuilder.append("$_= new " + newExprClassName + "($args);");
-            String params = "($$)";
-            try {
-                params = RobustNewExprParamsCount.getParamsString(e,patchClass.getName());
-            } catch (NotFoundException e1) {
-                e1.printStackTrace();
-            }
-
-//            stringBuilder.append("$_= ($r) new " + newExprClassName + "(this.originClass);");
-            if (CheckCodeChanges.isAnonymousInnerClass(newExprClassName)){
-                //create public Field outerPatchClassName
-                CtClass  anonymousInnerCtClass  = Config.classPool.getOrNull(newExprClassName);
-                CtField ctField = new CtField(patchClass, "outerPatchClassName", anonymousInnerCtClass);
-                ctField.setModifiers(AccessFlag.PUBLIC);
-                anonymousInnerCtClass.addField(ctField);
-                //set field value
-                stringBuilder.append(newExprClassName + " anonymousInnerClass = new " + newExprClassName + params +";");
-                stringBuilder.append("anonymousInnerClass.outerPatchClassName = this ;");
-                stringBuilder.append("$_ = anonymousInnerClass; ");
-            } else {
-                stringBuilder.append("$_ = new " + newExprClassName + params +";");
-            }
-            stringBuilder.append("};");
-
-            System.err.println("isAnonymousInnerClass :" + stringBuilder.toString());
-            e.replace(stringBuilder.toString());
-            return;
-        }
-
-
-
-//        try {
-//            CtClass newExpClass = Config.classPool.get(newExprClassName);
-//            replaceParamThisToOriginalClassInstance2(e);
-//        } catch (NotFoundException e1) {
-//            e1.printStackTrace();
-//        }
-
-
-//        if (isAnonymousInnerClass(newExprClassName)) {
-//
-//            //// TODO: 17/8/14 优化
-//            try {
-//                if (!ReflectUtils.isStatic(Config.classPool.get(e.getClassName()).getModifiers()) && JavaUtils.isInnerClassInModifiedClass(e.getClassName(), anonymousInnerClass)) {
-//                    e.replace(ReflectUtils.getNewInnerClassString(e.getSignature(), outerClass.getName(), ReflectUtils.isStatic(Config.classPool.get(e.getClassName()).getModifiers()), e.getClassName()));
-//                    return;
-//                }
-//            } catch (NotFoundException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//            e.replace(ReflectUtils.getCreateClassString(e, e.getClassName(), outerClass.getName(), ReflectUtils.isStatic(ctMethod.getModifiers())));
-//            return;
-//        }
-
-
-        //其他情况不用处理(// TODO: 17/8/3 需要将所有新增的class都设置成public的
-        //需要处理 package访问属性的method,直接在插桩的时候改成public好了(同样的，把那个字段的也改了，这里就可以少很多代码了）
     }
-
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
         System.err.println("MethodCall :" + m.getMethodName());
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
-        //如果是新增的class就不用替换了
-        // todo 如果是新增的方法,需要内联进去
-        try {
-            if (Config.newlyAddedClassNameList.contains(m.getMethod().getDeclaringClass().getName())) {
-                //需要换一下参数this为originalClass
-                if (outerMethodIsStatic) {
-                    return;
-                } else {
-                    replaceParamThisToOriginalClassInstance(m);
-                    return;
-                }
-            }
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        }
-
-        //todo 如何区分super方法 MainActivity#super.oncreate()
-        if (m.isSuper()) {
-            //放在assist类处理了
-            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
-            m.replace(ReflectUtils.invokeSuperString(m));
+        if (outerMethodIsStatic){
             return;
         }
-
-        int accessFlag = 0;
-        try {
-            accessFlag = m.getMethod().getModifiers();
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        }
-        //这里的package可以在插桩的时候将所有的package （method + 构造函数 + field）都改成public
-        boolean isNeedReflected = AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag);
-
-        if (isNeedReflected) {
-            //反射 // TODO: 17/8/13
-            m.replace(ReflectUtils.getMethodCallString(m, patchClass, outerMethodIsStatic));
-            return;
-        }
-
-        boolean isStatic = isStatic(accessFlag);
-
-        {//MainActivity#findViewById
-            try {
-                CtClass methodTargetClass = m.getMethod().getDeclaringClass();
-//              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
-                if (sourceClass.getName().equals(methodTargetClass.getName())) {
-                    replaceThisToOriginClassMethodDirectly(m);
-                    return;
-                } else if (sourceClass.subclassOf(methodTargetClass)) {
-                    //// TODO: 17/8/7 判断是否父类方法 或者本类方法
-                    System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
-                    //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
-                    replaceThisToOriginClassMethodDirectly(m);
-                    return;
-                } else {
-                    if (isStatic) {
-                        replaceParamThisToOriginalClassInstance(m);
-                    } else {
-                        replaceParamThisToOriginalClassInstance(m);
-                    }
-                }
-            } catch (NotFoundException e) {
-                e.printStackTrace();
-                System.err.println("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
-            }
-//                                    System.err.println(m.getClassName() + "," + m.getMethodName() + "");
+        //static synthetic access$000
+        if (isAccessMethod(m)) {
+            System.err.println(m.getMethodName() + " is access method");
+//            StringBuilder stringBuilder = new StringBuilder();
+//            stringBuilder.append("{");
+            //// TODO: 17/8/23  考虑2种情况，调用外部类的静态private方法与非静态private方法
+            /*
+            String zz = MainActivity.access$300(this.this$0); //非静态private方法  MainActivityPatch.access$300(this.outerPatchClassName);
+            MainActivity.access$400(this.this$0, zz); //非静态private方法
+            MainActivity.access$500(); //静态private方法
+            */
+            //replace access method
+            //replace params
+            String statement = "$_=($r) "+ outerPatchClassName+"."+ m.getMethodName() + getParamsStr(m) + " ; ";
+//            stringBuilder.append("}");
+            m.replace(statement);
         }
 
-
-        // 大部分情况下是需要替换this为originalClass的
-//        {
-//            try {
-//                boolean isContainThis = false;
-//                m.getMethod().getReturnType();//// TODO: 17/8/7 处理builder 除了匿名内部类，都把this换成originalClass
-//                CtClass[] paramTypes = m.getMethod().getParameterTypes();
-//                StringBuilder stringBuilder = new StringBuilder();
-//
-//                if (null != paramTypes) {
-//                    int index = 0;
-//                    for (CtClass ctClass : paramTypes) {
-//                        index++;
-//                        //MainActivityPatch contains MainActivity and MainActivityPatch
-//                        if (ctClass.getName().startsWith(anonymousInnerClass.getName())) {
-//                            //this ????// TODO: 17/8/7
-//                            isContainThis = true;
-//                            stringBuilder.append("$" + index + "= $" + index + "." + ORIGINCLASS + ";");
-//                        }
-//                    }
-//
-//                }
-//
-//                if (isContainThis) {
-//                    stringBuilder.append("$_ = $proceed($$);");
-//                    stringBuilder.toString();
-//                }
-//
-//            } catch (NotFoundException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
-
-        //可能会出现一个class，被修改多次，这时候如何预警？？？
-        //有一种问题，就是
-        // class A {
-        //   class InnerB{
-        //    //如果访问了A的私有方法，则A可能会出现Method的新增(access$200),对这部分的改动需要过滤掉，使用反射处理
-        //   }
-        // }
-//                                if (m.getMethodName().contains("access$")) {
-//                                    //method contain
-//
-//                                    m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), outerClass.getName(), ReflectUtils.isStatic(method.getModifiers()), /*getClassValue(*/m.getClassName()));
-//                                    return;
-//                                }
-
-        //处理内联？  proguard之后做，保存之前打包的jar，与现在对比;
-        //就不用处理内联了?
-        //做合成？
-        //old.jar(same diff1)
-        //new.jar(same diff2)
-        //changed.jar(same diff1/diff2)
-        //combined.jar(same
-//                                try {
-//                                    if (!repalceInlineMethod(m, method, false)) {
-//                                        Map memberMappingInfo = new HashMap();
-//                                        m.replace(ReflectUtils.getMethodCallString(m, memberMappingInfo, outerClass, ReflectUtils.isStatic(method.getModifiers()), false));
-//                                    }
-//                                } catch (Throwable e) {
-//                                    e.printStackTrace();
-//                                }
     }
+
+
+    private String getParamsStr(MethodCall methodCall){
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("(");
+        CtClass[] params = null;
+        try {
+            params = methodCall.getMethod().getParameterTypes();
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+        if (null !=params && params.length > 0){
+            List<String> paramList = new ArrayList<String>();
+            int index = 0;
+            for (CtClass param : params) {
+                index++;
+                if (param.getName().equals(outerSourceClassName)) {
+                    paramList.add("this.outerPatchClassName");
+                } else {
+                    paramList.add("$" + index);
+                }
+            }
+            stringBuilder.append(String.join(",",paramList));
+        }
+        stringBuilder.append(")");
+        return stringBuilder.toString();
+    }
+
+
 
     public static String setFieldString(CtField field, CtClass patchClass, CtClass sourceClass) {
 
@@ -377,14 +203,6 @@ public class RobustMethodExprEditor extends ExprEditor {
                 //保持原样
                 stringBuilder.append("$_ = $proceed($$);");
             }
-
-//            if (Constants.isLogging) {
-//                stringBuilder.append("  android.util.Log.d(\"robust\",\"set static  value is \" +\"" + (field.getName()) + " ${getCoutNumber()}\");");
-//            }
-//
-//            if (Constants.isLogging) {
-//                stringBuilder.append("  android.util.Log.d(\"robust\",\"set value is \" + \"" + (field.getName()) + "    ${getCoutNumber()}\");");
-//            }
         }
         stringBuilder.append("}");
         return stringBuilder.toString();
@@ -449,8 +267,8 @@ public class RobustMethodExprEditor extends ExprEditor {
                 int indexArg = 0;
                 for (CtClass ctClass : types) {
                     indexArg++;
-                    System.err.println("getParamsThisReplacedString2 : " + ctClass.getName() + ":" + sourceClass.getName());
-                    if (sourceClass.subclassOf(ctClass)) {
+                    System.err.println("getParamsThisReplacedString2 : " + ctClass.getName() + ":" + anonymousInnerClass.getName());
+                    if (anonymousInnerClass.subclassOf(ctClass)) {
                         stringBuilder.append("$" + indexArg + "=  this." + ORIGINCLASS + ";");
                     }
                 }
@@ -481,7 +299,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 int indexArg = 0;
                 for (CtClass ctClass : types) {
                     indexArg++;
-                    if (sourceClass.subclassOf(ctClass)) {
+                    if (anonymousInnerClass.subclassOf(ctClass)) {
                         stringBuilder.append("$" + indexArg + "=  this." + ORIGINCLASS + ";");
                     }
                 }

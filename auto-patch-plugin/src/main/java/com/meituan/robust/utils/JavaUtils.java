@@ -50,7 +50,7 @@ public class JavaUtils {
 //        parseRobustMethodsMap2File(path_waimai, new File(path_waimai + ".bak"));
 
         String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap.robust";
-        path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap (5).robust";
+        path0 = "/Users/hedingxu/robust-github/Robust/app/build/outputs/robust/methodsMap.robust";
 //        String path1 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap-11.robust";
 //        String path2 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap-12.robust";
 //        HashMap<String, String> hashMap1 = getMapFromZippedFile(path1);
@@ -371,8 +371,8 @@ public class JavaUtils {
             patchClass.addField(originField);
             originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
 
-//            CtField originClassField = new CtField(patchClass.getClassPool().get("java.long.Class"), ORIGINCLASS + "Type", patchClass);
-//            patchClass.addFid(originClassField);
+//            CtField originClassField = new CtField(outerClass.getClassPool().get("java.long.Class"), ORIGINCLASS + "Type", outerClass);
+//            outerClass.addFid(originClassField);
 
             String patchClassName = patchClass.getSimpleName();
             System.err.println("patchClassName : "+ patchClassName);
