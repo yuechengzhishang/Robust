@@ -63,17 +63,9 @@ public class MainActivity extends AppCompatActivity {
         Log.e("change","2.5.5.");
         Button patch = (Button) findViewById(R.id.patch);
         Log.e("change","3333");
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Log.e("robust","getCurrentProcessNameByReflect new Thread :"+getCurrentProcessNameByReflect());
-            }
-        }).start();
         patch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e("robust","getCurrentProcessNameByReflect main Thread :"+getCurrentProcessNameByReflect());
-
                 Toast.makeText(getApplicationContext(), "patch start...", Toast.LENGTH_SHORT).show();
                 if (isGrantSDCardReadPermission()) {
                     runRobust();
