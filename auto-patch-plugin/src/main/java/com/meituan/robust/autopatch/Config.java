@@ -21,6 +21,9 @@ import static com.meituan.robust.Constants.DEFAULT_MAPPING_FILE;
  */
 
 public final class Config {
+    public static final String ROBUST_TRANSFORM_MAIN_JAR = "robust_transform_main.jar";
+    public static final String ROBUST_PROGUARD_MAIN_JAR = "robust_proguard_main.jar";
+
     public static boolean catchReflectException = false;
     public static boolean supportProGuard = true;
     public static boolean isLogging = true;
@@ -32,6 +35,7 @@ public final class Config {
     public static Set newlyAddedMethodSet = new HashSet<String>();
     public static List<String> modifiedClassNameList = new ArrayList<String>();
     public static List<String> hotfixPackageList = new ArrayList<>();
+    public static List<String> exceptPackageList = new ArrayList<>();
     public static HashMap<String, String> methodMap = new HashMap<String, String>();
     public static String robustGenerateDirectory;
     public static Map<String, List<CtMethod>> invokeSuperMethodMap = new HashMap<>();

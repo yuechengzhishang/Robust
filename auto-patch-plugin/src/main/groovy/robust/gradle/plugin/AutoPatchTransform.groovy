@@ -5,7 +5,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
-import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
 import javassist.*
 import javassist.bytecode.AccessFlag
@@ -16,11 +15,9 @@ import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 
 import java.util.jar.JarFile
-import java.util.jar.JarOutputStream
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-
 /**
  * Created by mivanzhang on 16/7/21.
  *
@@ -129,7 +126,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         for (String libName : Constants.LIB_NAME_ARRAY) {
             InputStream inputStream = JavaUtils.class.getResourceAsStream("/libs/" + libName);
             if (inputStream == null) {
-                System.out.println("Warning!!!  Did not find " + libName + " ，you must add it to your project's libs ");
+                System.out.println("Warning!!!  Did not find " + libName + " ，you must addClasses it to your project's libs ");
                 continue;
             }
             File inputFile = new File(ROBUST_DIR + libName);
@@ -147,48 +144,44 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     def autoPatch(List<CtClass> box) {
         File buildDir = project.getBuildDir();
         String patchPath = buildDir.getAbsolutePath() + File.separator + Constants.ROBUST_GENERATE_DIRECTORY + File.separator;
-        clearPatchPath(patchPath);
-        if (false) {
-            //todo 不需要注解了
-            ReadAnnotation.readAnnotation(box, logger);
-        } else {
+//        clearPatchPath(patchPath);
 
-            //1. get last class.jar
-            File robustOutDirFile = new File(ROBUST_DIR);
-            File storeMainJarFile = new File(robustOutDirFile, "robust_main.jar")
-            File oldProGuardJarFile = new File(robustOutDirFile,"proguard_main.jar")
-            //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
-            //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
-            File robustDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
-            File newJarFile = new File(robustDirFile, "new_robust_main.jar")
-            FileUtil.createFile(newJarFile.absolutePath)
-            ZipOutputStream outStream = new JarOutputStream(new FileOutputStream(newJarFile));
-            for (CtClass ctClass : box) {
-                zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
-                ctClass.defrost()
-            }
-            outStream.close();
+        //1. get last class.jar
+        File oldMainJarFile = new File(ROBUST_DIR, Config.ROBUST_TRANSFORM_MAIN_JAR)
+        File oldProGuardJarFile = new File(ROBUST_DIR,Config.ROBUST_PROGUARD_MAIN_JAR)
 
-            //3. is changed
-            JarFile originalJarFile = new JarFile(storeMainJarFile);
-            JarFile currentJarFile = new JarFile(newJarFile);
-
-            //todo 删除方法（可以忽略，但是如果是有super的调用，则需要处理一下新方法调用super方法即可)
-            CheckCodeChanges.processChangedJar(originalJarFile, currentJarFile, Config.hotfixPackageList)
-
-
-            println("modifiedClassNameList is ：")
-            JavaUtils.printList(Config.modifiedClassNameList)
-
-            for (String modifiedClassName : Config.modifiedClassNameList) {
-                CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
-                modifiedCtClass.defrost();
-                Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
-            }
-
-            println("newlyAddedClassNameList is ：")
-            JavaUtils.printList(Config.newlyAddedClassNameList)
+        //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
+        //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
+        File newMainJarFile = new File(patchPath, Config.ROBUST_TRANSFORM_MAIN_JAR)
+        if (!newMainJarFile.exists()){
+            throw new RuntimeException("please apply plugin: 'robust'")
         }
+//        FileUtil.createFile(newMainJarFile.absolutePath)
+//        ZipOutputStream outStream = new JarOutputStream(new FileOutputStream(newMainJarFile));
+//        for (CtClass ctClass : box) {
+//            zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
+//            ctClass.defrost()
+//        }
+//        outStream.close();
+
+        //3. is changed
+        JarFile originalJarFile = new JarFile(oldMainJarFile);
+        JarFile currentJarFile = new JarFile(newMainJarFile);
+
+        CheckCodeChanges.processChangedJar(originalJarFile, currentJarFile, Config.hotfixPackageList, Config.exceptPackageList)
+
+        println("modifiedClassNameList is ：")
+        JavaUtils.printList(Config.modifiedClassNameList)
+
+        for (String modifiedClassName : Config.modifiedClassNameList) {
+            CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
+            modifiedCtClass.defrost();
+            Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
+        }
+
+        println("newlyAddedClassNameList is ：")
+        JavaUtils.printList(Config.newlyAddedClassNameList)
+
 
 
         if (Config.supportProGuard) {
@@ -252,10 +245,10 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         if (!Config.isManual) {
             if (Config.modifiedClassNameList.size() < 1) {
                 if (Config.isResourceFix) {
-                    logger.warn(" patch method is empty ,please check your Modify annotation or use RobustModify.modify() to mark modified methods")
+                    logger.warn(" patch method is empty ,please check your commit ")
                     return;
                 }
-                throw new RuntimeException(" patch method is empty ,please check your Modify annotation or use RobustModify.modify() to mark modified methods")
+                throw new RuntimeException(" patch method is empty ,please check your commit ")
             }
 //            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
             JavaUtils.printList(Config.modifiedClassNameList)
@@ -293,33 +286,33 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
 //        }
 
         Config.classPool.appendClassPath(Config.robustGenerateDirectory)
-        for(String originalClassName :Config.modifiedClassNameList){
+        for (String originalClassName : Config.modifiedClassNameList) {
             CtClass sourceClass = Config.classPool.get(originalClassName)
             CtClass[] ctClasses = sourceClass.getNestedClasses();
             ClassMap classMap = new ClassMap()
             for (CtClass nestedCtClass : ctClasses) {
-                boolean  isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
+                boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
                 System.err.println("nestedCtClass :" + nestedCtClass.getName())
-                if (isAnonymousInnerClass){
+                if (isAnonymousInnerClass) {
                     nestedCtClass.defrost()
                     nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))
-                    for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()){
+                    for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()) {
                         ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
                     }
                     String oldName = nestedCtClass.getName()
-                    String newName = nestedCtClass.getName().replace(originalClassName,originalClassName + "Patch")
+                    String newName = nestedCtClass.getName().replace(originalClassName, originalClassName + "Patch")
                     //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
-                    nestedCtClass.replaceClassName(oldName,newName)
+                    nestedCtClass.replaceClassName(oldName, newName)
                     nestedCtClass.writeFile(Config.robustGenerateDirectory)
 
                     Config.classPool.appendClassPath(Config.robustGenerateDirectory)
                     CtClass anonymousInnerClass = Config.classPool.get(nestedCtClass.getName())
                     anonymousInnerClass.defrost()
                     //handle access$100 todo 还得考虑普通内部类 比较头疼的内部类里面有内部类 8-23 需要测试
-                    AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass,originalClassName,originalClassName + "Patch")
+                    AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass, originalClassName, originalClassName + "Patch")
 //                    nestedCtClass.
                     anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
-                    classMap.put(oldName,newName)
+                    classMap.put(oldName, newName)
                     System.err.println("isAnonymousInnerClass :" + anonymousInnerClass.getName())
 
                 }
@@ -335,15 +328,15 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
-    def setAnonymousInnerClassPublic(String originalClassName){
+    def setAnonymousInnerClassPublic(String originalClassName) {
         CtClass sourceClass = Config.classPool.get(originalClassName)
         CtClass[] ctClasses = sourceClass.getNestedClasses();
         for (CtClass nestedCtClass : ctClasses) {
-            boolean  isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
-            if (isAnonymousInnerClass){
+            boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
+            if (isAnonymousInnerClass) {
                 nestedCtClass.defrost()
                 nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))
-                for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()){
+                for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()) {
                     ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
                 }
             }

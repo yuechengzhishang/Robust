@@ -31,11 +31,11 @@ public class PatchesInfoFactory {
             methodBody.append("public java.util.List getPatchedClassesInfo() {");
             methodBody.append("  java.util.List patchedClassesInfos = new java.util.ArrayList();");
             for (int i = 0; i < Config.modifiedClassNameList.size(); i++) {
-                if (Constants.OBSCURE) {
-                    methodBody.append("com.meituan.robust.PatchedClassInfo patchedClass" + i + " = new com.meituan.robust.PatchedClassInfo(\"" + ReadMapping.getInstance().getClassMappingOrDefault(Config.modifiedClassNameList.get(i)).getValueName() + "\",\"" + NameManger.getInstance().getPatchControlName(Config.modifiedClassNameList.get(i).substring(Config.modifiedClassNameList.get(i).lastIndexOf('.') + 1)) + "\");");
-                } else {
+//                if (Constants.OBSCURE) {
+//                    methodBody.append("com.meituan.robust.PatchedClassInfo patchedClass" + i + " = new com.meituan.robust.PatchedClassInfo(\"" + ReadMapping.getInstance().getClassMappingOrDefault(Config.modifiedClassNameList.get(i)).getValueName() + "\",\"" + NameManger.getInstance().getPatchControlName(Config.modifiedClassNameList.get(i).substring(Config.modifiedClassNameList.get(i).lastIndexOf('.') + 1)) + "\");");
+//                } else {
                     methodBody.append("com.meituan.robust.PatchedClassInfo patchedClass" + i + " = new com.meituan.robust.PatchedClassInfo(\"" + Config.modifiedClassNameList.get(i) + "\",\"" + NameManger.getInstance().getPatchControlName(Config.modifiedClassNameList.get(i).substring(Config.modifiedClassNameList.get(i).lastIndexOf('.') + 1)) + "\");");
-                }
+//                }
                 methodBody.append("patchedClassesInfos.add(patchedClass" + i + ");");
             }
             methodBody.append(Constants.ROBUST_UTILS_FULL_NAME + ".isThrowable=!" + Config.catchReflectException + ";");

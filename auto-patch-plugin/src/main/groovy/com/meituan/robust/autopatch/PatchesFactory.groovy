@@ -31,7 +31,7 @@ class PatchesFactory {
 //        if (patchMethodSignureSet.size() != 0) {
             for (CtMethod method : modifiedClass.getDeclaredMethods()) {
 //                if ((!patchMethodSignureSet.contains(method.getLongName()) || (!isInline && Config.methodMap.get(modifiedClass.getName() + "." + JavaUtils.getJavaMethodSignure(method)) == null))) {
-//                    methodNoNeedPatchList.add(method);
+//                    methodNoNeedPatchList.addClasses(method);
 //                } else {
 //                    Config.methodNeedPatchSet.remove(method.getLongName());
 //                }

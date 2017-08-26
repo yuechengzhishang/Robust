@@ -172,7 +172,7 @@ class RobustTransform extends Transform implements Plugin<Project> {
         }
         outStream.close();
 //        FileUtil.copyFile(jarFile,storeMainJarFile)
-        //拷贝插桩完成的main.jar end
+        //拷贝未插桩的main.jar完成 end
 
         def cost = (System.currentTimeMillis() - startTime) / 1000
 //        logger.quiet "check all class cost $cost second, class count: ${box.size()}"
@@ -183,6 +183,14 @@ class RobustTransform extends Transform implements Plugin<Project> {
         }
         insertcodeStrategy.insertCode(box, jarFile);
         writeMap2File(insertcodeStrategy.methodMap, Constants.METHOD_MAP_OUT_PATH)
+
+
+        //todo 在混淆task后，dex task之前 :aimeituan:transformClassesWithDexForPreloadedRelease
+        //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
+        String robustOutDir = project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY
+        File robustMainJar = new File(robustOutDir,"robust_transform_main.jar")
+        FileUtil.copyFile(jarFile,robustMainJar)
+
 
         cost = (System.currentTimeMillis() - startTime) / 1000
         logger.quiet "robust cost $cost second"

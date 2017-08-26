@@ -1,8 +1,9 @@
 package com.meituan.robust.autopatch;
 
-import com.android.build.gradle.internal2.incremental.InstantRunVerifier;
-import com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus;
 import com.meituan.robust.Constants;
+import com.meituan.robust.change.ChangeLog;
+import com.meituan.robust.change.RobustChangeInfo;
+import com.meituan.robust.change.RobustCodeChangeChecker;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -55,12 +56,12 @@ public class CheckCodeChanges {
 
 //                "/Users/hedingxu/robust-github/Robust/app/build/retrolambda/release/com/meituan/sample/MainActivity.class";
 
-//        List<com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus> status =
-//                InstantRunVerifier.runByClassNode(InstantRunVerifier.getClassNode(new File(oldClass))
-//                        , InstantRunVerifier.getClassNode(new File(newClass)));
+//        List<RobustChangeStatus> status =
+//                RobustCodeChangeChecker.runByClassNode(RobustCodeChangeChecker.getClassNode(new File(oldClass))
+//                        , RobustCodeChangeChecker.getClassNode(new File(newClass)));
 
 //        System.err.println(status.toString());
-        InstantRunVerifierStatus resultSoFar = processChangedJar(backupJarFile, jarFile, new ArrayList<String>());
+        processChangedJar(backupJarFile, jarFile, new ArrayList<String>(), new ArrayList<String>());
     }
 
     public static void main(String[] args) throws IOException, NotFoundException, CannotCompileException {
@@ -284,7 +285,7 @@ public class CheckCodeChanges {
 //                                        if (anonymousInnerClasses == null) {
 //                                            anonymousInnerClasses = new LinkedHashSet<String>();
 //                                        }
-//                                        anonymousInnerClasses.add(methodDeclaringClassName);
+//                                        anonymousInnerClasses.addClasses(methodDeclaringClassName);
 //                                        //记录需要变更的匿名内部类，需要处理匿名内部类里面的匿名内部类?
 //                                        changedClassAndItsAnonymousInnerClass.put(outerClass.getName(), anonymousInnerClasses);
 //                                        return;
@@ -330,7 +331,7 @@ public class CheckCodeChanges {
         patchClass.writeFile(patchClassDir);
     }
 
-    public static InstantRunVerifierStatus processChangedJar(JarFile backupJar, JarFile newJar, List<String> hotfixPackageList)
+    public static void processChangedJar(JarFile backupJar, JarFile newJar, List<String> hotfixPackageList, List<String> exceptPackageList)
             throws IOException {
 
         Map<String, JarEntry> backupEntries = new HashMap<String, JarEntry>();
@@ -346,7 +347,11 @@ public class CheckCodeChanges {
             JarEntry jarEntry = jarEntries.nextElement();
             String className = jarEntry.getName();
 
+            if (!className.endsWith(".class")) {
+                continue;
+            }
 
+            // is R.class or R$xml.class
             boolean isRSubClass = false;
             int index = className.lastIndexOf('/');
             if (index != -1 &&
@@ -359,58 +364,72 @@ public class CheckCodeChanges {
                 continue;
             }
 
-            boolean isHotfixPackageClass = false;
-            if (hotfixPackageList != null) {
-                for (String packageName : hotfixPackageList) {
-                    if (!className.startsWith("com/meituan/robust")) {
-                        if (className.startsWith(packageName) || className.startsWith(packageName.replace(".", File_SEPARATOR))) {
-                            isHotfixPackageClass = true;
-                        }
+            String dotClassName = className.replace(".class", "").replace(File_SEPARATOR, ".");
+
+            // is in except package list
+            if (null != exceptPackageList) {
+//                className.startsWith("com/meituan/robust")
+                boolean isExceptPackage = false;
+                for (String exceptPackage : exceptPackageList) {
+                    if (dotClassName.startsWith(exceptPackage.trim()) || dotClassName.startsWith(exceptPackage.trim().replace(".", File_SEPARATOR))) {
+                        isExceptPackage = true;
                     }
+                }
+                if (isExceptPackage) {
+                    continue;
                 }
             }
 
-            //&& !className.endsWith("R.class")
-            if (isHotfixPackageClass && className.endsWith(".class")) {
-//                System.err.println(jarEntry.getName());
-//                if (jarEntry.getName().contains("com/meituan/sample/")){
-//                    System.err.println("");
-//                    System.err.println("=======");
-//                    System.err.println("wanted class : " + jarEntry.getName());
-//                }
-                System.err.println("target classes : " + className);
-                JarEntry backupEntry = backupEntries.get(jarEntry.getName());
-                if (backupEntry != null) {
-                    byte[] oldClassBytes =
-                            new InstantRunVerifier.ClassBytesJarEntryProvider(backupJar, backupEntry).load();
+            // is in except package list
+            if (null != hotfixPackageList) {
+                for (String packageName : hotfixPackageList) {
+                    if (dotClassName.startsWith(packageName.trim()) || dotClassName.startsWith(packageName.trim().replace(".", File_SEPARATOR))) {
+                        //yes it is , class in hotfix package list
 
-                    byte[] newClassBytes =
-                            new InstantRunVerifier.ClassBytesJarEntryProvider(newJar, jarEntry).load();
-                    ClassNode oldClassNode = InstantRunVerifier.getClassNode(oldClassBytes);
-                    ClassNode newClassNode = InstantRunVerifier.getClassNode(newClassBytes);
+                        //start
 
-                    List<com.android.build.gradle.internal2.incremental.InstantRunVerifierStatus> status =
-                            InstantRunVerifier.runByClassNode(oldClassNode
-                                    , newClassNode);
+                        JarEntry backupEntry = backupEntries.get(jarEntry.getName());
+                        if (backupEntry != null) {
+                            byte[] oldClassBytes =
+                                    new RobustCodeChangeChecker.ClassBytesJarEntryProvider(backupJar, backupEntry).load();
 
-                    if (status.contains(InstantRunVerifierStatus.METHOD_CHANGED)
-                            || status.contains(InstantRunVerifierStatus.METHOD_ADDED)
-                            || status.contains(InstantRunVerifierStatus.FIELD_ADDED)){
-                        System.err.println(className + " has changed");
-                        Config.modifiedClassNameList.add(className.replace(".class","").replace(File_SEPARATOR,"."));
+                            byte[] newClassBytes =
+                                    new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
+                            ClassNode oldClassNode = RobustCodeChangeChecker.getClassNode(oldClassBytes);
+                            ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);
+
+                            RobustChangeInfo.ClassChange classChange =
+                                    RobustCodeChangeChecker.diffClass(oldClassNode
+                                            , newClassNode);
+
+                            if (null == classChange) {
+                            } else {
+                                if (null == classChange.fieldChange && null == classChange.methodChange) {
+
+                                } else {
+                                    //field change or method change
+                                    Config.modifiedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
+                                    RobustChangeInfo.changeClasses.add(classChange);
+//                            if (status.contains(RobustChangeStatus.METHOD_CHANGED)
+//                                    || status.contains(RobustChangeStatus.METHOD_ADDED)
+//                                    || status.contains(RobustChangeStatus.FIELD_ADDED)){
+//                                System.err.println(className + " has changed");
+//                                Config.modifiedClassNameList.add(className.replace(".class","").replace(File_SEPARATOR,"."));
+//                            }
+                                }
+                            }
+                        } else {
+                            RobustChangeInfo.addClasses.add(className.replace(File_SEPARATOR, "."));
+                            Config.newlyAddedClassNameList.add(className.replace(File_SEPARATOR, "."));
+                        }
+                        //end
+
                     }
-
-                } else {
-                    Config.newlyAddedClassNameList.add(className.replace(File_SEPARATOR,"."));
                 }
-
             }
         }
 
-
-        return InstantRunVerifierStatus.COMPATIBLE;
-
-
+        ChangeLog.print();
     }
 
     public

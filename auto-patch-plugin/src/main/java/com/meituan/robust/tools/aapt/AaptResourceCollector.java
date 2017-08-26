@@ -121,7 +121,7 @@ public class AaptResourceCollector {
     }
 
     /**
-     * add resource
+     * addClasses resource
      *
      * @param rType
      * @param idType
@@ -180,9 +180,9 @@ public class AaptResourceCollector {
 //}else{
 //existResourceDirectory=resourceDirectory;
 //resourceDirectoryMap.put(resourceDirectory, resourceDirectory);
-//resourceDirectoryList.add(existResourceDirectory);
+//resourceDirectoryList.addClasses(existResourceDirectory);
 //}
-//existResourceDirectory.resourceEntrySet.add(new ResourceEntry(name,null));
+//existResourceDirectory.resourceEntrySet.addClasses(new ResourceEntry(name,null));
 //}
 //}
 
@@ -206,7 +206,7 @@ public class AaptResourceCollector {
     }
 
     /**
-     * add r type resource name
+     * addClasses r type resource name
      *
      * @param rType
      * @param resourceName

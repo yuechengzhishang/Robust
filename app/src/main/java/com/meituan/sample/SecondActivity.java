@@ -47,6 +47,7 @@ public class SecondActivity extends AppCompatActivity implements View.OnClickLis
     @Modify
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        System.out.println("change secondary activity");
         System.out.println(inlineToString());
         setContentView(R.layout.activity_main2);
 
@@ -149,7 +150,7 @@ public class SecondActivity extends AppCompatActivity implements View.OnClickLis
 
     @Override
     public View onCreateView(String name, Context context, AttributeSet attrs) {
-
+        Toast.makeText(context, "Change second activity onCreateView ", Toast.LENGTH_SHORT).show();
         return super.onCreateView(name, context, attrs);
     }
 

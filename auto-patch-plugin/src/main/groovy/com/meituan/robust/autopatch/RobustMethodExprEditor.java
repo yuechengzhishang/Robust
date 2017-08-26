@@ -8,6 +8,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.expr.Expr;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
@@ -24,14 +25,40 @@ public class RobustMethodExprEditor extends ExprEditor {
     public CtClass sourceClass;
     public CtClass patchClass;
     public CtMethod ctMethod;
+    private boolean hasRobustProxyCode = false;
+    private boolean hasHandledProxyCode = false;
+
+    private boolean isNeedReplaceEmpty(){
+        if (hasRobustProxyCode){
+            return hasHandledProxyCode == false;
+        }
+        return false;
+    }
+
+    private boolean repalceWithEmpty(Expr expr){
+        if (isNeedReplaceEmpty()){
+            try {
+//                expr.replace(";");
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
 
     public RobustMethodExprEditor(CtClass sourceClass, CtClass patchClass, CtMethod ctMethod) {
         this.sourceClass = sourceClass;
         this.patchClass = patchClass;
         this.ctMethod = ctMethod;
+        this.hasRobustProxyCode = true;
     }
 
     public void edit(FieldAccess f) throws CannotCompileException {
+
+        if (repalceWithEmpty(f)){
+            return;
+        }
 
         if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
             return;
@@ -51,11 +78,16 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
-
+        if (repalceWithEmpty(a)){
+            return;
+        }
     }
 
     @Override
     public void edit(NewExpr e) throws CannotCompileException {
+        if (repalceWithEmpty(e)){
+            return;
+        }
 //        if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
 //            return;
 //        }
@@ -78,7 +110,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         String newExprClassName = e.getClassName();
 
         int paramsCount = 0;
-        if (true) {
+        {
 
             try {
 
@@ -109,12 +141,12 @@ public class RobustMethodExprEditor extends ExprEditor {
                 stringBuilder.append(newExprClassName + " anonymousInnerClass = new " + newExprClassName + params +";");
                 stringBuilder.append("anonymousInnerClass.outerPatchClassName = this ;");
                 stringBuilder.append("$_ = anonymousInnerClass; ");
+                System.err.println("isAnonymousInnerClass :" + stringBuilder.toString());
             } else {
                 stringBuilder.append("$_ = new " + newExprClassName + params +";");
             }
             stringBuilder.append("};");
 
-            System.err.println("isAnonymousInnerClass :" + stringBuilder.toString());
             e.replace(stringBuilder.toString());
             return;
         }
@@ -150,9 +182,41 @@ public class RobustMethodExprEditor extends ExprEditor {
         //需要处理 package访问属性的method,直接在插桩的时候改成public好了(同样的，把那个字段的也改了，这里就可以少很多代码了）
     }
 
+
+    //        过滤robust proxy
+    //com.meituan.robust.PatchProxy
+        /*
+        if (PatchProxy.isSupport(new Object[0], this, changeQuickRedirect, false, "4de6c62b640b9546c89a1540fbb998f1", new Class[0], Void.TYPE))
+        {
+            PatchProxy.accessDispatch(new Object[0], this, changeQuickRedirect, false, "4de6c62b640b9546c89a1540fbb998f1", new Class[0], Void.TYPE);return;
+        }
+        */
+    private boolean isCallProxyAccessDispatchMethod(MethodCall methodCall){
+        if (methodCall.getMethodName().equals("accessDispatch")){
+            try {
+                boolean isCallAccessDispatch = methodCall.getMethod().getLongName().startsWith("com.meituan.robust.PatchProxy.accessDispatch(");
+                if (isCallAccessDispatch){
+                    return true;
+                }
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
+        if (isCallProxyAccessDispatchMethod(m)){
+//            m.replace("$_ = ($r) new Object();");
+            hasHandledProxyCode = true;
+            return;
+        }
+        if (repalceWithEmpty(m)){
+            return;
+        }
+
         System.err.println("MethodCall :" + m.getMethodName());
+
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
         //如果是新增的class就不用替换了
         // todo 如果是新增的方法,需要内联进去
@@ -185,7 +249,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             e.printStackTrace();
         }
         //这里的package可以在插桩的时候将所有的package （method + 构造函数 + field）都改成public
-        boolean isNeedReflected = AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag);
+        boolean isNeedReflected = AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) /*|| AccessFlag.isPackage(accessFlag)*/;
 
         if (isNeedReflected) {
             //反射 // TODO: 17/8/13
@@ -195,15 +259,18 @@ public class RobustMethodExprEditor extends ExprEditor {
 
         boolean isStatic = isStatic(accessFlag);
 
-        {//MainActivity#findViewById
+        if (!isStatic) {
+            //非静态方法才有this，需要替换
+            //MainActivity#findViewById
             try {
                 CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
                 if (sourceClass.getName().equals(methodTargetClass.getName())) {
                     replaceThisToOriginClassMethodDirectly(m);
                     return;
-                } else if (sourceClass.subclassOf(methodTargetClass)) {
+                } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
                     //// TODO: 17/8/7 判断是否父类方法 或者本类方法
+                    //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
                     System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
                     //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
                     replaceThisToOriginClassMethodDirectly(m);

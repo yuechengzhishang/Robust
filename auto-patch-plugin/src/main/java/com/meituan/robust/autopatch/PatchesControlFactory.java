@@ -3,6 +3,9 @@ package com.meituan.robust.autopatch;
 import com.meituan.robust.Constants;
 import com.meituan.robust.utils.JavaUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
@@ -28,15 +31,15 @@ public class PatchesControlFactory {
         CtClass patchClass = classPool.get(NameManger.getInstance().getPatchName(modifiedClass.getName()));
         patchClass.defrost();
         CtClass controlClass = classPool.getAndRename(Constants.PATCH_TEMPLATE_FULL_NAME, NameManger.getInstance().getPatchControlName(modifiedClass.getSimpleName()));
-        StringBuilder getRealParameterMethodBody = new StringBuilder();
-        getRealParameterMethodBody.append("public Object getRealParameter(Object parameter) {");
-        getRealParameterMethodBody.append("if(parameter instanceof " + modifiedClass.getName() + "){");
-        getRealParameterMethodBody.
-                append("return new " + patchClass.getName() + "(" + "(" + modifiedClass.getName() + ")" + "parameter);");
-        getRealParameterMethodBody.append("}");
-        getRealParameterMethodBody.append("return parameter;}");
-        //// TODO: 17/8/10 注释掉了 ， 后面恢复
-        controlClass.addMethod(CtMethod.make(getRealParameterMethodBody.toString(), controlClass));
+//        StringBuilder getRealParameterMethodBody = new StringBuilder();
+//        getRealParameterMethodBody.append("public Object getRealParameter(Object parameter) {");
+//        getRealParameterMethodBody.append("if(parameter instanceof " + modifiedClass.getName() + "){");
+//        getRealParameterMethodBody.
+//                append("return new " + patchClass.getName() + "(" + "(" + modifiedClass.getName() + ")" + "parameter);");
+//        getRealParameterMethodBody.append("}");
+//        getRealParameterMethodBody.append("return parameter;}");
+//        //// TODO: 17/8/10 注释掉了 ， 后面恢复
+//        controlClass.addMethod(CtMethod.make(getRealParameterMethodBody.toString(), controlClass));
         controlClass.getDeclaredMethod("accessDispatch").insertBefore(getAccessDispatchMethodBody(patchClass, modifiedClass.getName()));
         controlClass.getDeclaredMethod("isSupport").insertBefore(getIsSupportMethodBody(patchClass, modifiedClass.getName()));
         controlClass.defrost();
@@ -141,6 +144,17 @@ public class PatchesControlFactory {
             accessDispatchMethodBody.append(" e.printStackTrace();}");
         }
         return accessDispatchMethodBody.toString();
+    }
+
+    private static List<CtMethod> getModifiedCtMethod (CtClass patchClass){
+        List<CtMethod> modifiedCtMethodList = new ArrayList<CtMethod>();
+        for (CtMethod ctMethod :patchClass.getDeclaredMethods()){
+//            for ()RobustChangeInfo.changeClasses.{
+//
+//            };
+            //// TODO: 17/8/26  
+        }
+        return modifiedCtMethodList;
     }
 
     private static String getIsSupportMethodBody(CtClass patchClass, String modifiedClassName) throws NotFoundException {

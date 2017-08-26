@@ -25,7 +25,7 @@ public class ReadXML {
         }
 
         if (Config.supportProGuard && (Config.mappingFilePath == null || "".equals(Config.mappingFilePath) || !(new File(Config.mappingFilePath)).exists())) {
-            throw new RuntimeException("Not found ${Config.mappingFilePath}, please put it on your project's robust dir or change your robust.xml !");
+            throw new RuntimeException("Not found ${Config.mappingFilePath}, please put it on your project's robust dir or changeClasses your robust.xml !");
         }
 
         for (name in robust.patchPackClass.name) {
@@ -41,6 +41,11 @@ public class ReadXML {
         for (name in robust.packname.name) {
             Config.hotfixPackageList.add(name.text());
         }
+
+        for (name in robust.exceptPackname.name) {
+            Config.exceptPackageList.add(name.text());
+        }
+
         for (name in robust.newlyAddClass.name) {
             Config.newlyAddedClassNameList.add(name.text());
         }

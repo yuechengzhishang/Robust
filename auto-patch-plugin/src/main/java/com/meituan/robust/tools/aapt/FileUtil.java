@@ -508,7 +508,7 @@ final class FileUtil {
     }
 
     /**
-     * add zip entry
+     * addClasses zip entry
      *
      * @param zipOutputStream
      * @param zipEntry
@@ -1229,7 +1229,7 @@ final class FileUtil {
 
     public interface CacheProcessor {
         /**
-         * key process,can change key to save cache
+         * key process,can changeClasses key to save cache
          *
          * @param cacheKey
          * @return String

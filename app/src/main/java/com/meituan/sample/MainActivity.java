@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Toast.makeText(this, "change main activity onCreate ", Toast.LENGTH_SHORT).show();
         Log.e("change","test change222");
         System.err.println("hello change mainActivity onCreate method ");
         setContentView(R.layout.activity_main);

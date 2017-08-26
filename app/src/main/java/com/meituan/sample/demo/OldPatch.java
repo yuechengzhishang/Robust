@@ -14,12 +14,19 @@ public class OldPatch extends Old {
     public OldPatch(){
         super();
     }
+
     public OldPatch(String hello,String xx){
         super(hello);
         Log.e("robust","hello click");
         Log.e("robust","hello click");
         Log.e("robust","hello click");
     }
+
+    public OldPatch(String hello,String xx,String yy){
+        this(hello,xx);
+        Log.e("robust","hello click + " + yy);
+    }
+
     private String test = "old patch test";
     private int testint1 = 1;
     public int testint2 = 2;
