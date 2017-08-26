@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.JavaUtils;
 
 import java.util.ArrayList;
@@ -80,8 +81,7 @@ public class PatchesControlFactory {
             accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"assemble method number  is  \" + methodNo);");
         }
 
-//        outerClass.declaredMethods.each {
-        for (CtMethod method : patchClass.getDeclaredMethods()) {
+        for (CtMethod method : getModifiedCtMethod(patchClass)) {
             CtClass[] parametertypes = method.getParameterTypes();
             String methodSignure = JavaUtils.getJavaMethodSignure(method).replaceAll(patchClass.getName(), modifiedClassName);
             String methodLongName = modifiedClassName + "." + methodSignure;
@@ -149,10 +149,9 @@ public class PatchesControlFactory {
     private static List<CtMethod> getModifiedCtMethod (CtClass patchClass){
         List<CtMethod> modifiedCtMethodList = new ArrayList<CtMethod>();
         for (CtMethod ctMethod :patchClass.getDeclaredMethods()){
-//            for ()RobustChangeInfo.changeClasses.{
-//
-//            };
-            //// TODO: 17/8/26  
+            if (RobustChangeInfo.isChangedMethod(ctMethod)){
+                modifiedCtMethodList.add(ctMethod);
+            }
         }
         return modifiedCtMethodList;
     }
@@ -167,7 +166,7 @@ public class PatchesControlFactory {
         if (Constants.isLogging) {
             isSupportBuilder.append("  android.util.Log.d(\"robust\",\"in isSupport assemble method number  is  \" + methodNo);");
         }
-        for (CtMethod method : patchClass.getDeclaredMethods()) {
+        for (CtMethod method : getModifiedCtMethod(patchClass)) {
             String methodSignure = JavaUtils.getJavaMethodSignure(method).replaceAll(patchClass.getName(), modifiedClassName);
             String methodLongName = modifiedClassName + "." + methodSignure;
             String methodNumber = Config.methodMap.get(methodLongName);

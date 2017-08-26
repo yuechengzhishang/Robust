@@ -156,13 +156,6 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         if (!newMainJarFile.exists()){
             throw new RuntimeException("please apply plugin: 'robust'")
         }
-//        FileUtil.createFile(newMainJarFile.absolutePath)
-//        ZipOutputStream outStream = new JarOutputStream(new FileOutputStream(newMainJarFile));
-//        for (CtClass ctClass : box) {
-//            zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
-//            ctClass.defrost()
-//        }
-//        outStream.close();
 
         //3. is changed
         JarFile originalJarFile = new JarFile(oldMainJarFile);
@@ -313,7 +306,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
 //                    nestedCtClass.
                     anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
                     classMap.put(oldName, newName)
-                    System.err.println("isAnonymousInnerClass :" + anonymousInnerClass.getName())
+                    System.err.println("isAnonymousInnerClass:" + anonymousInnerClass.getName())
 
                 }
             }
@@ -332,7 +325,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         CtClass sourceClass = Config.classPool.get(originalClassName)
         CtClass[] ctClasses = sourceClass.getNestedClasses();
         for (CtClass nestedCtClass : ctClasses) {
-            boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
+            boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass_$1(nestedCtClass.getName())
             if (isAnonymousInnerClass) {
                 nestedCtClass.defrost()
                 nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))

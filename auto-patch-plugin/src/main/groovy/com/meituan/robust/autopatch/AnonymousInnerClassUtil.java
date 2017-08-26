@@ -57,33 +57,36 @@ public class AnonymousInnerClassUtil {
 //              case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
                 String nestedClassName = ctClass.getName();
                 String shortClassName = nestedClassName.replace(sourceClass.getName(), "");
-                String numberStr = shortClassName.replace("$$Lambda", "");
-//                numberStr = numberStr.replace("","");
-                numberStr = numberStr.replace("$", "");
-
-                boolean isAnonymousInnerClass = false;
-                String patternString = "[0-9]*";
-                {
-                    Pattern pattern = Pattern.compile(patternString);
-                    Matcher matcher = pattern.matcher(numberStr);
-                    boolean matches = matcher.matches();
-                    isAnonymousInnerClass = matches;
-                }
-                boolean isAjcClosureAnonymousInnerClass = false;
-                {
-                    String ajcClosureAnonymousInnerClass = "AjcClosure" + patternString;
-                    Pattern ajcClosurePattern = Pattern.compile(ajcClosureAnonymousInnerClass);
-                    Matcher ajcClosureMatcher = ajcClosurePattern.matcher(numberStr);
-                    boolean ajcClosureMatches = ajcClosureMatcher.matches();
-                    isAjcClosureAnonymousInnerClass = ajcClosureMatches;
-                }
-
-                if (isAnonymousInnerClass || isAjcClosureAnonymousInnerClass) {
-                    System.err.println("isAnonymousInnerClass :" + ctClass.getName());
+                if (CheckCodeChanges.isAnonymousInnerClass(shortClassName)){
                     anonymousInnerClasses.add(ctClass.getName());
-                } else {
-                    System.err.println("notAnonymousInnerClass :" + ctClass.getName());
                 }
+//                String numberStr = shortClassName.replace("$$Lambda", "");
+////                numberStr = numberStr.replace("","");
+//                numberStr = numberStr.replace("$", "");
+//
+//                boolean isAnonymousInnerClass = false;
+//                String patternString = "[0-9]*";
+//                {
+//                    Pattern pattern = Pattern.compile(patternString);
+//                    Matcher matcher = pattern.matcher(numberStr);
+//                    boolean matches = matcher.matches();
+//                    isAnonymousInnerClass = matches;
+//                }
+//                boolean isAjcClosureAnonymousInnerClass = false;
+//                {
+//                    String ajcClosureAnonymousInnerClass = "AjcClosure" + patternString;
+//                    Pattern ajcClosurePattern = Pattern.compile(ajcClosureAnonymousInnerClass);
+//                    Matcher ajcClosureMatcher = ajcClosurePattern.matcher(numberStr);
+//                    boolean ajcClosureMatches = ajcClosureMatcher.matches();
+//                    isAjcClosureAnonymousInnerClass = ajcClosureMatches;
+//                }
+//
+//                if (isAnonymousInnerClass || isAjcClosureAnonymousInnerClass) {
+//                    System.err.println("isAnonymousInnerClass_$1 :" + ctClass.getName());
+//
+//                } else {
+//                    System.err.println("notAnonymousInnerClass :" + ctClass.getName());
+//                }
             }
             return anonymousInnerClasses;
     }

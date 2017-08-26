@@ -28,15 +28,15 @@ public class RobustMethodExprEditor extends ExprEditor {
     private boolean hasRobustProxyCode = false;
     private boolean hasHandledProxyCode = false;
 
-    private boolean isNeedReplaceEmpty(){
-        if (hasRobustProxyCode){
+    private boolean isNeedReplaceEmpty() {
+        if (hasRobustProxyCode) {
             return hasHandledProxyCode == false;
         }
         return false;
     }
 
-    private boolean repalceWithEmpty(Expr expr){
-        if (isNeedReplaceEmpty()){
+    private boolean repalceWithEmpty(Expr expr) {
+        if (isNeedReplaceEmpty()) {
             try {
 //                expr.replace(";");
                 return true;
@@ -56,7 +56,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     public void edit(FieldAccess f) throws CannotCompileException {
 
-        if (repalceWithEmpty(f)){
+        if (repalceWithEmpty(f)) {
             return;
         }
 
@@ -78,14 +78,14 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
-        if (repalceWithEmpty(a)){
+        if (repalceWithEmpty(a)) {
             return;
         }
     }
 
     @Override
     public void edit(NewExpr e) throws CannotCompileException {
-        if (repalceWithEmpty(e)){
+        if (repalceWithEmpty(e)) {
             return;
         }
 //        if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
@@ -115,7 +115,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             try {
 
                 paramsCount = new RobustNewExprParamsCount().replace(e);
-                System.err.println("RobustNewExprParamsCount: "+ paramsCount);
+                System.err.println("RobustNewExprParamsCount: " + paramsCount);
             } catch (NotFoundException e1) {
                 e1.printStackTrace();
             }
@@ -125,32 +125,31 @@ public class RobustMethodExprEditor extends ExprEditor {
 //            stringBuilder.append("$_= new " + newExprClassName + "($args);");
             String params = "($$)";
             try {
-                params = RobustNewExprParamsCount.getParamsString(e,patchClass.getName());
+                params = RobustNewExprParamsCount.getParamsString(e, patchClass.getName());
             } catch (NotFoundException e1) {
                 e1.printStackTrace();
             }
 
 //            stringBuilder.append("$_= ($r) new " + newExprClassName + "(this.originClass);");
-            if (CheckCodeChanges.isAnonymousInnerClass(newExprClassName)){
+            if (CheckCodeChanges.isAnonymousInnerClass_$1(newExprClassName)) {
                 //create public Field outerPatchClassName
-                CtClass  anonymousInnerCtClass  = Config.classPool.getOrNull(newExprClassName);
+                CtClass anonymousInnerCtClass = Config.classPool.getOrNull(newExprClassName);
                 CtField ctField = new CtField(patchClass, "outerPatchClassName", anonymousInnerCtClass);
                 ctField.setModifiers(AccessFlag.PUBLIC);
                 anonymousInnerCtClass.addField(ctField);
                 //set field value
-                stringBuilder.append(newExprClassName + " anonymousInnerClass = new " + newExprClassName + params +";");
+                stringBuilder.append(newExprClassName + " anonymousInnerClass = new " + newExprClassName + params + ";");
                 stringBuilder.append("anonymousInnerClass.outerPatchClassName = this ;");
                 stringBuilder.append("$_ = anonymousInnerClass; ");
-                System.err.println("isAnonymousInnerClass :" + stringBuilder.toString());
+                System.err.println("isAnonymousInnerClass_$1 :" + stringBuilder.toString());
             } else {
-                stringBuilder.append("$_ = new " + newExprClassName + params +";");
+                stringBuilder.append("$_ = new " + newExprClassName + params + ";");
             }
             stringBuilder.append("};");
 
             e.replace(stringBuilder.toString());
             return;
         }
-
 
 
 //        try {
@@ -161,7 +160,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 //        }
 
 
-//        if (isAnonymousInnerClass(newExprClassName)) {
+//        if (isAnonymousInnerClass_$1(newExprClassName)) {
 //
 //            //// TODO: 17/8/14 优化
 //            try {
@@ -191,11 +190,11 @@ public class RobustMethodExprEditor extends ExprEditor {
             PatchProxy.accessDispatch(new Object[0], this, changeQuickRedirect, false, "4de6c62b640b9546c89a1540fbb998f1", new Class[0], Void.TYPE);return;
         }
         */
-    private boolean isCallProxyAccessDispatchMethod(MethodCall methodCall){
-        if (methodCall.getMethodName().equals("accessDispatch")){
+    private boolean isCallProxyAccessDispatchMethod(MethodCall methodCall) {
+        if (methodCall.getMethodName().equals("accessDispatch")) {
             try {
                 boolean isCallAccessDispatch = methodCall.getMethod().getLongName().startsWith("com.meituan.robust.PatchProxy.accessDispatch(");
-                if (isCallAccessDispatch){
+                if (isCallAccessDispatch) {
                     return true;
                 }
             } catch (NotFoundException e) {
@@ -204,29 +203,42 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
         return false;
     }
+
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
-        if (isCallProxyAccessDispatchMethod(m)){
+        if (isCallProxyAccessDispatchMethod(m)) {
 //            m.replace("$_ = ($r) new Object();");
             hasHandledProxyCode = true;
             return;
         }
-        if (repalceWithEmpty(m)){
+        if (repalceWithEmpty(m)) {
             return;
         }
 
-        System.err.println("MethodCall :" + m.getMethodName());
-
+        if (m.getMethodName().contains("lambdaFactory")){
+            //ignore // TODO: 17/8/26 because below
+//            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
+            System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
+            return;
+        }
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
-        //如果是新增的class就不用替换了
-        // todo 如果是新增的方法,需要内联进去
+        int accessFlag = 0;
+        try {
+            accessFlag = m.getMethod().getModifiers();
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+        boolean methodClassIsStatic = isStatic(accessFlag);
+
+        //如果是新增class的Method就不用替换了
         try {
             if (Config.newlyAddedClassNameList.contains(m.getMethod().getDeclaringClass().getName())) {
                 //需要换一下参数this为originalClass
                 if (outerMethodIsStatic) {
+                    //没有this，不用处理
                     return;
                 } else {
-                    replaceParamThisToOriginalClassInstance(m);
+                    replaceParam_ThisToOriginalClassInstance(m);
                     return;
                 }
             }
@@ -236,57 +248,76 @@ public class RobustMethodExprEditor extends ExprEditor {
 
         //todo 如何区分super方法 MainActivity#super.oncreate()
         if (m.isSuper()) {
-            //放在assist类处理了
+            /*
+            protected void onCreate(@Nullable Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+            }
+            */
+            //放在assist类处理了 case : MainActivity#super.oncreate()
             System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
             m.replace(ReflectUtils.invokeSuperString(m));
             return;
         }
 
-        int accessFlag = 0;
-        try {
-            accessFlag = m.getMethod().getModifiers();
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        }
-        //这里的package可以在插桩的时候将所有的package （method + 构造函数 + field）都改成public
-        boolean isNeedReflected = AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) /*|| AccessFlag.isPackage(accessFlag)*/;
+//        {
+//            //是否需要反射处理 // TODO: 17/8/26  插桩的时候把package 、 protected方法全部改成了public方法 自己的private方法就访问自己的方法即可
+//            //这里的package可以在插桩的时候将所有的protect & package （method + 构造函数 + field）都改成public
+//            boolean isNeedReflected = AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag);
+//            if (isNeedReflected) {
+//                //反射 // TODO: 17/8/13
+//                m.replace(ReflectUtils.getMethodCallString(m, patchClass, outerMethodIsStatic));
+//                return;
+//            }
+//        }
 
-        if (isNeedReflected) {
-            //反射 // TODO: 17/8/13
-            m.replace(ReflectUtils.getMethodCallString(m, patchClass, outerMethodIsStatic));
-            return;
-        }
-
-        boolean isStatic = isStatic(accessFlag);
-
-        if (!isStatic) {
-            //非静态方法才有this，需要替换
-            //MainActivity#findViewById
-            try {
-                CtClass methodTargetClass = m.getMethod().getDeclaringClass();
-//              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
-                if (sourceClass.getName().equals(methodTargetClass.getName())) {
-                    replaceThisToOriginClassMethodDirectly(m);
-                    return;
-                } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
-                    //// TODO: 17/8/7 判断是否父类方法 或者本类方法
-                    //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
-                    System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
-                    //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
-                    replaceThisToOriginClassMethodDirectly(m);
-                    return;
-                } else {
-                    if (isStatic) {
-                        replaceParamThisToOriginalClassInstance(m);
-                    } else {
-                        replaceParamThisToOriginalClassInstance(m);
-                    }
-                }
-            } catch (NotFoundException e) {
-                e.printStackTrace();
-                System.err.println("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
+        if (outerMethodIsStatic) {
+            /*
+            protected void onCreate(@Nullable Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_robust_compat);
+                Toast.makeText(this, "Hello onCreate TestPatchActivity", Toast.LENGTH_SHORT).show();
             }
-//                                    System.err.println(m.getClassName() + "," + m.getMethodName() + "");
+            */
+
+            return;
+        } else {
+            //非静态方法才有this，需要替换
+            /*
+            protected void onCreate(@Nullable Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_robust_compat);
+                Toast.makeText(this, "Hello onCreate TestPatchActivity", Toast.LENGTH_SHORT).show();
+            }
+            */
+            if (methodClassIsStatic) {
+                try {
+                    replaceParam_ThisToOriginalClassInstance(m);
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    CtClass methodTargetClass = m.getMethod().getDeclaringClass();
+//              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
+                    if (sourceClass.getName().equals(methodTargetClass.getName())) {
+                        replaceThisToOriginClassMethodDirectly(m);
+                        return;
+                    } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
+                        //// TODO: 17/8/7 判断是否父类方法 或者本类方法
+                        //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
+                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
+                        //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
+                        replaceThisToOriginClassMethodDirectly(m);
+                        return;
+                    } else {
+                        //do noting
+                        return;
+                    }
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                    System.err.println("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
+                }
+            }
         }
 
 
@@ -476,7 +507,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         m.replace(stringBuilder.toString());
     }
 
-    public void replaceParamThisToOriginalClassInstance(MethodCall m) throws NotFoundException, CannotCompileException {
+    public void replaceParam_ThisToOriginalClassInstance(MethodCall m) throws NotFoundException, CannotCompileException {
         if (isStatic(ctMethod.getModifiers())) {
             return;
         }
@@ -548,7 +579,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 int indexArg = 0;
                 for (CtClass ctClass : types) {
                     indexArg++;
-                    if (sourceClass.subclassOf(ctClass)) {
+                    if (sourceClass.subclassOf(ctClass) && !ctClass.getName().contains("java.lang.Object")) {
                         stringBuilder.append("$" + indexArg + "=  this." + ORIGINCLASS + ";");
                     }
                 }

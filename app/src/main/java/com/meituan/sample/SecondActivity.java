@@ -47,7 +47,8 @@ public class SecondActivity extends AppCompatActivity implements View.OnClickLis
     @Modify
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("change secondary activity");
+        //// TODO: 17/8/26 改lambda表达式有问题
+//        System.out.println("change secondary activity");
         System.out.println(inlineToString());
         setContentView(R.layout.activity_main2);
 

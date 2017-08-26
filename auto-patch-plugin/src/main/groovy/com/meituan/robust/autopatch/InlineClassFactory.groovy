@@ -67,7 +67,7 @@ class InlineClassFactory {
         for (String fullClassName : inLineClassNameSet) {
             CtClass inlineClass = Config.classPool.get(fullClassName);
             CtClass inlinePatchClass = PatchesFactory.cloneClass(inlineClass, NameManger.getInstance().getInlinePatchName(inlineClass.name), null)
-            inlinePatchClass = JavaUtils.addPatchConstruct(inlinePatchClass, inlineClass)
+            inlinePatchClass = JavaUtils.addField_OriginClass(inlinePatchClass, inlineClass)
             PatchesFactory.createPublicMethodForPrivate(inlinePatchClass)
         }
     }

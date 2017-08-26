@@ -47,7 +47,7 @@ class PatchesFactory {
 
         modifiedClass = Config.classPool.get(originalClassName);
         modifiedClass.defrost()
-        JavaUtils.addPatchConstruct(temPatchClass, modifiedClass);
+        JavaUtils.addField_OriginClass(temPatchClass, modifiedClass);
         CtMethod reaLParameterMethod = CtMethod.make(JavaUtils.getRealParamtersBody(temPatchClass.name), temPatchClass);
         temPatchClass.addMethod(reaLParameterMethod);
 
@@ -142,7 +142,7 @@ class PatchesFactory {
         }
         //remove static code block,pay attention to the  class created by cloneClassWithoutFields which construct's
 //        CtClass outerClass = cloneClassWithoutFields(temPatchClass, patchName, null);
-//        outerClass = JavaUtils.addPatchConstruct(outerClass, modifiedClass);
+//        outerClass = JavaUtils.addField_OriginClass(outerClass, modifiedClass);
         CtClass patchClass = temPatchClass;
         return patchClass;
     }

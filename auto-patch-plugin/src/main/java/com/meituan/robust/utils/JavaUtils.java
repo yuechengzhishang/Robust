@@ -365,14 +365,11 @@ public class JavaUtils {
         return className.substring(0, index).equals(modifedClass.getName());
     }
 
-    public static CtClass addPatchConstruct(CtClass patchClass, CtClass sourceClass) {
+    public static CtClass addField_OriginClass(CtClass patchClass, CtClass sourceClass) {
         try {
             CtField originField = new CtField(sourceClass, ORIGINCLASS, patchClass);
-            patchClass.addField(originField);
             originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
-
-//            CtField originClassField = new CtField(outerClass.getClassPool().get("java.long.Class"), ORIGINCLASS + "Type", outerClass);
-//            outerClass.addFid(originClassField);
+            patchClass.addField(originField);
 
             String patchClassName = patchClass.getSimpleName();
             System.err.println("patchClassName : "+ patchClassName);
