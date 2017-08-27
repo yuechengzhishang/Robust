@@ -120,8 +120,8 @@ public class RobustNewExprParamsCount {
             for (CtClass param : params) {
                 index++;
                 if (param.getName().equals(patchClassName)) {
-                    System.err.println("param.getName(): " +param.getName());
-                    System.err.println("sourceClassName Patch: " +patchClassName+"Patch");
+//                    System.err.println("param.getName(): " +param.getName());
+//                    System.err.println("sourceClassName Patch: " +patchClassName+"Patch");
                     paramList.add("this." + Constants.ORIGINCLASS);
                 } else {
                     paramList.add("$" + index);
@@ -130,7 +130,7 @@ public class RobustNewExprParamsCount {
             stringBuilder.append(String.join(",",paramList));
             stringBuilder.append(")");
             String targetString = stringBuilder.toString();
-            System.err.println("getParamsString : " + targetString);
+//            System.err.println("getParamsString : " + targetString);
             return targetString;
         } catch (Exception e) {
             throw new CannotCompileException("broken method");

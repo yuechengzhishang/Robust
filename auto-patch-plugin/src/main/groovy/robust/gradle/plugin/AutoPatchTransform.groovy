@@ -5,6 +5,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
+import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
 import javassist.*
 import javassist.bytecode.AccessFlag
@@ -18,6 +19,7 @@ import java.util.jar.JarFile
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+
 /**
  * Created by mivanzhang on 16/7/21.
  *
@@ -92,7 +94,8 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         project.android.bootClasspath.each {
             Config.classPool.appendClassPath((String) it.absolutePath)
         }
-        def box = ReflectUtils.toCtClasses(inputs, Config.classPool)
+//        def box = ReflectUtils.toCtClasses(inputs, Config.classPool)
+        def box = new ArrayList<CtClass>()
         def cost = (System.currentTimeMillis() - startTime) / 1000
         logger.quiet "check all class cost $cost second, class count: ${box.size()}"
         autoPatch(box)
@@ -142,24 +145,35 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     }
 
     def autoPatch(List<CtClass> box) {
+
+        project.android.bootClasspath.each {
+            Config.oldClassPool.appendClassPath((String) it.absolutePath)
+        }
+
         File buildDir = project.getBuildDir();
         String patchPath = buildDir.getAbsolutePath() + File.separator + Constants.ROBUST_GENERATE_DIRECTORY + File.separator;
 //        clearPatchPath(patchPath);
 
         //1. get last class.jar
         File oldMainJarFile = new File(ROBUST_DIR, Config.ROBUST_TRANSFORM_MAIN_JAR)
-        File oldProGuardJarFile = new File(ROBUST_DIR,Config.ROBUST_PROGUARD_MAIN_JAR)
+        File oldProGuardJarFile = new File(ROBUST_DIR, Config.ROBUST_PROGUARD_MAIN_JAR)
 
         //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
         //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         File newMainJarFile = new File(patchPath, Config.ROBUST_TRANSFORM_MAIN_JAR)
-        if (!newMainJarFile.exists()){
+        if (!newMainJarFile.exists()) {
             throw new RuntimeException("please apply plugin: 'robust'")
         }
 
         //3. is changed
         JarFile originalJarFile = new JarFile(oldMainJarFile);
         JarFile currentJarFile = new JarFile(newMainJarFile);
+
+        //将构造函数转成initRobustPatch函数
+        originalJarFile = copyConstructor2InitRobustPatchMethod(oldMainJarFile.absolutePath, "old_"+oldMainJarFile.name)
+        currentJarFile = copyConstructor2InitRobustPatchMethod(newMainJarFile.absolutePath, "new_"+newMainJarFile.name)
+
+        Config.classPool.appendClassPath(currentJarFile.name)
 
         CheckCodeChanges.processChangedJar(originalJarFile, currentJarFile, Config.hotfixPackageList, Config.exceptPackageList)
 
@@ -204,6 +218,32 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
+    def JarFile copyConstructor2InitRobustPatchMethod(String fullPath, String jarName) {
+        ClassPool classPool = new ClassPool()
+        project.android.bootClasspath.each {
+            classPool.appendClassPath((String) it.absolutePath)
+        }
+        classPool.appendClassPath(fullPath)
+
+        String jarOutDirectoryPath = Config.robustGenerateDirectory + "constructor" + Constants.File_SEPARATOR + jarName.replace(".jar","")
+        FileUtil.createDirectory(jarOutDirectoryPath)
+        FileUtil.unzip(fullPath, jarOutDirectoryPath)
+
+        HashSet<String> classesNameHashSet = CheckCodeChanges.getTargetClassesFromJar(new JarFile(fullPath))
+        for (String className : classesNameHashSet) {
+            CtClass ctClass = classPool.get(className)
+            copyConstructor2Method(ctClass)
+            ctClass.writeFile(jarOutDirectoryPath)
+        }
+
+        String outJarFilePath = Config.robustGenerateDirectory + "constructor" + Constants.File_SEPARATOR + jarName
+
+        FileUtil.zip(outJarFilePath, jarOutDirectoryPath)
+
+        JarFile outJarFile = new JarFile(outJarFilePath)
+        return outJarFile;
+    }
+
     def zipPatchClassesFile() {
         ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(Config.robustGenerateDirectory + Constants.ZIP_FILE_NAME));
         zipAllPatchClasses(Config.robustGenerateDirectory + Config.patchPackageName.substring(0, Config.patchPackageName.indexOf(".")), "", zipOut);
@@ -234,6 +274,27 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
+
+    public static void copyConstructor2Method(CtClass patchClas) {
+
+        //临时删除默认的构造函数，这样能够 todo 解决修改构造函数的问题
+        try {
+            CtConstructor[] ctConstructors = patchClas.getConstructors();
+            if (null != ctConstructors) {
+                for (CtConstructor ctConstructor : ctConstructors) {
+                    //                if (ctConstructor.callsSuper()){
+//                    //这个构造函数调用了super方法，需要考虑一下特殊处理
+//                }
+                    CtMethod fakeConstructor = ctConstructor.toMethod(Constants.INIT_ROBUST_PATCH, patchClas)
+                    patchClas.addMethod(fakeConstructor)
+                }
+            }
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     def generatePatch(List<CtClass> box, String patchPath) {
         if (!Config.isManual) {
             if (Config.modifiedClassNameList.size() < 1) {
@@ -252,6 +313,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 setAnonymousInnerClassPublic(fullClassName)
                 CtClass ctClass = Config.classPool.get(fullClassName)
                 CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
+                patchClass.setSuperclass(Config.classPool.get("java.lang.Object"));
                 patchClass.writeFile(patchPath)
                 patchClass.defrost()
                 CtClass sourceClass = Config.classPool.get(fullClassName)

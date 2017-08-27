@@ -40,6 +40,7 @@ public final class Config {
     public static String robustGenerateDirectory;
     public static Map<String, List<CtMethod>> invokeSuperMethodMap = new HashMap<>();
     public static ClassPool classPool = new ClassPool();
+    public static ClassPool oldClassPool = new ClassPool();
     public static Set methodNeedPatchSet = new HashSet();
     public static List<CtMethod> addedSuperMethodList = new ArrayList<>();
     public static Set<String> noNeedReflectClassSet = new HashSet<>();

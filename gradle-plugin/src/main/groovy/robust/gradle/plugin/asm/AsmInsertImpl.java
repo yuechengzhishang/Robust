@@ -228,8 +228,8 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
 
             //如果是override方法，插桩 // TODO: 17/8/22  
-            System.err.println("isMethodNeedInsertCode -> " + " name: " + name + ", desc: " + desc);
-            //如果是空方法?
+//            System.err.println("isMethodNeedInsertCode -> " + " name: " + name + ", desc: " + desc);
+            //如果是空方法? // TODO: 17/8/22
 
             //// TODO: 17/8/22 diff getter setter isbool ...
 

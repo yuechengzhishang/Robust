@@ -6,6 +6,7 @@ import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.bytecode.ClassFile
 import javassist.expr.MethodCall
+
 /**
  * Created by zhangmeng on 16/12/2.
  * <p>
@@ -27,16 +28,7 @@ class PatchesFactory {
      */
     private CtClass createPatchClass(CtClass modifiedClass, boolean isInline, String patchName, Set patchMethodSignureSet, String patchPath) throws CannotCompileException, IOException, NotFoundException {
         List methodNoNeedPatchList = new ArrayList();
-        //just keep  methods need patch
-//        if (patchMethodSignureSet.size() != 0) {
-            for (CtMethod method : modifiedClass.getDeclaredMethods()) {
-//                if ((!patchMethodSignureSet.contains(method.getLongName()) || (!isInline && Config.methodMap.get(modifiedClass.getName() + "." + JavaUtils.getJavaMethodSignure(method)) == null))) {
-//                    methodNoNeedPatchList.addClasses(method);
-//                } else {
-//                    Config.methodNeedPatchSet.remove(method.getLongName());
-//                }
-            }
-//        }
+
         String originalClassName = modifiedClass.getName()
 
         CtClass temPatchClass = cloneClass(modifiedClass, patchName, methodNoNeedPatchList);
@@ -56,93 +48,18 @@ class PatchesFactory {
 //        if (Config.supportProGuard&&ReadMapping.getInstance().getClassMapping(modifiedClass.getName()) == null) {
 //            throw new RuntimeException(" something wrong with mappingfile ,cannot find  class  " + modifiedClass.getName() + "   in mapping file");
 //        }
-        List<CtMethod> invokeSuperMethodList = Config.invokeSuperMethodMap.getOrDefault(modifiedClass.getName(), new ArrayList<>());
 
-        if (true){
-            //把所有的方法访问属性都改成public
-            changeMethodToPublicAndUnAbstract(temPatchClass)
-        } else {
-            createPublicMethodForPrivate(temPatchClass);
-        }
+        //把所有的方法访问属性都改成public
+        changeMethodToPublicAndUnAbstract(temPatchClass)
 
         //执行替换
         for (CtMethod method : temPatchClass.getDeclaredMethods()) {
             if (!Config.addedSuperMethodList.contains(method) && !reaLParameterMethod.equals(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
                 method.instrument(
-                        new RobustMethodExprEditor(modifiedClass,temPatchClass,method)
+                        new RobustMethodExprEditor(modifiedClass, temPatchClass, method)
                 );
-//                method.instrument(
-//                        new ExprEditor() {
-//                            public void edit(FieldAccess f) throws CannotCompileException {
-//                                if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
-//                                    return;
-//                                }
-//                                Map memberMappingInfo = getClassMappingInfo(f.getField().declaringClass.name);
-//                                try {
-//                                    if (f.isReader()) {
-//                                        f.replace(ReflectUtils.getFieldString(f.getField(), memberMappingInfo, temPatchClass.getName(), modifiedClass.getName()));
-//                                    } else if (f.isWriter()) {
-//                                        f.replace(ReflectUtils.setFieldString(f.getField(), memberMappingInfo, temPatchClass.getName(), modifiedClass.getName()));
-//                                    }
-//                                } catch (NotFoundException e) {
-//                                    e.printStackTrace();
-//                                    throw new RuntimeException(e.getMessage());
-//                                }
-//                            }
-//
-//
-//                            @Override
-//                            void edit(NewExpr e) throws CannotCompileException {
-//                                //inner class in the patched class ,not all inner class
-//                                if (Config.newlyAddedClassNameList.contains(e.getClassName())||Config.noNeedReflectClassSet.contains(e.getClassName())) {
-//                                    return;
-//                                }
-//
-//                                try {
-//                                    if (!ReflectUtils.isStatic(Config.classPool.get(e.getClassName()).getModifiers()) && JavaUtils.isInnerClassInModifiedClass(e.getClassName(), modifiedClass)) {
-//                                        e.replace(ReflectUtils.getNewInnerClassString(e.getSignature(), temPatchClass.getName(), ReflectUtils.isStatic(Config.classPool.get(e.getClassName()).getModifiers()), getClassValue(e.getClassName())));
-//                                        return;
-//                                    }
-//                                } catch (NotFoundException e1) {
-//                                    e1.printStackTrace();
-//                                }
-//
-//                                e.replace(ReflectUtils.getCreateClassString(e, getClassValue(e.getClassName()), temPatchClass.getName(), ReflectUtils.isStatic(method.getModifiers())));
-//                            }
-//
-//                            @Override
-//                            void edit(MethodCall m) throws CannotCompileException {
-//
-//                                //methods no need reflect
-//                                if(Config.noNeedReflectClassSet.contains(m.method.declaringClass.name)){
-//                                    return;
-//                                }
-//                                if (m.getMethodName().contains("lambdaFactory")) {
-//                                    //method contain modifeid class
-//                                    m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), temPatchClass.getName(), ReflectUtils.isStatic(method.getModifiers()), getClassValue(m.getClassName())));
-//                                    return;
-//                                }
-//                                try {
-//                                    if (!repalceInlineMethod(m, method, false)) {
-//                                        Map memberMappingInfo = getClassMappingInfo(m.getMethod().getDeclaringClass().getName());
-//                                        if (invokeSuperMethodList.contains(m.getMethod())) {
-////                                        if (m.isSuper()) {
-//                                            m.replace(ReflectUtils.invokeSuperString(m));
-//                                            return;
-//                                        }
-//                                        m.replace(ReflectUtils.getMethodCallString(m, memberMappingInfo, temPatchClass, ReflectUtils.isStatic(method.getModifiers()), isInline));
-//                                    }
-//                                } catch (NotFoundException e) {
-//                                    e.printStackTrace();
-//                                }
-//                            }
-//                        }
-//                );
             }
         }
-        //remove static code block,pay attention to the  class created by cloneClassWithoutFields which construct's
-//        CtClass outerClass = cloneClassWithoutFields(temPatchClass, patchName, null);
-//        outerClass = JavaUtils.addField_OriginClass(outerClass, modifiedClass);
         CtClass patchClass = temPatchClass;
         return patchClass;
     }
@@ -164,47 +81,23 @@ class PatchesFactory {
         return targetClass;
     }
 
-    public
-    static CtClass cloneClass(CtClass sourceClass, String patchName, List<CtMethod> exceptMethodList) throws CannotCompileException, NotFoundException {
+    public static CtClass cloneClass(CtClass sourceClass, String patchName, List<CtMethod> exceptMethodList) throws CannotCompileException, NotFoundException {
 
-        if (true){
-            CtClass targetClass = Config.classPool.getOrNull(patchName);
-            if (targetClass != null) {
-                targetClass.defrost();
-            }
-
-            CtClass sourceClassTemp = sourceClass;
-            sourceClassTemp.setName(patchName);
-            try {
-                sourceClassTemp.writeFile(Config.robustGenerateDirectory);
-            } catch (CannotCompileException e) {
-                e.printStackTrace();
-            }
-            sourceClassTemp.defrost()
-            return sourceClassTemp;
-        }
         CtClass targetClass = Config.classPool.getOrNull(patchName);
         if (targetClass != null) {
             targetClass.defrost();
         }
-        targetClass = Config.classPool.makeClass(patchName);
-        targetClass.getClassFile().setMajorVersion(ClassFile.JAVA_7);
-        //warning 所有的super问题均在assist class来处理,
-        targetClass.setSuperclass(sourceClass.getSuperclass());
-        for (CtField field : sourceClass.getDeclaredFields()) {
-            targetClass.addField(new CtField(field, targetClass));
+
+        CtClass sourceClassTemp = sourceClass;
+        sourceClassTemp.setName(patchName);
+        try {
+            sourceClassTemp.writeFile(Config.robustGenerateDirectory);
+        } catch (CannotCompileException e) {
+            e.printStackTrace();
         }
-        ClassMap classMap = new ClassMap();
-        classMap.put(patchName, sourceClass.getName());
-        classMap.fix(sourceClass);
-        for (CtMethod method : sourceClass.getDeclaredMethods()) {
-            if (null == exceptMethodList || !exceptMethodList.contains(method)) {
-                CtMethod newCtMethod = new CtMethod(method, targetClass, classMap);
-                targetClass.addMethod(newCtMethod);
-            }
-        }
-        targetClass.setModifiers(AccessFlag.clear(targetClass.getModifiers(), AccessFlag.ABSTRACT));
-        return targetClass;
+        sourceClassTemp.defrost()
+        sourceClassTemp.getClassFile().setMajorVersion(ClassFile.JAVA_7);
+        return sourceClassTemp;
     }
 
     private void dealWithSuperMethod(CtClass patchClass, CtClass modifiedClass, String patchPath) throws NotFoundException, CannotCompileException, IOException {
@@ -295,16 +188,16 @@ class PatchesFactory {
 
     }
 
-    public static void changeMethodToPublicAndUnAbstract(CtClass ctClass){
+    public static void changeMethodToPublicAndUnAbstract(CtClass ctClass) {
         //方法访问属性转为public;并去掉abstract
         CtMethod[] ctMethods = ctClass.getDeclaredMethods();
-        if (null == ctMethods || 0 == ctMethods.length){
+        if (null == ctMethods || 0 == ctMethods.length) {
             return;
         }
         for (CtMethod method : ctMethods) {
             int originModifiers = method.getModifiers();
             int publicModifiers = AccessFlag.setPublic(originModifiers);
-            int unAbstractModifiers = AccessFlag.clear(publicModifiers,AccessFlag.ABSTRACT);
+            int unAbstractModifiers = AccessFlag.clear(publicModifiers, AccessFlag.ABSTRACT);
             method.setModifiers(unAbstractModifiers);
         }
     }

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -296,6 +297,69 @@ public class CheckCodeChanges {
 //        patchClass.writeFile(patchClassDir);
 //    }
 
+
+    public static HashSet<String> getTargetClassesFromJar(JarFile newJar){
+        //只考虑newClass 与 changedClass即可，删除的class不用管（不需要处理)
+        // go through the jar file, entry by entry.
+        List<String> hotfixPackageList = Config.hotfixPackageList;
+        List<String> exceptPackageList = Config.exceptPackageList;
+
+        HashSet<String> classNames = new HashSet<String>();
+        Enumeration<JarEntry> jarEntries = newJar.entries();
+        while (jarEntries.hasMoreElements()) {
+            JarEntry jarEntry = jarEntries.nextElement();
+            if (null == jarEntry){
+                continue;
+            }
+            String className = jarEntry.getName();
+
+            if (!className.endsWith(".class")) {
+                continue;
+            }
+
+            // is R.class or R$xml.class
+            boolean isRSubClass = false;
+            int index = className.lastIndexOf('/');
+            if (index != -1 &&
+                    className.startsWith("R$", index + 1)) {
+                isRSubClass = true;
+            }
+            String RClassStr2 = "R.class";
+            if (isRSubClass || className.endsWith(RClassStr2) || className.endsWith("/r.class") || className.endsWith(".r.class")) {
+//                System.err.println("is R dot class : " + className);
+                continue;
+            }
+
+            String dotClassName = className.replace(".class", "").replace(File_SEPARATOR, ".");
+
+            // is in except package list
+            if (null != exceptPackageList) {
+//                className.startsWith("com/meituan/robust")
+                boolean isExceptPackage = false;
+                for (String exceptPackage : exceptPackageList) {
+                    if (dotClassName.startsWith(exceptPackage.trim()) || dotClassName.startsWith(exceptPackage.trim().replace(".", File_SEPARATOR))) {
+                        isExceptPackage = true;
+                    }
+                }
+                if (isExceptPackage) {
+                    continue;
+                }
+            }
+
+            // is in except package list
+            if (null != hotfixPackageList) {
+                for (String packageName : hotfixPackageList) {
+                    if (dotClassName.startsWith(packageName.trim()) || dotClassName.startsWith(packageName.trim().replace(".", File_SEPARATOR))) {
+                        //yes it is , class in hotfix package list
+                        classNames.add(dotClassName);
+                    }
+                }
+            }
+        }
+
+        return classNames;
+    }
+
     public static void processChangedJar(JarFile backupJar, JarFile newJar, List<String> hotfixPackageList, List<String> exceptPackageList)
             throws IOException {
 
@@ -360,6 +424,7 @@ public class CheckCodeChanges {
 
                             byte[] newClassBytes =
                                     new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
+
                             ClassNode oldClassNode = RobustCodeChangeChecker.getClassNode(oldClassBytes);
                             ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);
 

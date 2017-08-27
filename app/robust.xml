@@ -53,6 +53,8 @@
     <exceptPackname name="exceptPackage">
         <name>com.meituan.robust</name>
         <name>com.meituan.sample.extension</name>
+        <!--<name>com.meituan.sample.MainActivity</name>-->
+        <!--<name>com.meituan.sample.SecondActivity</name>-->
     </exceptPackname>
 
     <!--补丁的包名，请保持和类PatchManipulateImp中fetchPatchList方法中设置的补丁类名保持一致（ setPatchesInfoImplClassFullName("com.meituan.robust.patch.PatchesInfoImpl")），

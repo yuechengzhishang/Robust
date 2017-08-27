@@ -59,7 +59,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
     }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
-        System.err.println("MethodCall :" + m.getMethodName());
+//        System.err.println("MethodCall :" + m.getMethodName());
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
         if (outerMethodIsStatic){
             return;

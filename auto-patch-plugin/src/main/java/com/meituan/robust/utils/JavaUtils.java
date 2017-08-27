@@ -20,10 +20,8 @@ import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
 import javassist.CtClass;
-import javassist.CtConstructor;
 import javassist.CtField;
 import javassist.CtMethod;
-import javassist.CtNewConstructor;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 
@@ -243,6 +241,10 @@ public class JavaUtils {
         return bigInt.toString(16);
     }
 
+
+    public static boolean booleanPrimeType(String typeName) {
+        return "boolean".equals(typeName);
+    }
     public static String getWrapperClass(String typeName) {
         String warpperType = typeName;
         switch (typeName) {
@@ -371,14 +373,14 @@ public class JavaUtils {
             originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
             patchClass.addField(originField);
 
-            String patchClassName = patchClass.getSimpleName();
-            System.err.println("patchClassName : "+ patchClassName);
-            StringBuilder patchClassConstruct = new StringBuilder();
-            patchClassConstruct.append(" public " +patchClassName+"(" + sourceClass.getName() + " originalObj) {");
-            patchClassConstruct.append(ORIGINCLASS + "= originalObj;");
-            patchClassConstruct.append("}");
-            CtConstructor constructor = CtNewConstructor.make(patchClassConstruct.toString(), patchClass);
-            patchClass.addConstructor(constructor);
+//            String patchClassName = patchClass.getSimpleName();
+//            System.err.println("patchClassName : "+ patchClassName);
+//            StringBuilder patchClassConstruct = new StringBuilder();
+//            patchClassConstruct.append(" public " +patchClassName+"(" + sourceClass.getName() + " originalObj) {");
+//            patchClassConstruct.append(ORIGINCLASS + "= originalObj;");
+//            patchClassConstruct.append("}");
+//            CtConstructor constructor = CtNewConstructor.make(patchClassConstruct.toString(), patchClass);
+//            patchClass.addConstructor(constructor);
         } catch (Exception e) {
             e.printStackTrace();
 

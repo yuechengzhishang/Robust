@@ -13,6 +13,7 @@ import java.util.Set;
 public class Constants {
 
     public static final String ORIGINCLASS = "originClass";
+    public static final String INIT_ROBUST_PATCH = "initRobustPatch";
     public static final String MODIFY_ANNOTATION = "com.meituan.robust.patch.annotaion.Modify";
     //    public static final String MODIFY_ANNOTATION = Modify.class.getCanonicalName();
     public static final String ADD_ANNOTATION = "com.meituan.robust.patch.annotaion.Add";

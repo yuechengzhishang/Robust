@@ -12,7 +12,10 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 
+import static com.meituan.robust.Constants.INIT_ROBUST_PATCH;
+import static com.meituan.robust.Constants.ORIGINCLASS;
 import static com.meituan.robust.autopatch.Config.classPool;
+import static com.meituan.robust.utils.JavaUtils.booleanPrimeType;
 
 /**
  * Created by mivanzhang on 17/2/9.
@@ -32,15 +35,6 @@ public class PatchesControlFactory {
         CtClass patchClass = classPool.get(NameManger.getInstance().getPatchName(modifiedClass.getName()));
         patchClass.defrost();
         CtClass controlClass = classPool.getAndRename(Constants.PATCH_TEMPLATE_FULL_NAME, NameManger.getInstance().getPatchControlName(modifiedClass.getSimpleName()));
-//        StringBuilder getRealParameterMethodBody = new StringBuilder();
-//        getRealParameterMethodBody.append("public Object getRealParameter(Object parameter) {");
-//        getRealParameterMethodBody.append("if(parameter instanceof " + modifiedClass.getName() + "){");
-//        getRealParameterMethodBody.
-//                append("return new " + patchClass.getName() + "(" + "(" + modifiedClass.getName() + ")" + "parameter);");
-//        getRealParameterMethodBody.append("}");
-//        getRealParameterMethodBody.append("return parameter;}");
-//        //// TODO: 17/8/10 注释掉了 ， 后面恢复
-//        controlClass.addMethod(CtMethod.make(getRealParameterMethodBody.toString(), controlClass));
         controlClass.getDeclaredMethod("accessDispatch").insertBefore(getAccessDispatchMethodBody(patchClass, modifiedClass.getName()));
         controlClass.getDeclaredMethod("isSupport").insertBefore(getIsSupportMethodBody(patchClass, modifiedClass.getName()));
         controlClass.defrost();
@@ -57,25 +51,26 @@ public class PatchesControlFactory {
             accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"arrivied in AccessDispatch \"+methodName+\" paramArrayOfObject  \" +paramArrayOfObject);");
         }
         //create patch instance
-        accessDispatchMethodBody.append(patchClass.getName() + " patch= null;\n");
+        accessDispatchMethodBody.append(patchClass.getName() + " patch = new " + patchClass.getName() + "();\n");
         accessDispatchMethodBody.append(" String isStatic=$1.split(\":\")[2];");
         accessDispatchMethodBody.append(" if (isStatic.equals(\"false\")) {\n");
-        accessDispatchMethodBody.append(" if (keyToValueRelation.get(paramArrayOfObject[paramArrayOfObject.length - 1]) == null) {\n");
-        if (Constants.isLogging) {
-            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"keyToValueRelation not contain\" );");
-        }
-        accessDispatchMethodBody.append("patch=new " + patchClass.getName() + "(("+ modifiedClassName+")paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
-        accessDispatchMethodBody.append(" keyToValueRelation.put(paramArrayOfObject[paramArrayOfObject.length - 1], patch);\n");
-        accessDispatchMethodBody.append("}else{");
-        accessDispatchMethodBody.append("patch=(" + patchClass.getName() + ") keyToValueRelation.get(paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
-        accessDispatchMethodBody.append("}");
+        accessDispatchMethodBody.append("patch." + ORIGINCLASS + " = ("+ modifiedClassName +")paramArrayOfObject[paramArrayOfObject.length - 1];");
+//        accessDispatchMethodBody.append(" if (keyToValueRelation.get(paramArrayOfObject[paramArrayOfObject.length - 1]) == null) {\n");
+//        if (Constants.isLogging) {
+//            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"keyToValueRelation not contain\" );");
+//        }
+//        accessDispatchMethodBody.append("patch=new " + patchClass.getName() + "(("+ modifiedClassName+")paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
+//        accessDispatchMethodBody.append(" keyToValueRelation.put(paramArrayOfObject[paramArrayOfObject.length - 1], patch);\n");
+//        accessDispatchMethodBody.append("}else{");
+//        accessDispatchMethodBody.append("patch=(" + patchClass.getName() + ") keyToValueRelation.get(paramArrayOfObject[paramArrayOfObject.length - 1]);\n");
+//        accessDispatchMethodBody.append("}");
         accessDispatchMethodBody.append("}\n");
-        accessDispatchMethodBody.append("else{");
-        if (Constants.isLogging) {
-            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"static method forward \" );");
-        }
-        accessDispatchMethodBody.append("patch=new " + patchClass.getName() + "(null);\n");
-        accessDispatchMethodBody.append("}");
+//        accessDispatchMethodBody.append("else{");
+//        if (Constants.isLogging) {
+//            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"static method forward \" );");
+//        }
+//        accessDispatchMethodBody.append("patch=new " + patchClass.getName() + "();\n");
+//        accessDispatchMethodBody.append("}");
         accessDispatchMethodBody.append("String methodNo=$1.split(\":\")[3];\n");
         if (Constants.isLogging) {
             accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"assemble method number  is  \" + methodNo);");
@@ -86,6 +81,10 @@ public class PatchesControlFactory {
             String methodSignure = JavaUtils.getJavaMethodSignure(method).replaceAll(patchClass.getName(), modifiedClassName);
             String methodLongName = modifiedClassName + "." + methodSignure;
             String methodNumber = Config.methodMap.get(methodLongName);
+            if (methodLongName.contains(INIT_ROBUST_PATCH)){
+                String tempMethodLongName = methodLongName.replace(INIT_ROBUST_PATCH,"<init>");
+                methodNumber = Config.methodMap.get(tempMethodLongName);
+            }
             //just Forward methods with methodNumber
             if (methodNumber != null) {
                 accessDispatchMethodBody.append(" if((\"" + methodNumber + "\").equals(methodNo)){\n");
@@ -130,10 +129,18 @@ public class PatchesControlFactory {
                     }
                 }
                 for (int index = 0; index < parametertypes.length; index++) {
-                    accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") (paramArrayOfObject[" + index + "])");
-                    accessDispatchMethodBody.append(")" + JavaUtils.wrapperToPrime(parametertypes[index].getName()));
-                    if (index != parametertypes.length - 1) {
-                        accessDispatchMethodBody.append(",");
+                    if (booleanPrimeType(parametertypes[index].getName())){
+                        accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") (fixObj(paramArrayOfObject[" + index + "]))");
+                        accessDispatchMethodBody.append(")" + JavaUtils.wrapperToPrime(parametertypes[index].getName()));
+                        if (index != parametertypes.length - 1) {
+                            accessDispatchMethodBody.append(",");
+                        }
+                    } else {
+                        accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") (paramArrayOfObject[" + index + "])");
+                        accessDispatchMethodBody.append(")" + JavaUtils.wrapperToPrime(parametertypes[index].getName()));
+                        if (index != parametertypes.length - 1) {
+                            accessDispatchMethodBody.append(",");
+                        }
                     }
                 }
                 accessDispatchMethodBody.append("));}\n");

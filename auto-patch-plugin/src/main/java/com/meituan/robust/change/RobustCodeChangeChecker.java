@@ -160,6 +160,9 @@ public class RobustCodeChangeChecker {
         List<MethodNode> addMethods = new ArrayList<>();
         //noinspection unchecked
         for (MethodNode methodNode : (List<MethodNode>) originalClass.methods) {
+            if (methodNode.name.equals("initRobustPatch")){
+                System.err.println(originalClass.name + " : " + methodNode.name + " " + methodNode.desc);
+            }
             MethodNode updatedMethod = findMethod(updatedClass, methodNode.name, methodNode.desc);
             if (updatedMethod == null) {
                 // although it's probably ok if a method got deleted since nobody should be calling

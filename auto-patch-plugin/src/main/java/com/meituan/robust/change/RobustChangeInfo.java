@@ -37,7 +37,9 @@ public class RobustChangeInfo {
     public static boolean isChangedMethod(CtMethod ctMethod) {
         String dotClass = ctMethod.getDeclaringClass().getName();
         if (dotClass.endsWith("Patch")) {
-            dotClass = dotClass.replace("Patch", "");
+            dotClass = dotClass + "ROBUST_FOR_DELETE";
+            String tempStr = "Patch" + "ROBUST_FOR_DELETE";
+            dotClass = dotClass.replace(tempStr,"");
         }
         String methodName = ctMethod.getName();
         String signature = ctMethod.getSignature();

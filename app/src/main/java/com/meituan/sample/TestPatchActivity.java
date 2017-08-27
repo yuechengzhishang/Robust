@@ -27,6 +27,13 @@ public class TestPatchActivity extends AppCompatActivity{
         System.err.println("TestPatchActivity constructor");
         Log.e("robust","777");
     }
+
+    public TestPatchActivity(int x){
+        this();
+        Log.e("robust","qqqq");
+        Log.e("robust","pppp");
+        Log.e("robust","BBBB");
+    }
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Log.e("robust","1111");
@@ -34,7 +41,6 @@ public class TestPatchActivity extends AppCompatActivity{
         Log.e("robust","222");
         setContentView(R.layout.activity_robust_compat);
         Log.e("robust","333");
-        Toast.makeText(this, "Hello onCreate TestPatchActivity", Toast.LENGTH_SHORT).show();
         Log.e("robust","444");
         // TODO: 17/8/26 需要解决 lambda表达式
 //        findViewById(R.id.patch_text).setOnClickListener(v -> {
@@ -45,6 +51,7 @@ public class TestPatchActivity extends AppCompatActivity{
 //            Log.d("robust", " onclick  in Listener");
 //        }
 //        );
+        Toast.makeText(getApplicationContext(),"T onclick  in Listener 2222",Toast.LENGTH_SHORT).show();
 
         findViewById(R.id.patch_text).setOnClickListener(new View.OnClickListener() {
             @Override
