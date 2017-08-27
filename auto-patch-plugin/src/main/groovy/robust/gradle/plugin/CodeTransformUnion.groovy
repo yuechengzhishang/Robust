@@ -1,7 +1,5 @@
 package robust.gradle.plugin
 
-import com.android.build.api.transform.*
-import com.android.build.gradle.internal.pipeline.TransformManager
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
@@ -11,41 +9,24 @@ import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.expr.ExprEditor
 import javassist.expr.MethodCall
-import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.logging.Logger
 
 import java.util.jar.JarFile
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-
 /**
  * Created by mivanzhang on 16/7/21.
  *
  * AutoPatchTransform generate patch dex
  */
-class AutoPatchTransform extends Transform implements Plugin<Project> {
-    private
-    static String dex2SmaliCommand;
-    private
-    static String smali2DexCommand;
-    private
-    static String jar2DexCommand;
+public class CodeTransformUnion {
+    private static String dex2SmaliCommand;
+    private static String smali2DexCommand;
+    private static String jar2DexCommand;
     public static String ROBUST_DIR;
-    Project project
-    static Logger logger
 
-    @Override
-    void apply(Project target) {
-        this.project = target
-        logger = project.logger
-        initConfig();
-        project.android.registerTransform(this)
-        project.afterEvaluate(new RobustResourcePatchAction())
-    }
-
-    def initConfig() {
+    public static initConfig(Project project) {
         //clear
         NameManger.init();
         InlineClassFactory.init();
@@ -64,60 +45,18 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         Config.methodMap = JavaUtils.getMapFromZippedFile(project.projectDir.path + Constants.METHOD_MAP_PATH)
     }
 
-    @Override
-    String getName() {
-        return "AutoPatchTransform"
-    }
-
-    @Override
-    Set<QualifiedContent.ContentType> getInputTypes() {
-        return TransformManager.CONTENT_CLASS
-    }
-
-    @Override
-    Set<QualifiedContent.Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_PROJECT
-    }
-
-    @Override
-    boolean isIncremental() {
-        return false
-    }
-
-    @Override
-    void transform(Context context, Collection<TransformInput> inputs, Collection<TransformInput> referencedInputs, TransformOutputProvider outputProvider, boolean isIncremental) throws IOException, TransformException, InterruptedException {
-        def startTime = System.currentTimeMillis()
-        logger.quiet '================autoPatch start================'
+    public static void transform(Project project) throws IOException {
+        long startTime = System.currentTimeMillis()
+        System.err.println("================autoPatch start================")
         copyJarToRobust()
-        outputProvider.deleteAll()
-        def outDir = outputProvider.getContentLocation("main", outputTypes, scopes, Format.DIRECTORY)
-        project.android.bootClasspath.each {
-            Config.classPool.appendClassPath((String) it.absolutePath)
-        }
-//        def box = ReflectUtils.toCtClasses(inputs, Config.classPool)
-        def box = new ArrayList<CtClass>()
-        def cost = (System.currentTimeMillis() - startTime) / 1000
-        logger.quiet "check all class cost $cost second, class count: ${box.size()}"
-        autoPatch(box)
+        autoPatch(project)
 //        JavaUtils.removeJarFromLibs()
         if (Config.debug) {
             JavaUtils.printMap2File(Config.methodMap, new File(project.projectDir.path + Constants.METHOD_MAP_PATH + ".txt"))
-            logger.quiet '================method signature to method id map unzip to file ================'
+            System.err.println("================method signature to method id map unzip to file ================");
         }
-        cost = (System.currentTimeMillis() - startTime) / 1000
-        logger.quiet "autoPatch cost $cost second"
-        if (Config.isResourceFix) {
-            File jarFile = outputProvider.getContentLocation("main", getOutputTypes(), getScopes(),
-                    Format.JAR);
-            if (!jarFile.getParentFile().exists()) {
-                jarFile.getParentFile().mkdirs();
-            }
-            if (jarFile.exists()) {
-                jarFile.delete();
-            }
-            ResourceTaskUtils.keepCode(box, jarFile)
-            return;
-        }
+        long cost = (System.currentTimeMillis() - startTime) / 1000
+        System.err.println("autoPatch cost"+ cost +"second")
         throw new RuntimeException("auto patch end successfully")
     }
 
@@ -144,7 +83,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
-    def autoPatch(List<CtClass> box) {
+    public static autoPatch(Project project) {
         project.android.bootClasspath.each {
             Config.classPool.appendClassPath((String) it.absolutePath)
         }
@@ -201,7 +140,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             ReadMapping.getInstance().initMappingInfo();
         }
 
-        generatePatch(box, patchPath);
+        generatePatch(patchPath);
 
         zipPatchClassesFile()
         executeCommand(jar2DexCommand)
@@ -216,7 +155,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             if (dexPatchFile.exists()) {
                 Config.patchHasDex = true;
             } else {
-                logger.quiet "dex patch file does not exists"
+                System.err.println("dex patch file does not exists")
                 return
             }
         } else {
@@ -224,7 +163,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
-    def JarFile copyConstructor2InitRobustPatchMethod(String fullPath, String jarName) {
+    public static JarFile copyConstructor2InitRobustPatchMethod(Project project,String fullPath, String jarName) {
         ClassPool classPool = new ClassPool()
         project.android.bootClasspath.each {
             classPool.appendClassPath((String) it.absolutePath)
@@ -250,14 +189,14 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         return outJarFile;
     }
 
-    def zipPatchClassesFile() {
+    public static zipPatchClassesFile() {
         ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(Config.robustGenerateDirectory + Constants.ZIP_FILE_NAME));
         zipAllPatchClasses(Config.robustGenerateDirectory + Config.patchPackageName.substring(0, Config.patchPackageName.indexOf(".")), "", zipOut);
         zipOut.close();
 
     }
 
-    def zipAllPatchClasses(String path, String fullClassName, ZipOutputStream zipOut) {
+    public static zipAllPatchClasses(String path, String fullClassName, ZipOutputStream zipOut) {
         File file = new File(path);
         if (file.exists()) {
             fullClassName = fullClassName + file.name;
@@ -276,14 +215,14 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 zipFile(file, zipOut, fullClassName);
             }
         } else {
-            logger.debug("文件不存在!");
+            System.err.println("文件不存在!");
         }
     }
 
 
     public static void copyConstructor2Method(CtClass patchClas) {
 
-        //临时删除默认的构造函数，这样能够 todo 解决修改构造函数的问题
+        //临时删除默认的构造函数，这样能够解决修改构造函数的问题
         try {
             CtConstructor[] ctConstructors = patchClas.getConstructors();
             if (null != ctConstructors) {
@@ -298,14 +237,12 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         } catch (NotFoundException e) {
             e.printStackTrace();
         }
-
     }
 
-    def generatePatch(List<CtClass> box, String patchPath) {
-        if (!Config.isManual) {
+    public static generatePatch(String patchPath) {
             if (Config.modifiedClassNameList.size() < 1) {
                 if (Config.isResourceFix) {
-                    logger.warn(" patch method is empty ,please check your commit ")
+                    System.err.println(" patch method is empty ,please check your commit ")
                     return;
                 }
                 throw new RuntimeException(" patch method is empty ,please check your commit ")
@@ -326,25 +263,9 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
             }
             handleAnonymousInnerClass();
             createPatchesInfoClass(patchPath);
-//            if (Config.methodNeedPatchSet.size() > 0) {
-//                throw new RuntimeException(" some methods haven't patched,see unpatched method list : " + Config.methodNeedPatchSet.toListString())
-//            }
-        } else {
-            autoPatchManually(box, patchPath);
-        }
-
     }
 
-    def handleAnonymousInnerClass() {
-        //处理匿名内部类 todo
-        //rename to ~patch
-//        JavaUtils.printList(Config.newlyAddedClassNameList)
-//        for (String className : Config.newlyAddedClassNameList) {
-//            CtClass newAddCtClass = Config.classPool.get(className)
-//            newAddCtClass.replaceClassName(className, className + "Patch")
-//            newAddCtClass.writeFile(Config.robustGenerateDirectory)
-//        }
-
+    public static handleAnonymousInnerClass() {
         Config.classPool.appendClassPath(Config.robustGenerateDirectory)
         for (String originalClassName : Config.modifiedClassNameList) {
             CtClass sourceClass = Config.classPool.get(originalClassName)
@@ -388,7 +309,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
-    def setAnonymousInnerClassPublic(String originalClassName) {
+    public static  setAnonymousInnerClassPublic(String originalClassName) {
         CtClass sourceClass = Config.classPool.get(originalClassName)
         CtClass[] ctClasses = sourceClass.getNestedClasses();
         for (CtClass nestedCtClass : ctClasses) {
@@ -403,21 +324,11 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         }
     }
 
-    def deleteTmpFiles() {
+    public static  deleteTmpFiles() {
         RobustPatchMerger.deleteTmpFiles()
     }
 
-    def autoPatchManually(List<CtClass> box, String patchPath) {
-        box.forEach { ctClass ->
-            if (Config.isManual && ctClass.name.startsWith(Config.patchPackageName)) {
-                Config.modifiedClassNameList.add(ctClass.name);
-                ctClass.writeFile(patchPath);
-            }
-        }
-    }
-
-
-    def executeCommand(String commond) {
+    public static executeCommand(String commond) {
         Process output = commond.execute(null, new File(Config.robustGenerateDirectory))
         output.inputStream.eachLine { println commond + " inputStream output   " + it }
         output.errorStream.eachLine {
@@ -427,7 +338,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     }
 
 
-    def handleSuperMethodInClass(List originClassList) {
+    public static handleSuperMethodInClass(List originClassList) {
         CtClass modifiedCtClass;
         for (String modifiedFullClassName : originClassList) {
             List<CtMethod> invokeSuperMethodList = Config.invokeSuperMethodMap.getOrDefault(modifiedFullClassName, new ArrayList());
@@ -453,22 +364,22 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     }
 
 
-    def createControlClass(String patchPath, CtClass modifiedClass) {
+    public static createControlClass(String patchPath, CtClass modifiedClass) {
         CtClass controlClass = PatchesControlFactory.createPatchesControl(modifiedClass);
         controlClass.writeFile(patchPath);
         return controlClass;
     }
 
 
-    def createPatchesInfoClass(String patchPath) {
+    public static createPatchesInfoClass(String patchPath) {
         PatchesInfoFactory.createPatchesInfo().writeFile(patchPath);
     }
 
-    def clearPatchPath(String patchPath) {
+    public static clearPatchPath(String patchPath) {
         new File(patchPath).deleteDir();
     }
 
-    def packagePatchDex2Apk() throws IOException {
+    public static packagePatchDex2Apk() throws IOException {
         File inputFile = new File(Config.robustGenerateDirectory, Constants.PATACH_DEX_NAME);
         if (!inputFile.exists() || !inputFile.canRead()) {
             throw new RuntimeException("patch.dex is not exists or readable")
@@ -480,7 +391,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
         zipOut.close()
     }
 
-    def zipFile(File inputFile, ZipOutputStream zos, String entryName) {
+    public static zipFile(File inputFile, ZipOutputStream zos, String entryName) {
         ZipEntry entry = new ZipEntry(entryName);
         zos.putNextEntry(entry);
         FileInputStream fis = new FileInputStream(inputFile)
