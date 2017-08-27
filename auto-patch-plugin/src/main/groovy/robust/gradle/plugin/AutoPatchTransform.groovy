@@ -313,7 +313,6 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
                 setAnonymousInnerClassPublic(fullClassName)
                 CtClass ctClass = Config.classPool.get(fullClassName)
                 CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
-                patchClass.setSuperclass(Config.classPool.get("java.lang.Object"));
                 patchClass.writeFile(patchPath)
                 patchClass.defrost()
                 CtClass sourceClass = Config.classPool.get(fullClassName)

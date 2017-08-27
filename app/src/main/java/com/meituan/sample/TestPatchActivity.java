@@ -26,6 +26,7 @@ public class TestPatchActivity extends AppCompatActivity{
         Log.e("robust","666");
         System.err.println("TestPatchActivity constructor");
         Log.e("robust","777");
+        Log.e("robust","TestPatchActivity super ING");
     }
 
     public TestPatchActivity(int x){

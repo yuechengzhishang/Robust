@@ -158,6 +158,7 @@ public class RobustCodeChangeChecker {
         List<MethodNode> nonVisitedMethodsOnUpdatedClass = new ArrayList<>(updatedClass.methods);
         List<MethodNode> changedMethods = new ArrayList<>();
         List<MethodNode> addMethods = new ArrayList<>();
+        List<MethodNode> invariantMethods = new ArrayList<>();
         //noinspection unchecked
         for (MethodNode methodNode : (List<MethodNode>) originalClass.methods) {
             if (methodNode.name.equals("initRobustPatch")){
@@ -178,6 +179,7 @@ public class RobustCodeChangeChecker {
                     //ignore // TODO: 17/8/24
                     boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod);
                     if (isEqual) {
+                        invariantMethods.add(updatedMethod);
                     } else {
                         ChangeLog.log(updatedClass.name, "METHOD_CHANGE : " + methodNode.name + " " + methodNode.desc);
                         changedMethods.add(updatedMethod);
@@ -185,6 +187,7 @@ public class RobustCodeChangeChecker {
                 } else {
                     boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod);
                     if (isEqual) {
+                        invariantMethods.add(updatedMethod);
                     } else {
                         ChangeLog.log(updatedClass.name, "METHOD_CHANGE : " + methodNode.name + " " + methodNode.desc);
                         changedMethods.add(updatedMethod);
@@ -215,6 +218,7 @@ public class RobustCodeChangeChecker {
             RobustChangeInfo.MethodChange methodChange = new RobustChangeInfo.MethodChange();
             methodChange.addList.addAll(addMethods);
             methodChange.changeList.addAll(changedMethods);
+            methodChange.invariantList.addAll(invariantMethods);
             return methodChange;
         }
     }
@@ -247,12 +251,14 @@ public class RobustCodeChangeChecker {
             List<FieldNode> copyOfOne = new ArrayList<FieldNode>(one);
             List<FieldNode> copyOfTwo = new ArrayList<FieldNode>(two);
 
+            List<FieldNode> invariantFields = new ArrayList<FieldNode>();
             // TODO: 17/8/25 需要区分出来 change field 与 add field
             for (FieldNode elementOfTwo : two) {
                 //遍历2
                 FieldNode commonElement = getElementOf(copyOfOne, elementOfTwo, FIELD_COMPARATOR);
                 if (commonElement != null) {
                     copyOfOne.remove(commonElement);
+                    invariantFields.add(elementOfTwo);
                 }
             }
 
@@ -274,6 +280,8 @@ public class RobustCodeChangeChecker {
 
             RobustChangeInfo.FieldChange fieldChange = new RobustChangeInfo.FieldChange();
             fieldChange.changeList.addAll(copyOfTwo);
+            fieldChange.addList.addAll(copyOfOne);
+            fieldChange.invariantList.addAll(invariantFields);
 
             return  fieldChange;
         }

@@ -32,14 +32,42 @@ class PatchesFactory {
         String originalClassName = modifiedClass.getName()
 
         CtClass temPatchClass = cloneClass(modifiedClass, patchName, methodNoNeedPatchList);
-        if (temPatchClass.getDeclaredMethods().length == 0) {
-            //todo 方法被删除空了，需要做兼容
-//            throw new RuntimeException("all methods in patch class are deteted,cannot find patchMethod in class " + temPatchClass.getName());
+
+        //把所有的方法访问属性都改成public
+        changeMethodToPublicAndUnAbstract(temPatchClass)
+
+        List<CtMethod> willDeleteCtMethods = new ArrayList<CtMethod>();
+        for (CtMethod ctMethod : temPatchClass.getDeclaredMethods()) {
+            if (com.meituan.robust.change.RobustChangeInfo.isInvariantMethod(ctMethod)) {
+//                temPatchClass.removeMethod(ctMethod)
+                willDeleteCtMethods.add(ctMethod)
+            }
+        }
+
+        List<CtConstructor> willDeleteCtConstructors = new ArrayList<CtConstructor>();
+        for (CtConstructor ctConstructor : temPatchClass.getDeclaredConstructors()) {
+            //删除所有的构造函数
+//            temPatchClass.removeConstructor(ctConstructor)
+            willDeleteCtConstructors.add(ctConstructor)
+        }
+
+        List<CtConstructor> willDeleteCtFields = new ArrayList<CtField>();
+        for (CtField ctField : temPatchClass.getDeclaredFields()) {
+            if (com.meituan.robust.change.RobustChangeInfo.isInvariantField(ctField)) {
+//                temPatchClass.removeField(ctField)
+                if (isChangeQuickRedirectFieldForPatchClass(ctField)){
+                    //保留这个patch class的ChangeQuickRedirectField
+                    //java.lang.NoSuchFieldError: com.meituan.sample.TestPatchActivityPatch.changeQuickRedirect
+                } else {
+                    willDeleteCtFields.add(ctField)
+                }
+            }
         }
 
         modifiedClass = Config.classPool.get(originalClassName);
         modifiedClass.defrost()
         JavaUtils.addField_OriginClass(temPatchClass, modifiedClass);
+
         CtMethod reaLParameterMethod = CtMethod.make(JavaUtils.getRealParamtersBody(temPatchClass.name), temPatchClass);
         temPatchClass.addMethod(reaLParameterMethod);
 
@@ -49,19 +77,61 @@ class PatchesFactory {
 //            throw new RuntimeException(" something wrong with mappingfile ,cannot find  class  " + modifiedClass.getName() + "   in mapping file");
 //        }
 
-        //把所有的方法访问属性都改成public
-        changeMethodToPublicAndUnAbstract(temPatchClass)
+
+
+        temPatchClass.writeFile(patchPath)
+        temPatchClass.defrost()
 
         //执行替换
         for (CtMethod method : temPatchClass.getDeclaredMethods()) {
+            if (willDeleteCtMethods.contains(method)) {
+                continue;
+            }
+            if (method.name.equals("<init>")) {
+                continue;
+            }
             if (!Config.addedSuperMethodList.contains(method) && !reaLParameterMethod.equals(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
                 method.instrument(
                         new RobustMethodExprEditor(modifiedClass, temPatchClass, method)
                 );
             }
         }
+
+        temPatchClass.writeFile(patchPath)
+        temPatchClass.defrost()
+
+        for (CtMethod ctMethod : willDeleteCtMethods) {
+            temPatchClass.removeMethod(ctMethod)
+        }
+
+        temPatchClass.writeFile(patchPath)
+        temPatchClass.defrost()
+
+        for (CtConstructor ctConstructor : willDeleteCtConstructors) {
+            temPatchClass.removeConstructor(ctConstructor)
+        }
+
+        temPatchClass.writeFile(patchPath)
+        temPatchClass.defrost()
+        for (CtField ctField : willDeleteCtFields) {
+            temPatchClass.removeField(ctField)
+        }
+
+        CtConstructor ctConstructor = CtNewConstructor.defaultConstructor(temPatchClass);
+        temPatchClass.addConstructor(ctConstructor)
+
+        temPatchClass.setSuperclass(Config.classPool.get("java.lang.Object"));
+        temPatchClass.setInterfaces(null);
         CtClass patchClass = temPatchClass;
         return patchClass;
+    }
+
+    public static boolean isChangeQuickRedirectFieldForPatchClass(CtField ctField){
+        if (ctField.type.getName().equals(Constants.INTERFACE_NAME)){
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -81,7 +151,8 @@ class PatchesFactory {
         return targetClass;
     }
 
-    public static CtClass cloneClass(CtClass sourceClass, String patchName, List<CtMethod> exceptMethodList) throws CannotCompileException, NotFoundException {
+    public
+    static CtClass cloneClass(CtClass sourceClass, String patchName, List<CtMethod> exceptMethodList) throws CannotCompileException, NotFoundException {
 
         CtClass targetClass = Config.classPool.getOrNull(patchName);
         if (targetClass != null) {

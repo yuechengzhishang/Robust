@@ -10,10 +10,10 @@ import java.util.Map;
  */
 
 public class ProGuardMappingUtils {
+    public static Map<String, ClassMapping> classMappings = new LinkedHashMap<String, ClassMapping>();
     private ProGuardMappingUtils() {
 
     }
-
     public static void main(String[] args){
         String mappingPath = "/Users/hedingxu/robust-github/Robust/app/robust/mapping.txt";
         handleMappingFile(mappingPath);
@@ -24,7 +24,6 @@ public class ProGuardMappingUtils {
 
         MappingReader reader = new MappingReader(applyMapping);
 
-        Map<String, ClassMapping> classMappings = new LinkedHashMap<String, ClassMapping>();
         MappingProcessor keeper = new MappingContainer(classMappings);
         try {
             reader.pump(keeper);

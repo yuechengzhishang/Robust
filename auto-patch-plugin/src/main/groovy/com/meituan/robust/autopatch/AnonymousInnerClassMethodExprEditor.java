@@ -77,9 +77,17 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
             */
             //replace access method
             //replace params
-            String statement = "$_=($r) "+ outerPatchClassName+"."+ m.getMethodName() + getParamsStr(m) + " ; ";
 //            stringBuilder.append("}");
-            m.replace(statement);
+            try {
+                String statement = "$_=($r) "+ outerPatchClassName+"."+ m.getMethodName() + getParamsStr(m) + " ; ";
+                m.replace(statement);
+            } catch (javassist.CannotCompileException e){
+                String statement = "$_=($r) "+ outerSourceClassName+"."+ m.getMethodName() + getParamsStr(m) + " ; ";
+                m.replace(statement);
+
+            }
+
+
         }
 
     }
