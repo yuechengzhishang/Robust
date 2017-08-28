@@ -105,7 +105,12 @@ public class CodeTransformUnion {
         File newMainJarFile = new File(patchPath, Config.ROBUST_TRANSFORM_MAIN_JAR)
         File newProGuradJarFile = new File(patchPath,Config.ROBUST_PROGUARD_MAIN_JAR)
         if (newMainJarFile.exists() || newProGuradJarFile.exists()) {
-
+            //如果proguard打开了，就使用proguard的包
+            //todo test
+            if (newProGuradJarFile.exists()){
+                newMainJarFile = newProGuradJarFile
+                oldMainJarFile = oldProGuardJarFile
+            }
         } else {
             throw new RuntimeException("please apply plugin: 'robust'")
         }

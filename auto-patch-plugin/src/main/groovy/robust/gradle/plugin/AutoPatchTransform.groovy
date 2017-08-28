@@ -15,8 +15,8 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     @Override
     void apply(Project target) {
         this.project = target
-        CodeTransformUnion.initConfig(project);
-        project.android.registerTransform(this)
+//        project.android.registerTransform(this)
+        target.afterEvaluate(new RobustAutoPatchAction())
     }
 
     @Override
@@ -41,6 +41,6 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
 
     @Override
     void transform(Context context, Collection<TransformInput> inputs, Collection<TransformInput> referencedInputs, TransformOutputProvider outputProvider, boolean isIncremental) throws IOException, TransformException, InterruptedException {
-        CodeTransformUnion.transform(project)
+
     }
 }

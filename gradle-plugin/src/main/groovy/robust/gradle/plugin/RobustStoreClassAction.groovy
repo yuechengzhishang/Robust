@@ -22,7 +22,7 @@ public class RobustStoreClassAction implements Action<Project> {
                     jarMergingTask = project.tasks.findByName(GradleUtils.getJarMergingTaskName(project, variant));
                 }
 
-                dexTask.doFirst {
+                proGuardTask.doLast {
                     File proGuardJar;
                     if (proGuardTask != null) {
                         proGuardJar = GradleUtils.getProGuardTaskOutputJar(project, variant, dexTask);
