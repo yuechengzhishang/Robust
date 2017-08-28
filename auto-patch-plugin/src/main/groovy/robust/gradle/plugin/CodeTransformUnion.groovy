@@ -115,8 +115,8 @@ public class CodeTransformUnion {
         JarFile currentJarFile = new JarFile(newMainJarFile);
 
         //将构造函数转成initRobustPatch函数
-        originalJarFile = copyConstructor2InitRobustPatchMethod(oldMainJarFile.absolutePath, "old_"+oldMainJarFile.name)
-        currentJarFile = copyConstructor2InitRobustPatchMethod(newMainJarFile.absolutePath, "new_"+newMainJarFile.name)
+        originalJarFile = copyConstructor2InitRobustPatchMethod(project,oldMainJarFile.absolutePath, "old_"+oldMainJarFile.name)
+        currentJarFile = copyConstructor2InitRobustPatchMethod(project,newMainJarFile.absolutePath, "new_"+newMainJarFile.name)
 
         Config.classPool.appendClassPath(currentJarFile.name)
 
