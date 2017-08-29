@@ -195,6 +195,14 @@ public class PatchesControlFactory {
             String methodLongName = modifiedClassName + "." + methodSignure;
             String methodNumber = Config.methodMap.get(methodLongName);
             //just Forward methods with methodNumber
+
+            if (methodNumber == null){
+                if (methodLongName.contains(INIT_ROBUST_PATCH)) {
+                    String tempMethodLongName = methodLongName.replace(INIT_ROBUST_PATCH, "<init>");
+                    methodNumber = Config.methodMap.get(tempMethodLongName);
+                }
+            }
+
             if (methodNumber != null) {
                 methodsIdBuilder.append(methodNumber + ":");
             }
