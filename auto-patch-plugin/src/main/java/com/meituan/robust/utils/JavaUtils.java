@@ -13,6 +13,7 @@ import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -409,7 +410,7 @@ public class JavaUtils {
         System.out.println("");
     }
 
-    public static void printList(List<String> list) {
+    public static void printList(Collection<String> list) {
         if (list == null) {
             return;
         }

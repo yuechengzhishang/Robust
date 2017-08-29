@@ -5,13 +5,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import com.meituan.robust.patch.RobustModify;
-import com.meituan.sample.robusttest.Super;
-
-import static com.meituan.sample.SecondActivity.state;
 
 /**
  * Created by hedingxu on 17/6/16.

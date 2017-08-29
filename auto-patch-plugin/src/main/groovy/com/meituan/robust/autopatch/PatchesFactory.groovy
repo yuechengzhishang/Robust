@@ -84,11 +84,16 @@ class PatchesFactory {
 
         //执行替换
         for (CtMethod method : temPatchClass.getDeclaredMethods()) {
-            if (willDeleteCtMethods.contains(method)) {
-                continue;
-            }
-            if (method.name.equals("<init>")) {
-                continue;
+            //对于内部类带来的方法修改，需要处理
+            if (AnonymousClassOuterClassMethodUtils.isModifiedByAnonymous(modifiedClass.name,method)){
+
+            } else {
+                if (willDeleteCtMethods.contains(method)) {
+                    continue;
+                }
+                if (method.name.equals("<init>")) {
+                    continue;
+                }
             }
             if (!Config.addedSuperMethodList.contains(method) && !reaLParameterMethod.equals(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
                 method.instrument(

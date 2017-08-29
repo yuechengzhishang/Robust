@@ -34,6 +34,7 @@ public final class Config {
     public static List<String> newlyAddedClassNameList = new ArrayList<String>();
     public static Set newlyAddedMethodSet = new HashSet<String>();
     public static List<String> modifiedClassNameList = new ArrayList<String>();
+    public static List<String> modifiedAnonymousInnerClassNameList = new ArrayList<String>();
     public static List<String> hotfixPackageList = new ArrayList<>();
     public static List<String> exceptPackageList = new ArrayList<>();
     public static HashMap<String, String> methodMap = new HashMap<String, String>();

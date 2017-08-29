@@ -2,6 +2,7 @@ package robust.gradle.plugin
 
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
+import com.meituan.robust.autopatch.AnonymousClassOuterClassMethodUtils
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
@@ -15,6 +16,7 @@ import java.util.jar.JarFile
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+
 /**
  * Created by mivanzhang on 16/7/21.
  *
@@ -56,7 +58,7 @@ public class CodeTransformUnion {
             System.err.println("================method signature to method id map unzip to file ================");
         }
         long cost = (System.currentTimeMillis() - startTime) / 1000
-        System.err.println("autoPatch cost"+ cost +"second")
+        System.err.println("autoPatch cost" + cost + "second")
         throw new RuntimeException("auto patch end successfully")
     }
 
@@ -103,11 +105,11 @@ public class CodeTransformUnion {
         //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
         //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         File newMainJarFile = new File(patchPath, Config.ROBUST_TRANSFORM_MAIN_JAR)
-        File newProGuradJarFile = new File(patchPath,Config.ROBUST_PROGUARD_MAIN_JAR)
+        File newProGuradJarFile = new File(patchPath, Config.ROBUST_PROGUARD_MAIN_JAR)
         if (newMainJarFile.exists() || newProGuradJarFile.exists()) {
             //如果proguard打开了，就使用proguard的包
-            //todo test
-            if (newProGuradJarFile.exists()){
+            //todo test proguard
+            if (newProGuradJarFile.exists()) {
                 newMainJarFile = newProGuradJarFile
                 oldMainJarFile = oldProGuardJarFile
             }
@@ -120,8 +122,8 @@ public class CodeTransformUnion {
         JarFile currentJarFile = new JarFile(newMainJarFile);
 
         //将构造函数转成initRobustPatch函数
-        originalJarFile = copyConstructor2InitRobustPatchMethod(project,oldMainJarFile.absolutePath, "old_"+oldMainJarFile.name)
-        currentJarFile = copyConstructor2InitRobustPatchMethod(project,newMainJarFile.absolutePath, "new_"+newMainJarFile.name)
+        originalJarFile = copyConstructor2InitRobustPatchMethod(project, oldMainJarFile.absolutePath, "old_" + oldMainJarFile.name)
+        currentJarFile = copyConstructor2InitRobustPatchMethod(project, newMainJarFile.absolutePath, "new_" + newMainJarFile.name)
 
         Config.classPool.appendClassPath(currentJarFile.name)
 
@@ -130,10 +132,35 @@ public class CodeTransformUnion {
         println("modifiedClassNameList is ：")
         JavaUtils.printList(Config.modifiedClassNameList)
 
+        println("newlyAddedClassNameList is ：")
+        JavaUtils.printList(Config.newlyAddedClassNameList)
+
+        println("modifiedAnonymousInnerClassNameList is :")
+        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
+
+        println("convert modifiedAnonymousInnerClassNameList to newAddClassNameList:")
+        for (String anonymousClassName: Config.modifiedAnonymousInnerClassNameList){
+            if (Config.newlyAddedClassNameList.contains(anonymousClassName)){
+            } else {
+                Config.newlyAddedClassNameList.add(anonymousClassName)
+            }
+        }
+
+        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
+        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList){
+            AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
+            if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)){
+                //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
+            } else {
+                Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
+            }
+        }
+
         for (String modifiedClassName : Config.modifiedClassNameList) {
             CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
             modifiedCtClass.defrost();
-            Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
+            //todo delete unChanged anonymousInnerClass 8-29
+//            Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
         }
 
         println("newlyAddedClassNameList is ：")
@@ -168,14 +195,15 @@ public class CodeTransformUnion {
         }
     }
 
-    public static JarFile copyConstructor2InitRobustPatchMethod(Project project,String fullPath, String jarName) {
+    public
+    static JarFile copyConstructor2InitRobustPatchMethod(Project project, String fullPath, String jarName) {
         ClassPool classPool = new ClassPool()
         project.android.bootClasspath.each {
             classPool.appendClassPath((String) it.absolutePath)
         }
         classPool.appendClassPath(fullPath)
 
-        String jarOutDirectoryPath = Config.robustGenerateDirectory + "constructor" + Constants.File_SEPARATOR + jarName.replace(".jar","")
+        String jarOutDirectoryPath = Config.robustGenerateDirectory + "constructor" + Constants.File_SEPARATOR + jarName.replace(".jar", "")
         FileUtil.createDirectory(jarOutDirectoryPath)
         FileUtil.unzip(fullPath, jarOutDirectoryPath)
 
@@ -245,29 +273,38 @@ public class CodeTransformUnion {
     }
 
     public static generatePatch(String patchPath) {
-            if (Config.modifiedClassNameList.size() < 1) {
-                if (Config.isResourceFix) {
-                    System.err.println(" patch method is empty ,please check your commit ")
-                    return;
-                }
-                throw new RuntimeException(" patch method is empty ,please check your commit ")
+        if (Config.modifiedClassNameList.size() < 1) {
+            if (Config.isResourceFix) {
+                System.err.println(" patch method is empty ,please check your commit ")
+                return;
             }
+            throw new RuntimeException(" patch method is empty ,please check your commit ")
+        }
 //            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
-            JavaUtils.printList(Config.modifiedClassNameList)
-            handleSuperMethodInClass(Config.modifiedClassNameList);
 
-            //auto generate all class
-            for (String fullClassName : Config.modifiedClassNameList) {
-                setAnonymousInnerClassPublic(fullClassName)
-                CtClass ctClass = Config.classPool.get(fullClassName)
-                CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
-                patchClass.writeFile(patchPath)
-                patchClass.defrost()
-                CtClass sourceClass = Config.classPool.get(fullClassName)
-                createControlClass(patchPath, sourceClass)
+        HashMap<String, HashSet<AnonymousClassOuterClassMethodUtils.OuterMethodInfo>> changedAnonymousInfoMap =
+                AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap;
+
+        if (changedAnonymousInfoMap.size()>0){
+            for (String anonymousClassName:changedAnonymousInfoMap.keySet()){
+
             }
-            handleAnonymousInnerClass();
-            createPatchesInfoClass(patchPath);
+        }
+        JavaUtils.printList(Config.modifiedClassNameList)
+        handleSuperMethodInClass(Config.modifiedClassNameList);
+
+        //auto generate all class
+        for (String fullClassName : Config.modifiedClassNameList) {
+            setAnonymousInnerClassPublic(fullClassName)//todo 在robustTransform已经做了，可以考虑删除这行代码
+            CtClass ctClass = Config.classPool.get(fullClassName)
+            CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
+            patchClass.writeFile(patchPath)
+            patchClass.defrost()
+            CtClass sourceClass = Config.classPool.get(fullClassName)
+            createControlClass(patchPath, sourceClass)
+        }
+        handleAnonymousInnerClass();
+        createPatchesInfoClass(patchPath);
     }
 
     public static handleAnonymousInnerClass() {
@@ -314,7 +351,7 @@ public class CodeTransformUnion {
         }
     }
 
-    public static  setAnonymousInnerClassPublic(String originalClassName) {
+    public static setAnonymousInnerClassPublic(String originalClassName) {
         CtClass sourceClass = Config.classPool.get(originalClassName)
         CtClass[] ctClasses = sourceClass.getNestedClasses();
         for (CtClass nestedCtClass : ctClasses) {
@@ -329,7 +366,7 @@ public class CodeTransformUnion {
         }
     }
 
-    public static  deleteTmpFiles() {
+    public static deleteTmpFiles() {
         RobustPatchMerger.deleteTmpFiles()
     }
 
@@ -409,8 +446,6 @@ public class CodeTransformUnion {
         zos.closeEntry();
         zos.flush();
     }
-
-
 
 
 }

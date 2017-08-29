@@ -329,7 +329,7 @@ class ReflectUtils {
     }
 
 
-    def
+    public
     static String getNewInnerClassString(String signature, String patchClassName, boolean isStatic, String className) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
@@ -357,7 +357,7 @@ class ReflectUtils {
 
 
 
-    private static String getParameterClassString(CtClass[] parameters) {
+    public static String getParameterClassString(CtClass[] parameters) {
         if (parameters == null || parameters.length < 1) {
             return "";
         }
@@ -371,7 +371,7 @@ class ReflectUtils {
         return stringBuilder.toString();
     }
 
-    def
+    public
     static String getMethodCallString(MethodCall methodCall,  CtClass patchClass, boolean isInStaticMethod) {
         String signatureBuilder = getParameterClassString(methodCall.method.parameterTypes);
         StringBuilder stringBuilder = new StringBuilder();
@@ -451,7 +451,7 @@ class ReflectUtils {
         return stringBuilder.toString();
     }
 
-    def
+    public
     static String getInLineMemberString(CtMethod method, boolean isInStaticMethod, boolean isNewClass) {
 
         StringBuilder parameterBuilder = new StringBuilder();
@@ -518,7 +518,7 @@ class ReflectUtils {
         return stringBuilder.toString();
     }
 
-    static getInLineMethodName(CtMethod ctMethod) {
+    public static getInLineMethodName(CtMethod ctMethod) {
         if (AccessFlag.isPrivate(ctMethod.modifiers)) {
             return Constants.ROBUST_PUBLIC_SUFFIX + ctMethod.name;
         } else {
@@ -527,11 +527,11 @@ class ReflectUtils {
     }
 
 
-    static boolean isStatic(int modifiers) {
+    public static boolean isStatic(int modifiers) {
         return (modifiers & AccessFlag.STATIC) != 0;
     }
 
-    def static String invokeSuperString(MethodCall m) {
+    public static String invokeSuperString(MethodCall m) {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append("{");
@@ -549,11 +549,11 @@ class ReflectUtils {
         return stringBuilder.toString();
     }
 
-    def static String getStaticSuperMethodName(String methodName) {
+    public static String getStaticSuperMethodName(String methodName) {
         return Constants.STATICFLAG + methodName;
     }
 
-    def static getJavaMethodSignureWithReturnType(CtMethod ctMethod) {
+    public static String getJavaMethodSignureWithReturnType(CtMethod ctMethod) {
         //不考虑proguard的情况，这么干
         if (true){
             return ctMethod.name;

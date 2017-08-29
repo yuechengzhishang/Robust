@@ -52,7 +52,7 @@ public class AnonymousInnerClassUtil {
             for (CtClass ctClass : ctClasses) {
 //              case: com.dianping.ad.view.BannerAdView$$Lambda$1
 //              case: com.meituan.sample.MainActivity$3
-//              case: com.meituan.android.baby.poi.agent.BabyPoiPromoAgent$AjcClosure1 你们内部类
+//              case: com.meituan.android.baby.poi.agent.BabyPoiPromoAgent$AjcClosure1 AspectJ产生的内部类
 //              case: android.support.design.widget.AppBarLayout$Behavior$SavedState$1 跟普通匿名内部类一样
 //              case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
                 String nestedClassName = ctClass.getName();

@@ -440,17 +440,34 @@ public class CheckCodeChanges {
                                     //field change or method change
                                     Config.modifiedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
                                     RobustChangeInfo.changeClasses.add(classChange);
-//                            if (status.contains(RobustChangeStatus.METHOD_CHANGED)
-//                                    || status.contains(RobustChangeStatus.METHOD_ADDED)
-//                                    || status.contains(RobustChangeStatus.FIELD_ADDED)){
-//                                System.err.println(className + " has changed");
-//                                Config.modifiedClassNameList.add(className.replace(".class","").replace(File_SEPARATOR,"."));
-//                            }
+//                                  //todo 这里File_SEPARATOR需要考虑windows里面的是否兼容
+                                    if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
+//                                        ClassNode newAnonymousInnerClass = newClassNode;
+//                                        String outerClass = newAnonymousInnerClass.outerClass;
+//                                        String outerMethod = newAnonymousInnerClass.outerMethod;
+//                                        String outerMethodDesc = newAnonymousInnerClass.outerMethodDesc;
+//                                        System.err.println("======MMMMM");
+//                                        System.err.println("isAnonymousInnerClass: " + newAnonymousInnerClass.name);
+//                                        System.err.println("outerClass: " + outerClass);
+//                                        System.err.println("outerMethod: " + outerMethod);
+//                                        System.err.println("outerMethodDesc: " + outerMethodDesc);
+//                                        System.err.println("======NNNNN");
+                                        ClassNode newAnonymousInnerClass = newClassNode;
+                                        AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
+                                    }
                                 }
                             }
                         } else {
                             RobustChangeInfo.addClasses.add(className.replace(File_SEPARATOR, "."));
-                            Config.newlyAddedClassNameList.add(className.replace(File_SEPARATOR, "."));
+                            Config.newlyAddedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
+
+//                            //todo just for test only
+                            if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
+                                byte[] newClassBytes = new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
+                                ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);
+                                ClassNode newAnonymousInnerClass = newClassNode;
+                                AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
+                            }
                         }
                         //end
 

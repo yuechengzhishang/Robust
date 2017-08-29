@@ -103,16 +103,25 @@ public class ProcessUtil {
     }
 
     private static String getCurrentProcessNameByFile() {
+        BufferedReader reader = null;
         try {
             final File cmdline = new File("/proc/" + android.os.Process.myPid() + "/cmdline");
-            BufferedReader reader = new BufferedReader(new FileReader(cmdline));
+            reader = new BufferedReader(new FileReader(cmdline));
             String processNameLine = reader.readLine();
             String pureProcessName = processNameLine.replaceAll("[^0-9a-zA-Z.-_+:]+", "").replace("\n", "");
             return pureProcessName;
-        } catch (Throwable e) {
-            e.printStackTrace();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+            }
         }
-        return null;
+        return "";
     }
 
 }
