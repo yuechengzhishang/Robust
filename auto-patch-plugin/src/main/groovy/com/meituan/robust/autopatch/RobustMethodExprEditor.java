@@ -65,7 +65,10 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
 
         try {
+            //TODO: 17/8/29 尽量不使用反射
+            //todo 根据field的访问类型
             if (f.isReader()) {
+                //reader done
                 f.replace(ReflectUtils.getFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
             } else if (f.isWriter()) {
                 f.replace(ReflectUtils.setFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));

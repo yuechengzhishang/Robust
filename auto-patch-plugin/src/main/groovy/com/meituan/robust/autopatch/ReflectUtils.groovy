@@ -1,107 +1,60 @@
 package com.meituan.robust.autopatch
 
-import com.android.SdkConstants
-import com.android.build.api.transform.TransformInput
 import com.meituan.robust.Constants
 import com.meituan.robust.utils.JavaUtils
-import javassist.*
+import javassist.CtClass
+import javassist.CtField
+import javassist.CtMethod
 import javassist.bytecode.AccessFlag
 import javassist.expr.MethodCall
 import javassist.expr.NewExpr
-import org.apache.commons.io.FileUtils
 import robust.gradle.plugin.AutoPatchTransform
 
-import java.util.jar.JarEntry
-import java.util.jar.JarFile
-import java.util.regex.Matcher
-
 class ReflectUtils {
+
+    //FieldAccess
+//            $0	The object containing the field accessed by the expression. This is not equivalent to this.
+//                    this represents the object that the method including the expression is invoked on.
+//            $0 is null if the field is static.
+    //如果FieldAccess is non-static and outerMethod is non-static =>  FieldAccess has this
+//            if (!isOuterMethodStatic && !isStatic) { //有this存在的环境
+//                //todo need to handle $0 is this 's Q
+//                if (AccessFlag.isPublic(field.modifiers)){
+//                    //没有考虑新增field,如果是新增field，需要区分出来，新增/修改的field需要使用this调用
+//                    stringBuilder.append("if(\$0 == this) { ");
+//                        stringBuilder.append("\$_=(\$r) " + "((" + patchClassName + ")this)." + Constants.ORIGINCLASS + "."+field.name+";");
+//                    stringBuilder.append("} ")
+//                    stringBuilder.append("else            { "+ "\$_ = \$proceed(\$\$);" + " }" );
+//                } else {
+//                    //todo need reflect
+//                    stringBuilder.append("if(\$0 == this) {");
+//                    stringBuilder.append("\$_=(\$r) " + "((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "."+field.name+";");
+//                    stringBuilder.append("} ")
+//                    stringBuilder.append("else            { "+ "\$_ = \$proceed(\$\$);" + " }" );
+//                }
+//            } else {
+//                if (AccessFlag.isPublic(field.modifiers)){
+//
+//                }
+//            }
+    //如果在TestPatchActivity 里面 TestPatchActivity testPatchActivity =  new TestPatchActivity(); 这种情况好像没有考虑
+    //如何避免TestPatchActivity testPatchActivity =  new TestPatchActivity();
+    //int xx = testPatchActivity.xx; vs int xx = this.xx; todo 8-30
+    //这种情况如何处理？其中方法里还包括这样的代码
+    //int xx = testPatchActivity.getxx(); vs int xx = this.getxx(); todo 8-30
+    // 在方法的处理中？？？ 可以判断 testPatchActivity 是否 == this，来区分
+//            if (AccessFlag.isPublic(field.modifiers)) {
+//                if (field.declaringClass.name.equals(patchClassName)) { //如果是子类的protected属性呢？todo
+//                    stringBuilder.append("\$_=(\$r) " + "((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + ";");
+//                } else {
+//                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
+//                }
+//            }
 
     public static final Boolean INLINE_R_FILE = true;
     public static int invokeCount = 0;
 
-    static List<CtClass> toCtClasses(Collection<TransformInput> inputs, ClassPool classPool) {
-        List<String> classNames = new ArrayList<>()
-        List<CtClass> allClass = new ArrayList<>();
-        def startTime = System.currentTimeMillis()
-        inputs.each {
-            it.directoryInputs.each {
-                def dirPath = it.file.absolutePath
-                classPool.insertClassPath(it.file.absolutePath)
-                FileUtils.listFiles(it.file, null, true).each {
-                    if (it.absolutePath.endsWith(SdkConstants.DOT_CLASS)) {
-                        def className = it.absolutePath.substring(dirPath.length() + 1, it.absolutePath.length() - SdkConstants.DOT_CLASS.length()).replaceAll(Matcher.quoteReplacement(File.separator), '.')
-                        classNames.add(className)
-                    }
-                }
-            }
-            it.jarInputs.each {
-                classPool.insertClassPath(it.file.absolutePath)
-                def jarFile = new JarFile(it.file)
-                Enumeration<JarEntry> classes = jarFile.entries();
-                while (classes.hasMoreElements()) {
-                    JarEntry libClass = classes.nextElement();
-                    String className = libClass.getName();
-                    if (className.endsWith(SdkConstants.DOT_CLASS)) {
-                        className = className.substring(0, className.length() - SdkConstants.DOT_CLASS.length()).replaceAll('/', '.')
-                        classNames.add(className)
-                    }
-                }
-            }
-        }
-        def cost = (System.currentTimeMillis() - startTime) / 1000
-        println "autopatch read all class file cost $cost second"
-        classNames.each {
-            try {
-                allClass.add(classPool.get(it));
-            } catch (NotFoundException e) {
-                println "class not found exception class name:  $it "
-                e.printStackTrace()
-
-            }
-        }
-        return allClass;
-    }
-
-
-    public
-    static String setFieldString(CtField field, Map memberMappingInfo, String patchClassName, String modifiedClassName) {
-        boolean isStatic = isStatic(field.modifiers)
-        StringBuilder stringBuilder = new StringBuilder("{");
-        if (isStatic) {
-            println("setFieldString static field " + field.getName() + "  declaringClass   " + field.declaringClass.name)
-            if (AccessFlag.isPublic(field.modifiers)) {
-                stringBuilder.append("\$_ = \$proceed(\$\$);");
-            } else {
-                if (field.declaringClass.name.equals(patchClassName)) {
-                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\"," + modifiedClassName + ".class,\$1);");
-                } else {
-                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\"," + field.declaringClass.name + ".class,\$1);");
-                }
-            }
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"set static  value is \" +\"" + (field.getName()) + " ${getCoutNumber()}\");");
-            }
-        } else {
-            stringBuilder.append("java.lang.Object instance;");
-            stringBuilder.append("java.lang.Class clazz;");
-            stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-            stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
-            stringBuilder.append("}else{");
-            stringBuilder.append("instance=\$0;");
-            stringBuilder.append("}");
-            stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\",instance,\$1,${field.declaringClass.name}.class);");
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"set value is \" + \"" + (field.getName()) + "    ${getCoutNumber()}\");");
-            }
-        }
-        stringBuilder.append("}")
-//        println field.getName() + "  set  field repalce  by  " + stringBuilder.toString()
-        return stringBuilder.toString();
-    }
-
-    public
-    static String setFieldString2(CtField field, String patchClassName, String modifiedClassName) {
+    public static String setFieldString2(CtField field, String patchClassName, String modifiedClassName) {
         boolean isStatic = isStatic(field.modifiers)
         StringBuilder stringBuilder = new StringBuilder("{");
         if (isStatic) {
@@ -119,17 +72,25 @@ class ReflectUtils {
                 stringBuilder.append("  android.util.Log.d(\"robust\",\"set static  value is \" +\"" + (field.getName()) + " ${getCoutNumber()}\");");
             }
         } else {
-            stringBuilder.append("java.lang.Object instance;");
-            stringBuilder.append("java.lang.Class clazz;");
-            stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-            stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
-            stringBuilder.append("}else{");
-            stringBuilder.append("instance=\$0;");
-            stringBuilder.append("}");
-            if (field.declaringClass.name.equals(patchClassName)) {
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.name + "\",instance,\$1,${modifiedClassName}.class);");
+            if (AccessFlag.isPublic(field.modifiers)) {
+                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                stringBuilder.append("((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + " = \$1;");
+                stringBuilder.append("} else {");
+                stringBuilder.append("\$_ = \$proceed(\$\$);");
+                stringBuilder.append("}");
             } else {
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.name + "\",instance,\$1,${field.declaringClass.name}.class);");
+                stringBuilder.append("java.lang.Object instance;");
+                stringBuilder.append("java.lang.Class clazz;");
+                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
+                stringBuilder.append("}else{");
+                stringBuilder.append("instance=\$0;");
+                stringBuilder.append("}");
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.name + "\",instance,\$1,${modifiedClassName}.class);");
+                } else {
+                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.name + "\",instance,\$1,${field.declaringClass.name}.class);");
+                }
             }
 
             if (Constants.isLogging) {
@@ -141,9 +102,7 @@ class ReflectUtils {
         return stringBuilder.toString();
     }
 
-    public
-    static String getFieldString(CtField field, Map memberMappingInfo, String patchClassName, String modifiedClassName) {
-
+    public static String getFieldString2(CtField field, String patchClassName, String modifiedClassName) {
         boolean isStatic = isStatic(field.modifiers);
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
@@ -157,53 +116,6 @@ class ReflectUtils {
                     stringBuilder.append("\$_ = \$proceed(\$\$);");
                 }
             } else {
-
-                if (field.declaringClass.name.equals(patchClassName)) {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\"," + modifiedClassName + ".class);");
-
-                } else {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\"," + field.declaringClass.name + ".class);");
-                }
-            }
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"get static  value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
-            }
-        } else {
-            stringBuilder.append("java.lang.Object instance;");
-            stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-            stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
-            stringBuilder.append("}else{");
-            stringBuilder.append("instance=\$0;");
-            stringBuilder.append("}");
-
-            stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + getMappingValue(field.name, memberMappingInfo) + "\",instance,${field.declaringClass.name}.class);");
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"get value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
-            }
-        }
-        stringBuilder.append("}");
-//        println field.getName() + "  get field repalce  by  " + stringBuilder.toString() + "\n"
-        return stringBuilder.toString();
-    }
-
-
-    public
-    static String getFieldString2(CtField field, String patchClassName, String modifiedClassName) {
-
-        boolean isStatic = isStatic(field.modifiers);
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("{");
-        if (isStatic) {
-            if (AccessFlag.isPublic(field.modifiers)) {
-                //deal with android R file
-                if (INLINE_R_FILE && isRFile(field.declaringClass.name)) {
-                    println("getFieldString static field " + field.getName() + "   is R file macthed   " + field.declaringClass.name)
-                    stringBuilder.append("\$_ = " + field.constantValue + ";");
-                } else {
-                    stringBuilder.append("\$_ = \$proceed(\$\$);");
-                }
-            } else {
-
                 if (field.declaringClass.name.equals(patchClassName)) {
                     stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class);");
 
@@ -215,19 +127,26 @@ class ReflectUtils {
                 stringBuilder.append("  android.util.Log.d(\"robust\",\"get static  value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
             }
         } else {
-            stringBuilder.append("java.lang.Object instance;");
-            stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-            stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
-            stringBuilder.append("}else{");
-            stringBuilder.append("instance=\$0;");
-            stringBuilder.append("}");
-
-            if (field.declaringClass.name.equals(patchClassName)) {
-                stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${modifiedClassName}.class);");
+            if (AccessFlag.isPublic(field.modifiers)) {
+                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                stringBuilder.append("\$=(\$r)((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + ";");
+                stringBuilder.append("}else{");
+                stringBuilder.append("\$_ = \$proceed(\$\$);");
+                stringBuilder.append("}");
             } else {
-                stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
+                stringBuilder.append("java.lang.Object instance;");
+                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
+                stringBuilder.append("}else{");
+                stringBuilder.append("instance=\$0;");
+                stringBuilder.append("}");
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    //如果是子类的protected属性呢？todo
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${modifiedClassName}.class);");
+                } else {
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
+                }
             }
-
             if (Constants.isLogging) {
                 stringBuilder.append("  android.util.Log.d(\"robust\",\"get value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
             }
@@ -254,7 +173,7 @@ class ReflectUtils {
         }
         StringBuilder signureBuilder = new StringBuilder();
         String name;
-        boolean isArray=false;
+        boolean isArray = false;
         for (int index = 1; index < signature.indexOf(")"); index++) {
             if (Constants.OBJECT_TYPE == signature.charAt(index) && signature.indexOf(Constants.PACKNAME_END) != -1) {
                 name = signature.substring(index + 1, signature.indexOf(Constants.PACKNAME_END, index)).replaceAll("/", ".")
@@ -264,9 +183,9 @@ class ReflectUtils {
                     signureBuilder.append(name);
                 }
                 index = signature.indexOf(";", index);
-                if(isArray){
+                if (isArray) {
                     signureBuilder.append("[]");
-                    isArray=false;
+                    isArray = false;
                 }
                 signureBuilder.append(".class,");
             }
@@ -282,15 +201,15 @@ class ReflectUtils {
                     case 'D': signureBuilder.append("double"); break;
                     default: break;
                 }
-                if(isArray){
+                if (isArray) {
                     signureBuilder.append("[]");
-                    isArray=false;
+                    isArray = false;
                 }
                 signureBuilder.append(".class,");
             }
 
             if (Constants.ARRAY_TYPE.equals(String.valueOf(signature.charAt(index)))) {
-                isArray=true;
+                isArray = true;
             }
         }
         if (signureBuilder.length() > 0 && String.valueOf(signureBuilder.charAt(signureBuilder.length() - 1)).equals(","))
@@ -356,7 +275,6 @@ class ReflectUtils {
     }
 
 
-
     public static String getParameterClassString(CtClass[] parameters) {
         if (parameters == null || parameters.length < 1) {
             return "";
@@ -372,7 +290,7 @@ class ReflectUtils {
     }
 
     public
-    static String getMethodCallString(MethodCall methodCall,  CtClass patchClass, boolean isInStaticMethod) {
+    static String getMethodCallString(MethodCall methodCall, CtClass patchClass, boolean isInStaticMethod) {
         String signatureBuilder = getParameterClassString(methodCall.method.parameterTypes);
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
@@ -555,7 +473,7 @@ class ReflectUtils {
 
     public static String getJavaMethodSignureWithReturnType(CtMethod ctMethod) {
         //不考虑proguard的情况，这么干
-        if (true){
+        if (true) {
             return ctMethod.name;
         }
         StringBuilder methodSignure = new StringBuilder();

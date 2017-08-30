@@ -37,6 +37,8 @@ public class TestPatchActivity extends AppCompatActivity{
         setContentView(R.layout.activity_robust_compat);
         Log.e("robust","333");
         Log.e("robust","444");
+        String xx = SecondActivity.ACCESSIBILITY_SERVICE;
+        Log.e("robust",xx);
         // TODO: 17/8/26 需要解决 lambda表达式
 //        findViewById(R.id.patch_text).setOnClickListener(v -> {
 //            RobustModify.modify();
