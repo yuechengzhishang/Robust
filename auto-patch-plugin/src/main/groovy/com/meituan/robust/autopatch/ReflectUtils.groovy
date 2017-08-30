@@ -54,13 +54,77 @@ class ReflectUtils {
     public static final Boolean INLINE_R_FILE = true;
     public static int invokeCount = 0;
 
+
+
+    public static String getFieldString2(CtField field, String patchClassName, String modifiedClassName) {
+        boolean isStatic = isStatic(field.modifiers);
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("{");
+        if (isStatic) {
+            if (AccessFlag.isPublic(field.modifiers)) {
+                //deal with android R file
+                if (INLINE_R_FILE && isRFile(field.declaringClass.name)) {
+                    println("getFieldString static field " + field.getName() + "   is R file macthed   " + field.declaringClass.name)
+                    stringBuilder.append("\$_ = " + field.constantValue + ";");
+                } else {
+                    if (field.declaringClass.name.equals(patchClassName)) {
+                        stringBuilder.append("\$_ = " +modifiedClassName +"."+ field.name +";");
+                    } else {
+                        stringBuilder.append("\$_ = \$proceed(\$\$);");
+                    }
+                }
+            } else {
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class);");
+
+                } else {
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + field.declaringClass.name + ".class);");
+                }
+            }
+            if (Constants.isLogging) {
+                stringBuilder.append("  android.util.Log.d(\"robust\",\"get static  value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
+            }
+        } else {
+            if (AccessFlag.isPublic(field.modifiers)) {
+                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                stringBuilder.append("\$_ =(\$r)((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + ";");
+                stringBuilder.append("}else{");
+                stringBuilder.append("\$_ = \$proceed(\$\$);");
+                stringBuilder.append("}");
+            } else {
+                stringBuilder.append("java.lang.Object instance;");
+                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
+                stringBuilder.append("}else{");
+                stringBuilder.append("instance=\$0;");
+                stringBuilder.append("}");
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    //如果是子类的protected属性呢？todo
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${modifiedClassName}.class);");
+                } else {
+                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
+                }
+            }
+            if (Constants.isLogging) {
+                stringBuilder.append("  android.util.Log.d(\"robust\",\"get value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
+            }
+        }
+        stringBuilder.append("}");
+//        println field.getName() + "  get field repalce  by  " + stringBuilder.toString() + "\n"
+        return stringBuilder.toString();
+    }
+
     public static String setFieldString2(CtField field, String patchClassName, String modifiedClassName) {
         boolean isStatic = isStatic(field.modifiers)
         StringBuilder stringBuilder = new StringBuilder("{");
         if (isStatic) {
             println("setFieldString static field " + field.getName() + "  declaringClass   " + field.declaringClass.name)
             if (AccessFlag.isPublic(field.modifiers)) {
-                stringBuilder.append("\$_ = \$proceed(\$\$);");
+                if (field.declaringClass.name.equals(patchClassName)) {
+                    stringBuilder.append(modifiedClassName+"."+field.name +" = \$1 ;");
+                } else {
+                    stringBuilder.append("\$_ = \$proceed(\$\$);");
+                }
             } else {
                 if (field.declaringClass.name.equals(patchClassName)) {
                     stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class,\$1);");
@@ -99,60 +163,6 @@ class ReflectUtils {
         }
         stringBuilder.append("}")
 //        println field.getName() + "  set  field repalce  by  " + stringBuilder.toString()
-        return stringBuilder.toString();
-    }
-
-    public static String getFieldString2(CtField field, String patchClassName, String modifiedClassName) {
-        boolean isStatic = isStatic(field.modifiers);
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("{");
-        if (isStatic) {
-            if (AccessFlag.isPublic(field.modifiers)) {
-                //deal with android R file
-                if (INLINE_R_FILE && isRFile(field.declaringClass.name)) {
-                    println("getFieldString static field " + field.getName() + "   is R file macthed   " + field.declaringClass.name)
-                    stringBuilder.append("\$_ = " + field.constantValue + ";");
-                } else {
-                    stringBuilder.append("\$_ = \$proceed(\$\$);");
-                }
-            } else {
-                if (field.declaringClass.name.equals(patchClassName)) {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class);");
-
-                } else {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getStaticFieldValue(\"" + field.name + "\"," + field.declaringClass.name + ".class);");
-                }
-            }
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"get static  value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
-            }
-        } else {
-            if (AccessFlag.isPublic(field.modifiers)) {
-                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-                stringBuilder.append("\$=(\$r)((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + ";");
-                stringBuilder.append("}else{");
-                stringBuilder.append("\$_ = \$proceed(\$\$);");
-                stringBuilder.append("}");
-            } else {
-                stringBuilder.append("java.lang.Object instance;");
-                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-                stringBuilder.append("instance=((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + ";")
-                stringBuilder.append("}else{");
-                stringBuilder.append("instance=\$0;");
-                stringBuilder.append("}");
-                if (field.declaringClass.name.equals(patchClassName)) {
-                    //如果是子类的protected属性呢？todo
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${modifiedClassName}.class);");
-                } else {
-                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
-                }
-            }
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"get value is \" +\"" + (field.getName()) + "    ${getCoutNumber()}\");");
-            }
-        }
-        stringBuilder.append("}");
-//        println field.getName() + "  get field repalce  by  " + stringBuilder.toString() + "\n"
         return stringBuilder.toString();
     }
 
