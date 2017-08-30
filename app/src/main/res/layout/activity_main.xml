@@ -17,22 +17,56 @@
         android:layout_alignParentRight="true"
         android:text="patch" />
 
-    <Button
-        android:id="@+id/jump_patch_activity"
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:text="jump_patch_activity" />
+        android:dividerPadding="10dp"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/jump_second_activity"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="96dp"
-        android:text="jump_second_activity" />
+        <Button
+            android:id="@+id/jump_patch_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jump_patch_activity" />
+
+        <Button
+            android:id="@+id/jump_second_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:text="jump_second_activity" />
+
+        <Button
+            android:id="@+id/jump_bad_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jump_bad_class_activity" />
+
+        <Button
+            android:id="@+id/jump_bad_inner_class_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jump_bad_inner_class_activity" />
+
+        <Button
+            android:id="@+id/jump_bad_inner_static_class_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jump_bad_inner_static_class_activity" />
+
+        <Button
+            android:id="@+id/jump_bad_anonymous_inner_class_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jump_bad_anonymous_inner_class_activity" />
+
+        <Button
+            android:id="@+id/jump_bad_lambda_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="jump_bad_lambda_activity" />
+    </LinearLayout>
+
 
     <TextView
         android:layout_width="wrap_content"

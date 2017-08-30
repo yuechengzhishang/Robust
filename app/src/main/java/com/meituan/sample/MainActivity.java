@@ -17,6 +17,11 @@ import com.meituan.robust.PatchExecutor;
 import com.meituan.robust.PatchProxy;
 import com.meituan.robust.RobustCallBack;
 import com.meituan.sample.extension.LogExtension;
+import com.meituan.sample.test.TestBadAnonymousInnerClassActivity;
+import com.meituan.sample.test.TestBadClassActivity;
+import com.meituan.sample.test.TestBadInnerClassActivity;
+import com.meituan.sample.test.TestBadStaticInnerClassActivity;
+import com.meituan.sample.test.TestLambdaActivity;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -134,6 +139,142 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Log.e("change","6666");
+
+        findViewById(R.id.jump_bad_activity).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestBadClassActivity.class);
+                startActivity(intent);
+                //========just add complexity =========
+                boolean isMainThread = false;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (getApplicationContext().getMainLooper().isCurrentThread()) {
+                        isMainThread = true;
+                    }
+                } else {
+                    String currentThreadName = Thread.currentThread().getName();
+                    String mainThreadName = getApplicationContext().getMainLooper().getThread().getName();
+                    if (TextUtils.equals(currentThreadName, mainThreadName)) {
+                        isMainThread = true;
+                    }
+                }
+
+                Log.d("robust", "isMainThread :" + isMainThread);
+                //=================
+            }
+        });
+
+        Log.e("change","777");
+
+
+        findViewById(R.id.jump_bad_inner_class_activity).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestBadInnerClassActivity.class);
+                startActivity(intent);
+                //========just add complexity =========
+                boolean isMainThread = false;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (getApplicationContext().getMainLooper().isCurrentThread()) {
+                        isMainThread = true;
+                    }
+                } else {
+                    String currentThreadName = Thread.currentThread().getName();
+                    String mainThreadName = getApplicationContext().getMainLooper().getThread().getName();
+                    if (TextUtils.equals(currentThreadName, mainThreadName)) {
+                        isMainThread = true;
+                    }
+                }
+
+                Log.d("robust", "isMainThread :" + isMainThread);
+                //=================
+            }
+        });
+
+        Log.e("change", "888");
+
+        findViewById(R.id.jump_bad_inner_static_class_activity).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestBadStaticInnerClassActivity.class);
+                startActivity(intent);
+                //========just add complexity =========
+                boolean isMainThread = false;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (getApplicationContext().getMainLooper().isCurrentThread()) {
+                        isMainThread = true;
+                    }
+                } else {
+                    String currentThreadName = Thread.currentThread().getName();
+                    String mainThreadName = getApplicationContext().getMainLooper().getThread().getName();
+                    if (TextUtils.equals(currentThreadName, mainThreadName)) {
+                        isMainThread = true;
+                    }
+                }
+
+                Log.d("robust", "isMainThread :" + isMainThread);
+                //=================
+            }
+        });
+
+        Log.e("change", "999");
+
+        findViewById(R.id.jump_bad_anonymous_inner_class_activity).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestBadAnonymousInnerClassActivity.class);
+                startActivity(intent);
+                //========just add complexity =========
+                boolean isMainThread = false;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (getApplicationContext().getMainLooper().isCurrentThread()) {
+                        isMainThread = true;
+                    }
+                } else {
+                    String currentThreadName = Thread.currentThread().getName();
+                    String mainThreadName = getApplicationContext().getMainLooper().getThread().getName();
+                    if (TextUtils.equals(currentThreadName, mainThreadName)) {
+                        isMainThread = true;
+                    }
+                }
+
+                Log.d("robust", "isMainThread :" + isMainThread);
+                //=================
+            }
+        });
+
+        Log.e("change", "1010");
+
+        findViewById(R.id.jump_bad_lambda_activity).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, TestLambdaActivity.class);
+                startActivity(intent);
+                //========just add complexity =========
+                boolean isMainThread = false;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (getApplicationContext().getMainLooper().isCurrentThread()) {
+                        isMainThread = true;
+                    }
+                } else {
+                    String currentThreadName = Thread.currentThread().getName();
+                    String mainThreadName = getApplicationContext().getMainLooper().getThread().getName();
+                    if (TextUtils.equals(currentThreadName, mainThreadName)) {
+                        isMainThread = true;
+                    }
+                }
+
+                Log.d("robust", "isMainThread :" + isMainThread);
+                //=================
+            }
+        });
+
+        Log.e("change", "1111");
     }
 
     //patch  data report

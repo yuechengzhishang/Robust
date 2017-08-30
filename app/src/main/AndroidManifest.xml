@@ -22,6 +22,12 @@
             android:label="@string/title_activity_main2"
             android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity android:name=".TestPatchActivity" />
+
+        <activity android:name=".test.TestBadClassActivity" />
+        <activity android:name=".test.TestBadInnerClassActivity" />
+        <activity android:name=".test.TestBadStaticInnerClassActivity" />
+        <activity android:name=".test.TestBadAnonymousInnerClassActivity" />
+        <activity android:name=".test.TestLambdaActivity" />
     </application>
 
 </manifest>
