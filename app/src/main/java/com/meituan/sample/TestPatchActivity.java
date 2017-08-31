@@ -92,7 +92,7 @@ public class TestPatchActivity extends AppCompatActivity{
         });
     }
 
-    public static String hello(){
+    private static String hello(){
         return "public static String hello";
     }
 }
