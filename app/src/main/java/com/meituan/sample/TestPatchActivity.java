@@ -46,12 +46,7 @@ public class TestPatchActivity extends AppCompatActivity{
         String xx = SecondActivity.ACCESSIBILITY_SERVICE;
         Log.e("robust",xx);
 
-//        //write
-//        publicString = "publicString";
-//        //read
-//        String str = publicString;
-//        //show
-//        Toast.makeText(this, "publicString: " + str, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "hello: " + hello(), Toast.LENGTH_SHORT).show();
 
         //write
         publicString = "publicString";
@@ -83,17 +78,21 @@ public class TestPatchActivity extends AppCompatActivity{
         Toast.makeText(this, "publicStaticString: " + str4, Toast.LENGTH_SHORT).show();
 
 //        // TODO: 17/8/26 需要解决 lambda表达式
-        findViewById(R.id.patch_text).setOnClickListener(v -> {
-                    Log.d("robust", " onclick  in Listener");
-                    Toast.makeText(getApplicationContext(), "T onclick Listener in lambda ", Toast.LENGTH_SHORT).show();
-                }
-        );
+//        findViewById(R.id.patch_text).setOnClickListener(v -> {
+//                    Log.d("robust", " onclick  in Listener");
+//                    Toast.makeText(getApplicationContext(), "T onclick Listener in lambda ", Toast.LENGTH_SHORT).show();
+//                }
+//        );
 
-//        findViewById(R.id.patch_text).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Toast.makeText(getApplicationContext(),"T onclick  in Listener",Toast.LENGTH_SHORT).show();
-//            }
-//        });
+        findViewById(R.id.patch_text).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getApplicationContext(),"T onclick  in Listener",Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    public static String hello(){
+        return "public static String hello";
     }
 }

@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.change.RobustChangeInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -213,7 +214,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
-        if (m.getMethodName().contains("lambdaFactory")){
+        if (m.getMethodName().contains("lambdaFactory")) {
             //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
@@ -278,6 +279,29 @@ public class RobustMethodExprEditor extends ExprEditor {
 //                return;
 //            }
 //        }
+
+
+        try {
+            CtMethod callCtMethod = m.getMethod();
+            boolean callMethodIsStatic = isStatic(callCtMethod.getModifiers());
+            if (callMethodIsStatic) {
+                CtClass methodTargetClass = m.getMethod().getDeclaringClass();
+                if (patchClass.getName().equals(methodTargetClass.getName())) {
+                    if (RobustChangeInfo.isInvariantMethod(ctMethod)) {
+                        if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
+                            String statement = "$_=($r)" + sourceClass.getName() + "." + m.getMethod().getName() + "($$);";
+                            m.replace(statement);
+                            return;
+                        }
+                    }
+
+                }
+
+
+            }
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
 
         if (outerMethodIsStatic) {
             /*
@@ -396,9 +420,8 @@ public class RobustMethodExprEditor extends ExprEditor {
     }
 
 
-
     public void replaceParam_This_lambda(MethodCall m) throws NotFoundException, CannotCompileException {
-        if (m.getMethod().getParameterTypes().length == 0){
+        if (m.getMethod().getParameterTypes().length == 0) {
             return;
         } else {
             StringBuilder stringBuilder = new StringBuilder();
@@ -407,16 +430,16 @@ public class RobustMethodExprEditor extends ExprEditor {
             stringBuilder.append("$_ = ($r) " + m.getMethod().getDeclaringClass() + "." + m.getMethod().getName());
             stringBuilder.append("(");
             List<String> paramList = new ArrayList<String>();
-            for (int index =1 ;index <= m.getMethod().getParameterTypes().length;index++){
+            for (int index = 1; index <= m.getMethod().getParameterTypes().length; index++) {
                 paramList.add("$" + index);
             }
-            stringBuilder.append(String.join(",",paramList));
+            stringBuilder.append(String.join(",", paramList));
             stringBuilder.append(")");
             stringBuilder.append("}");
 
 //            stringBuilder.append(getParamsThisReplacedString(m));
 //            stringBuilder.append("$_ = $proceed($args);");
-            m.replace( stringBuilder.toString());
+            m.replace(stringBuilder.toString());
 
 //            m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), temPatchClass.getName(), ReflectUtils.isStatic(method.getModifiers()), m.getClassName()));
             return;
