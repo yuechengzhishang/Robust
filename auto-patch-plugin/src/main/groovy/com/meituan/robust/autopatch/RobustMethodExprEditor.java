@@ -287,17 +287,17 @@ public class RobustMethodExprEditor extends ExprEditor {
             if (callMethodIsStatic) {
                 CtClass methodTargetClass = m.getMethod().getDeclaringClass();
                 if (patchClass.getName().equals(methodTargetClass.getName())) {
-                    if (RobustChangeInfo.isInvariantMethod(ctMethod)) {
+                    if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
                         if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
                             String statement = "$_=($r)" + sourceClass.getName() + "." + m.getMethod().getName() + "($$);";
                             m.replace(statement);
                             return;
                         }
+                    } else {
+                        //do nothing
+                        return;
                     }
-
                 }
-
-
             }
         } catch (NotFoundException e) {
             e.printStackTrace();
