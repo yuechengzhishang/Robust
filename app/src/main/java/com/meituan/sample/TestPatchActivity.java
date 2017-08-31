@@ -7,8 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.meituan.robust.patch.RobustModify;
-
 /**
  * Created by hedingxu on 17/6/16.
  */
@@ -47,6 +45,8 @@ public class TestPatchActivity extends AppCompatActivity{
         Log.e("robust",xx);
 
         Toast.makeText(this, "hello: " + hello(), Toast.LENGTH_SHORT).show();
+
+//        Toast.makeText(this, "hello: " + helloPrivate(), Toast.LENGTH_SHORT).show();
 
         //write
         publicString = "publicString";
@@ -93,6 +93,10 @@ public class TestPatchActivity extends AppCompatActivity{
     }
 
     private static String hello(){
-        return "public static String hello";
+        return "private static String hello";
+    }
+
+    private String helloPrivate(){
+        return "private String hello";
     }
 }

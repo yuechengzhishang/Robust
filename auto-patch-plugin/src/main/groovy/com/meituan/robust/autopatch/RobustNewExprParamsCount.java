@@ -122,7 +122,7 @@ public class RobustNewExprParamsCount {
                 if (param.getName().equals(patchClassName)) {
 //                    System.err.println("param.getName(): " +param.getName());
 //                    System.err.println("sourceClassName Patch: " +patchClassName+"Patch");
-                    paramList.add("this." + Constants.ORIGINCLASS);
+                    paramList.add("$" + index + "." + Constants.ORIGINCLASS);
                 } else {
                     paramList.add("$" + index);
                 }

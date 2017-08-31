@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch
 
 import com.meituan.robust.Constants
+import com.meituan.robust.change.comparator.ByteCodeUtils
 import com.meituan.robust.utils.JavaUtils
 import javassist.*
 import javassist.bytecode.AccessFlag
@@ -120,6 +121,14 @@ class PatchesFactory {
         temPatchClass.defrost()
         for (CtField ctField : willDeleteCtFields) {
             temPatchClass.removeField(ctField)
+        }
+
+        //暂时先删除掉classInitMethod todo 解决静态字段的赋值问题
+        try {
+            CtMethod classInitMethod = temPatchClass.getDeclaredMethod(ByteCodeUtils.CLASS_INITIALIZER);
+            temPatchClass.removeMethod(classInitMethod)
+        } catch (NotFoundException e){
+            e.printStackTrace()
         }
 
         CtConstructor ctConstructor = CtNewConstructor.defaultConstructor(temPatchClass);

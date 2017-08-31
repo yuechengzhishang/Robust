@@ -58,6 +58,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         this.hasRobustProxyCode = true;
     }
 
+    @Override
     public void edit(FieldAccess f) throws CannotCompileException {
 
         if (repalceWithEmpty(f)) {
@@ -204,7 +205,7 @@ public class RobustMethodExprEditor extends ExprEditor {
     }
 
 
-//    public String staticMethodCall (MethodCall methodCall) throws NotFoundException {
+    //    public String staticMethodCall (MethodCall methodCall) throws NotFoundException {
 //        StringBuilder stringBuilder = new StringBuilder();
 //        stringBuilder.append("{");
 //        String signatureBuilder = getParameterClassString(methodCall.getMethod().getParameterTypes());
@@ -284,10 +285,61 @@ public class RobustMethodExprEditor extends ExprEditor {
             m.replace(ReflectUtils.invokeSuperString(m));
             return;
         }
+        CtMethod callCtMethod = null;
+        try {
+            callCtMethod = m.getMethod();
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+        boolean callMethodIsStatic = isStatic(callCtMethod.getModifiers());
+        //callMethodIsStatic
+        //outerMethodIsStatic
+
+
+        if (outerMethodIsStatic && callMethodIsStatic) {
+            //外部静态方法 call 静态方法
+            try {
+                RobustMethodCallEditorUtils.staticMethodCallStaticMethod(ctMethod, m, patchClass, sourceClass);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+//        if (!outerMethodIsStatic && callMethodIsStatic) {
+//                //外部非静态方法 call 静态方法
+//            try {
+//                RobustMethodCallEditorUtils2.nonstaticMethodCallStaticMethod(ctMethod, m, patchClass, sourceClass);
+//            } catch (NotFoundException e) {
+//                e.printStackTrace();
+//            }
+//            return;
+//        }
+
+//        try {
+//            if (outerMethodIsStatic && callMethodIsStatic) {
+//                //外部静态方法 call 静态方法
+//                RobustMethodCallEditorUtils.staticMethodCallStaticMethod(ctMethod, m, patchClass, sourceClass);
+//                return;
+//            } else if (outerMethodIsStatic && !callMethodIsStatic) {
+//                //外部静态方法 call 非静态方法
+//                RobustMethodCallEditorUtils4.staticMethod_Call_nonStaticMethod(ctMethod, m, patchClass, sourceClass);
+//                return;
+//            } else if (!outerMethodIsStatic && callMethodIsStatic) {
+//                //外部非静态方法 call 静态方法
+//                RobustMethodCallEditorUtils2.nonstaticMethodCallStaticMethod(ctMethod, m, patchClass, sourceClass);
+//                return;
+//            } else if (!outerMethodIsStatic && !callMethodIsStatic) {
+//                //外部非静态方法 call 非静态方法
+//                RobustMethodCallEditorUtils3.nonstaticMethod_Call_nonStaticMethod(ctMethod, m, patchClass, sourceClass);
+//                return;
+//            }
+//        } catch (NotFoundException e) {
+//            e.printStackTrace();
+//            throw new RuntimeException(e);
+//        }
 
         try {
-            CtMethod callCtMethod = m.getMethod();
-            boolean callMethodIsStatic = isStatic(callCtMethod.getModifiers());
             if (callMethodIsStatic) {
                 CtClass methodTargetClass = m.getMethod().getDeclaringClass();
                 if (patchClass.getName().equals(methodTargetClass.getName())) {
@@ -297,18 +349,12 @@ public class RobustMethodExprEditor extends ExprEditor {
                             String statement = "$_=($r)" + sourceClass.getName() + "." + m.getMethod().getName() + "($$);";
                             try {
                                 m.replace(statement);
-                            } catch (javassist.CannotCompileException e){
-
-//                                statement = "$_=($r)" +
-//                                        Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(" +"\"" + callCtMethod.getName() + "\"" + "," + sourceClass.getName() + ".class,$args,null);";
-                                m.replace(getMethodCallString_this_static_method_call(m,patchClass,outerMethodIsStatic,sourceClass.getName()));
+                            } catch (javassist.CannotCompileException e) {
+                                m.replace(getMethodCallString_this_static_method_call(m, patchClass, outerMethodIsStatic, sourceClass.getName()));
                             }
                             return;
                         } else {
-//                            String statement = "$_=($r)" +
-//                             Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(" +"\"" + callCtMethod.getName() + "\"" + "," + sourceClass.getName() + ".class,$args,null);";
-//                            m.replace(statement);
-                            m.replace(getMethodCallString_this_static_method_call(m,patchClass,outerMethodIsStatic,sourceClass.getName()));
+                            m.replace(getMethodCallString_this_static_method_call(m, patchClass, outerMethodIsStatic, sourceClass.getName()));
                             return;
                         }
                     } else {
@@ -316,6 +362,33 @@ public class RobustMethodExprEditor extends ExprEditor {
                         return;
                     }
                 }
+            } else {
+                //call method is not non-static
+//                TestPatchActivity#onCreate({private String hello()}
+//                CtClass methodTargetClass = m.getMethod().getDeclaringClass();
+//                if (patchClass.getName().equals(methodTargetClass.getName())) {
+//                    if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
+//                        if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
+//                            //need to reflect static method
+//                            String statement = "$_=($r)" + sourceClass.getName() + "." + m.getMethod().getName() + "($$);";
+//                            try {
+//                                m.replace(statement);
+//                            } catch (javassist.CannotCompileException e){
+//                                m.replace(getMethodCallString_this_static_method_call(m,patchClass,outerMethodIsStatic,sourceClass.getName()));
+//                            }
+//                            return;
+//                        } else {
+////                            String statement = "$_=($r)" +
+////                             Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(" +"\"" + callCtMethod.getName() + "\"" + "," + sourceClass.getName() + ".class,$args,null);";
+////                            m.replace(statement);
+//                            m.replace(getMethodCallString_this_static_method_call(m,patchClass,outerMethodIsStatic,sourceClass.getName()));
+//                            return;
+//                        }
+//                    } else {
+//                        //do nothing
+//                        return;
+//                    }
+//                }
             }
         } catch (NotFoundException e) {
             e.printStackTrace();
@@ -527,7 +600,7 @@ public class RobustMethodExprEditor extends ExprEditor {
     }
 
 
-    private static String getMethodCallString_this_static_method_call(MethodCall methodCall, CtClass patchClass, boolean isInStaticMethod, String sourceClassName) throws NotFoundException {
+    public static String getMethodCallString_this_static_method_call(MethodCall methodCall, CtClass patchClass, boolean isInStaticMethod, String sourceClassName) throws NotFoundException {
         String signatureBuilder = getParameterClassString(methodCall.getMethod().getParameterTypes());
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
