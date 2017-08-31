@@ -2,6 +2,9 @@ package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
@@ -101,14 +104,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
             //外部方法是static，则没有this这个概念了
         }
-//        else {
-//            try {
-//                replaceParamThisToOriginalClassInstance2(e);
-//            } catch (NotFoundException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//        }
 
         String newExprClassName = e.getClassName();
 
@@ -222,6 +217,17 @@ public class RobustMethodExprEditor extends ExprEditor {
             //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
+//            try {
+//                replaceParam_This_lambda(m);
+//            } catch (NotFoundException e) {
+//                e.printStackTrace();
+//                throw new RuntimeException(e);
+//            }
+            if (m.getMethodName().contains("lambdaFactory")) {
+                //method contain modifeid class
+                m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), patchClass.getName(), ReflectUtils.isStatic(ctMethod.getModifiers()), m.getClassName()));
+                return;
+            }
             return;
         }
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
@@ -323,39 +329,8 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         }
 
-
         // 大部分情况下是需要替换this为originalClass的
-//        {
-//            try {
-//                boolean isContainThis = false;
-//                m.getMethod().getReturnType();//// TODO: 17/8/7 处理builder 除了匿名内部类，都把this换成originalClass
-//                CtClass[] paramTypes = m.getMethod().getParameterTypes();
-//                StringBuilder stringBuilder = new StringBuilder();
-//
-//                if (null != paramTypes) {
-//                    int index = 0;
-//                    for (CtClass ctClass : paramTypes) {
-//                        index++;
-//                        //MainActivityPatch contains MainActivity and MainActivityPatch
-//                        if (ctClass.getName().startsWith(anonymousInnerClass.getName())) {
-//                            //this ????// TODO: 17/8/7
-//                            isContainThis = true;
-//                            stringBuilder.append("$" + index + "= $" + index + "." + ORIGINCLASS + ";");
-//                        }
-//                    }
-//
-//                }
-//
-//                if (isContainThis) {
-//                    stringBuilder.append("$_ = $proceed($$);");
-//                    stringBuilder.toString();
-//                }
-//
-//            } catch (NotFoundException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
+        // TODO: 17/8/7 处理builder 除了匿名内部类，都把this换成originalClass
 
         //可能会出现一个class，被修改多次，这时候如何预警？？？
         //有一种问题，就是
@@ -386,109 +361,6 @@ public class RobustMethodExprEditor extends ExprEditor {
 //                                } catch (Throwable e) {
 //                                    e.printStackTrace();
 //                                }
-    }
-
-    public static String setFieldString(CtField field, CtClass patchClass, CtClass sourceClass) {
-
-
-        CtClass fieldDeclaringClass = field.getDeclaringClass();
-        boolean isWriteSuperClassField = patchClass.subclassOf(fieldDeclaringClass);
-
-        boolean isStatic = isStatic(field.getModifiers());
-        StringBuilder stringBuilder = new StringBuilder("{");
-
-
-        String patchClassName = patchClass.getName();
-        String originalClassName = sourceClass.getName();
-        String declaringClassName = field.getDeclaringClass().getName();
-        //静态字段
-        if (isStatic) {
-            System.err.println("setFieldString static field " + field.getName() + "  declaringClass   " + declaringClassName);
-
-            if (declaringClassName.equals(patchClassName)) {
-                //如果是本patch类的field
-                //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
-                stringBuilder.append("$_ = $proceed($$);");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.getName() + "\"," + originalClassName + ".class,$1);");
-            } else if (declaringClassName.equals(originalClassName)) {
-                //如果是本patch类的field
-                stringBuilder.append("$_ = $proceed($$);");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.getName() + "\"," + patchClassName + ".class,$1);");
-            } else if (isWriteSuperClassField) {
-                stringBuilder.append("$_ = $proceed($$);");
-                //如果是父类的field,静态字段无需处理
-            } else if (AccessFlag.isPackage(field.getModifiers())) {
-                //package
-//                stringBuilder.append("$_ = $proceed($$);");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.getName() + "\"," + declaringClassName + ".class,$1);");
-            } else {
-                //保持原样
-                stringBuilder.append("$_ = $proceed($$);");
-            }
-
-            if (Constants.isLogging) {
-                stringBuilder.append("  android.util.Log.d(\"robust\",\"set static  value is \" +\"" + (field.getName()) + " ${getCoutNumber()}\");");
-            }
-        } else {
-            //非静态字段
-            System.err.println("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
-
-            if (declaringClassName.equals(patchClassName)) {
-                //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
-                //如果是本patch类的field
-                stringBuilder.append("$_ = $proceed($$);");
-
-                stringBuilder.append("{");
-                stringBuilder.append(originalClassName + " instance;");
-                stringBuilder.append("instance=((" + patchClassName + ")$0)." + ORIGINCLASS + ";");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + (field.getName()) + "\",instance,$1," + originalClassName + ".class);");
-                stringBuilder.append("}");
-//                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.getName() + "\"," + originalClassName + ".class,$1);");
-            } else if (declaringClassName.equals(originalClassName)) {
-                //如果是本patch类的field
-                stringBuilder.append("$_ = $proceed($$);");
-
-                stringBuilder.append("{");
-                stringBuilder.append(originalClassName + " instance;");
-                stringBuilder.append("instance=((" + patchClassName + ")$0)." + ORIGINCLASS + ";");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + (field.getName()) + "\",instance,$1," + originalClassName + ".class);");
-                stringBuilder.append("}");
-
-//                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.getName() + "\"," + patchClassName + ".class,$1);");
-            } else if (isWriteSuperClassField) {
-                stringBuilder.append("$_ = $proceed($$);");
-
-                stringBuilder.append("{");
-                stringBuilder.append(originalClassName + " instance;");
-                stringBuilder.append("instance = ((" + patchClassName + ")$0)." + ORIGINCLASS + ";");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + (field.getName()) + "\",instance,$1," + declaringClassName + ".class);");
-                stringBuilder.append("}");
-
-//                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + field.getName() + "\"," + originalClassName + ".class,$1);");
-            } else if (AccessFlag.isPackage(field.getModifiers())) {
-                //package
-//                stringBuilder.append("$_ = $proceed($$);");
-                stringBuilder.append("{");
-                stringBuilder.append(declaringClassName + " instance;");
-                stringBuilder.append("instance = (" + declaringClassName + ") $0;");
-                stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setFieldValue(\"" + (field.getName()) + "\",instance,$1," + declaringClassName + ".class);");
-                stringBuilder.append("}");
-
-            } else {
-                //保持原样
-                stringBuilder.append("$_ = $proceed($$);");
-            }
-
-//            if (Constants.isLogging) {
-//                stringBuilder.append("  android.util.Log.d(\"robust\",\"set static  value is \" +\"" + (field.getName()) + " ${getCoutNumber()}\");");
-//            }
-//
-//            if (Constants.isLogging) {
-//                stringBuilder.append("  android.util.Log.d(\"robust\",\"set value is \" + \"" + (field.getName()) + "    ${getCoutNumber()}\");");
-//            }
-        }
-        stringBuilder.append("}");
-        return stringBuilder.toString();
     }
 
     static boolean isStatic(int modifiers) {
@@ -522,6 +394,35 @@ public class RobustMethodExprEditor extends ExprEditor {
         m.replace(stringBuilder.toString());
         return;
     }
+
+
+
+    public void replaceParam_This_lambda(MethodCall m) throws NotFoundException, CannotCompileException {
+        if (m.getMethod().getParameterTypes().length == 0){
+            return;
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("{");
+            stringBuilder.append(getParamsThisReplacedString(m));
+            stringBuilder.append("$_ = ($r) " + m.getMethod().getDeclaringClass() + "." + m.getMethod().getName());
+            stringBuilder.append("(");
+            List<String> paramList = new ArrayList<String>();
+            for (int index =1 ;index <= m.getMethod().getParameterTypes().length;index++){
+                paramList.add("$" + index);
+            }
+            stringBuilder.append(String.join(",",paramList));
+            stringBuilder.append(")");
+            stringBuilder.append("}");
+
+//            stringBuilder.append(getParamsThisReplacedString(m));
+//            stringBuilder.append("$_ = $proceed($args);");
+            m.replace( stringBuilder.toString());
+
+//            m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), temPatchClass.getName(), ReflectUtils.isStatic(method.getModifiers()), m.getClassName()));
+            return;
+        }
+    }
+
 
     public void replaceParamThisToOriginalClassInstance2(NewExpr m) throws NotFoundException, CannotCompileException {
         StringBuilder stringBuilder = new StringBuilder();
@@ -565,9 +466,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         if (isStatic(ctMethod.getModifiers())) {
             return "";
         }
-        if (m.getSignature().contains("isGrantSDCardReadPermission")) {
-            System.err.println("isGrantSDCardReadPermission");
-        }
+
         StringBuilder stringBuilder = new StringBuilder();
         CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //      System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());

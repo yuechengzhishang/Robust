@@ -706,10 +706,11 @@ public class CheckCodeChanges {
     }
 
     public static boolean isAnonymousInnerClass(String className){
-        return
-                isAnonymousInnerClass_$$Lambda$1(className)
-                || isAnonymousInnerClass_$1(className)
-                || isAnonymousInnerClass_$AjcClosure1(className);
+        return isAnonymousInnerClass_$1(className);
+//        return
+//                isAnonymousInnerClass_$$Lambda$1(className)
+//                || isAnonymousInnerClass_$1(className)
+//                || isAnonymousInnerClass_$AjcClosure1(className);
     }
 
 }
