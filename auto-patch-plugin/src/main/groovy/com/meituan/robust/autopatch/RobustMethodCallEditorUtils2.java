@@ -169,4 +169,73 @@ public class RobustMethodCallEditorUtils2 {
         paramsStr = stringBuilder.toString();
         return paramsStr;
     }
+
+//    lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
+
+
+    //PatchClass get(this) -> get(this.OriginClass)
+    public static boolean handleLambdaFactory(CtMethod ctMethod, MethodCall m, CtClass patchClass, CtClass sourceClass) throws NotFoundException, CannotCompileException {
+        if (!m.getMethodName().contains("lambdaFactory")) {
+            return false;
+        }
+        String lambdaClassName = null;
+        CtMethod callCtMethod = null;
+        try {
+            callCtMethod = m.getMethod();
+        } catch (NotFoundException e){
+            if (e.getMessage().startsWith("lambdaFactory$(..) is not found in ")){
+                lambdaClassName =  e.getMessage().replace("lambdaFactory$(..) is not found in ","").trim();
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (null != lambdaClassName ){
+            if (null == callCtMethod){
+                CtClass lambdaCtClass = Config.classPool.get(lambdaClassName);
+                if (null != lambdaCtClass){
+                    for (CtMethod ctMethod1 : lambdaCtClass.getDeclaredMethods()){
+                        if (ctMethod1.getName().equals(m.getMethodName())){
+                            //(Lcom/meituan/sample/SecondActivity;)Landroid/view/View$OnClickListener;
+                            //(Lcom/meituan/sample/SecondActivityPatch;)Landroid/view/View$OnClickListener;
+                            if (ctMethod1.getSignature().equals(m.getSignature().replace("Patch;",";"))){
+                                callCtMethod = ctMethod1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        String paramsStr = "($$)";
+        CtClass[] params = callCtMethod.getParameterTypes();
+        if (null == params || params.length == 0) {
+
+        }
+        else {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("(");
+            int index = 0;
+            List<String> paramList = new ArrayList<String>();
+            for (CtClass param : params) {
+                index++;
+                if (param.getName().equals(patchClass.getName())||param.getName().equals(sourceClass.getName())) {
+                    paramList.add("$" + index + "." + Constants.ORIGINCLASS);
+                } else {
+                    paramList.add("$" + index);
+                }
+            }
+            stringBuilder.append(String.join(",", paramList));
+            stringBuilder.append(")");
+            paramsStr = stringBuilder.toString();
+        }
+
+        if (null == Config.classPool.get(lambdaClassName)){
+            lambdaClassName =  lambdaClassName.replace(sourceClass.getName(),patchClass.getName());
+        }
+        String statement = "$_ = ($r) " + lambdaClassName + "." + m.getMethodName() + paramsStr +";";
+        m.replace(statement);
+        return true;
+    }
 }

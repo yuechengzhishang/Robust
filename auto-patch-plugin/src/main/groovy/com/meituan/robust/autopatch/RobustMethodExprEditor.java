@@ -235,16 +235,21 @@ public class RobustMethodExprEditor extends ExprEditor {
             //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
-//            try {
-//                replaceParam_This_lambda(m);
-//            } catch (NotFoundException e) {
-//                e.printStackTrace();
-//                throw new RuntimeException(e);
-//            }
-            if (m.getMethodName().contains("lambdaFactory")) {
-                //method contain modifeid class
-                m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), patchClass.getName(), ReflectUtils.isStatic(ctMethod.getModifiers()), m.getClassName()));
-                return;
+//            m.getMethod() : lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
+            try {
+
+//                getParamsThisReplacedString(m);
+//                replaceParam_ThisToOriginalClassInstance(m);
+//                String params = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(ctMethod,m,patchClass,sourceClass);
+//                StringBuilder stringBuilder = new StringBuilder();
+//                stringBuilder.append("{");
+//                stringBuilder.append("$_ = $proceed" +params+ ";");
+//                stringBuilder.append("}");
+//                m.replace(stringBuilder.toString());
+                RobustMethodCallEditorUtils2.handleLambdaFactory(ctMethod,m,patchClass,sourceClass);
+
+            } catch (NotFoundException e) {
+                e.printStackTrace();
             }
             return;
         }

@@ -311,10 +311,22 @@ public class CodeTransformUnion {
         Config.classPool.appendClassPath(Config.robustGenerateDirectory)
         for (String originalClassName : Config.modifiedClassNameList) {
             CtClass sourceClass = Config.classPool.get(originalClassName)
-            CtClass[] ctClasses = sourceClass.getNestedClasses();
+//            CtClass[] ctClasses = sourceClass.getNestedClasses();
+            List<CtClass> ctClasses = new ArrayList<CtClass>()
+            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里 todo 9-1
+
+            for (String newAddClassName:Config.newlyAddedClassNameList) { //处理lambda表达式
+               if(CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newAddClassName)) {
+                   String lambdaSourceClass = originalClassName + "\$\$Lambda\$";
+                    if (newAddClassName.contains(lambdaSourceClass)){
+                        ctClasses.add(Config.classPool.get(newAddClassName));
+                    }
+                }
+            }
+
             ClassMap classMap = new ClassMap()
             for (CtClass nestedCtClass : ctClasses) {
-                boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())
+                boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
                 System.err.println("nestedCtClass :" + nestedCtClass.getName())
                 if (isAnonymousInnerClass) {
                     nestedCtClass.defrost()

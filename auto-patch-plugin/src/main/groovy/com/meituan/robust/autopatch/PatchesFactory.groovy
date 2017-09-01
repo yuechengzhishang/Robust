@@ -123,12 +123,13 @@ class PatchesFactory {
             temPatchClass.removeField(ctField)
         }
 
-        //暂时先删除掉classInitMethod todo 解决静态字段的赋值问题
+        //暂时先删除掉classInitMethod todo 解决如果改了静态字段的赋值问题
         try {
             CtMethod classInitMethod = temPatchClass.getDeclaredMethod(ByteCodeUtils.CLASS_INITIALIZER);
             temPatchClass.removeMethod(classInitMethod)
         } catch (NotFoundException e){
-            e.printStackTrace()
+//            有的有clinit，有的没有这个
+//            e.printStackTrace()
         }
 
         CtConstructor ctConstructor = CtNewConstructor.defaultConstructor(temPatchClass);
