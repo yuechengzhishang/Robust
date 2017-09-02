@@ -230,8 +230,9 @@ public class RobustMethodExprEditor extends ExprEditor {
         if (repalceWithEmpty(m)) {
             return;
         }
+        boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
 
-        if (m.getMethodName().contains("lambdaFactory")) {
+        if (outerMethodIsStatic == false && m.getMethodName().contains("lambdaFactory")) {
             //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
@@ -253,7 +254,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
             return;
         }
-        boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
         int accessFlag = 0;
         try {
             accessFlag = m.getMethod().getModifiers();

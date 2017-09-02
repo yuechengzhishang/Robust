@@ -8,6 +8,7 @@ import java.util.List;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
@@ -190,9 +191,10 @@ public class RobustMethodCallEditorUtils2 {
             }
         }
 
+        CtClass lambdaCtClass = null;
         if (null != lambdaClassName ){
             if (null == callCtMethod){
-                CtClass lambdaCtClass = Config.classPool.get(lambdaClassName);
+                lambdaCtClass = Config.classPool.get(lambdaClassName);
                 if (null != lambdaCtClass){
                     for (CtMethod ctMethod1 : lambdaCtClass.getDeclaredMethods()){
                         if (ctMethod1.getName().equals(m.getMethodName())){
@@ -234,8 +236,23 @@ public class RobustMethodCallEditorUtils2 {
         if (null == Config.classPool.get(lambdaClassName)){
             lambdaClassName =  lambdaClassName.replace(sourceClass.getName(),patchClass.getName());
         }
-        String statement = "$_ = ($r) " + lambdaClassName + "." + m.getMethodName() + paramsStr +";";
-        m.replace(statement);
+
+        String statement1 = lambdaClassName +  " lambdaInstance = "+ "("+lambdaClassName+ ")" + lambdaClassName + "." + m.getMethodName() + paramsStr +";";
+        String statement2 = "lambdaInstance.outerPatchClassName = this ;" ;
+        String statement3 = "$_ = ($r) lambdaInstance ;" ;
+
+
+        CtField ctField = new CtField(patchClass, "outerPatchClassName", lambdaCtClass);
+        ctField.setModifiers(AccessFlag.PUBLIC);
+        lambdaCtClass.addField(ctField);
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("{");
+        stringBuilder.append(statement1);
+        stringBuilder.append(statement2);
+        stringBuilder.append(statement3);
+        stringBuilder.append("}");
+        m.replace(stringBuilder.toString());
         return true;
     }
 }
