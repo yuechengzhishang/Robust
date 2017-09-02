@@ -7,5 +7,9 @@
             android:name="com.meituan.robust.resource.service.RobustRecoverService"
             android:exported="false"
             android:process=":robust"/>
+        <service
+            android:name="com.meituan.robust.resource.service.RobustRecoverService$InnerService"
+            android:exported="false"
+            android:process=":robust"/>
     </application>
 </manifest>

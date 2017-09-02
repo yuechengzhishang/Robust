@@ -311,6 +311,25 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
+        if (!outerMethodIsStatic && callMethodIsStatic){
+            try {
+                if (AccessFlag.isPublic(m.getMethod().getModifiers())){
+
+                } else {
+                    if (RobustChangeInfo.isInvariantMethod(m.getMethod())){
+                        if (RobustMethodCallEditorUtils2.isThisClassOrSubclass(m.getMethod().getDeclaringClass(),patchClass,sourceClass)){
+                            String statement = ReflectUtils.getMethodCallString(m,patchClass,false);
+                            m.replace(statement);
+                        }
+                    }
+                }
+
+            } catch (NotFoundException e){
+
+            }
+
+        }
+
 //        if (!outerMethodIsStatic && callMethodIsStatic) {
 //                //外部非静态方法 call 静态方法
 //            try {

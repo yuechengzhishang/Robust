@@ -54,8 +54,6 @@ class ReflectUtils {
     public static final Boolean INLINE_R_FILE = true;
     public static int invokeCount = 0;
 
-
-
     public static String getFieldString2(CtField field, String patchClassName, String modifiedClassName) {
         boolean isStatic = isStatic(field.modifiers);
         StringBuilder stringBuilder = new StringBuilder();
@@ -343,8 +341,9 @@ class ReflectUtils {
                 stringBuilder.append("java.lang.Object parameters[]=" + Constants.GET_REAL_PARAMETER + "(\$args);");
                 if (signatureBuilder.toString().length() > 1) {
                     stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\"," + methodCall.method.declaringClass.name + ".class,parameters,new Class[]{" + signatureBuilder.toString() + "});");
-                } else
+                } else{
                     stringBuilder.append("\$_=(\$r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + getJavaMethodSignureWithReturnType(methodCall.method) + "\"," + methodCall.method.declaringClass.name + ".class,parameters,null);");
+                }
             }
 
         } else {
