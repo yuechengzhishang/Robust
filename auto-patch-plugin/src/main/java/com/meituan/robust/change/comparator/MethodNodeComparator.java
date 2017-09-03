@@ -1,7 +1,9 @@
 package com.meituan.robust.change.comparator;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.TraceMethodVisitor;
 
@@ -12,10 +14,8 @@ import java.io.StringWriter;
  * Created by hedingxu on 17/8/26.
  */
 
-public class MethodNodeComparator implements Comparator<MethodNode> {
-
-    @Override
-    public boolean areEqual(@Nullable MethodNode first, @Nullable MethodNode second) {
+public class MethodNodeComparator {
+    public boolean areEqual(@Nullable MethodNode first, @Nullable MethodNode second, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass) {
         if (first == null && second == null) {
             return true;
         }
@@ -35,6 +35,20 @@ public class MethodNodeComparator implements Comparator<MethodNode> {
         firstMethodTextifier.print(new PrintWriter(firstText));
         secondMethodTextifier.print(new PrintWriter(secondText));
 
+        if (!firstText.toString().equals(secondText.toString())){
+//            System.err.println();
+//            System.err.println("first:");
+//            System.err.println(firstText.toString());
+//            System.err.println();
+//            System.err.println("second:");
+//            System.err.println(secondText.toString());
+            System.err.println("DiffLineByLine:" + first.name + " " + first.desc);
+
+            boolean isRealSame =  DiffLineByLine.diff(firstText.toString(),secondText.toString(),originalClass,  updatedClass);
+            System.err.println("isRealSame if lambda1 == lambda2 :" + isRealSame);
+            System.err.println();
+            return isRealSame;
+        }
         return firstText.toString().equals(secondText.toString());
     }
 }

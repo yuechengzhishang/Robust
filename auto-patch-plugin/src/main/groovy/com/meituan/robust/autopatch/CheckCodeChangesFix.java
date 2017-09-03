@@ -8,4 +8,5 @@ public class CheckCodeChangesFix {
     //对于CheckCodeChanges的修正
     //lambda & anonymousInnerClass
 
+
 }

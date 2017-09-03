@@ -138,6 +138,50 @@ public class CodeTransformUnion {
         println("modifiedAnonymousInnerClassNameList is :")
         JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
 
+        println("fix that unchanged lambda class really: ")
+        //fix start
+        List<String> newModifiedClassNameList = new ArrayList<>();
+        for (String className : Config.modifiedClassNameList){
+            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)){
+
+            } else {
+                newModifiedClassNameList.add(className);
+            }
+        }
+        Config.modifiedClassNameList = newModifiedClassNameList;
+
+        List<String> newlyAddedClassNameList = new ArrayList<>();
+        for (String className : Config.newlyAddedClassNameList){
+            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)){
+
+            } else {
+                newlyAddedClassNameList.add(className);
+            }
+        }
+        Config.newlyAddedClassNameList = newlyAddedClassNameList;
+
+        List<String> modifiedAnonymousInnerClassNameList = new ArrayList<>();
+        for (String className : Config.modifiedAnonymousInnerClassNameList){
+            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)){
+
+            } else {
+                modifiedAnonymousInnerClassNameList.add(className);
+            }
+        }
+        Config.modifiedAnonymousInnerClassNameList = modifiedAnonymousInnerClassNameList;
+        //fix end
+
+        println("modifiedClassNameList is ：")
+        JavaUtils.printList(Config.modifiedClassNameList)
+
+        println("newlyAddedClassNameList is ：")
+        JavaUtils.printList(Config.newlyAddedClassNameList)
+
+        println("modifiedAnonymousInnerClassNameList is :")
+        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
+
+
+
         println("convert modifiedAnonymousInnerClassNameList to newAddClassNameList:")
         for (String anonymousClassName: Config.modifiedAnonymousInnerClassNameList){
             if (Config.newlyAddedClassNameList.contains(anonymousClassName)){

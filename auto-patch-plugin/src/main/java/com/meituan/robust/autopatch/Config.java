@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarFile;
 
 import javassist.ClassPool;
 import javassist.CtMethod;
@@ -35,6 +36,10 @@ public final class Config {
     public static Set newlyAddedMethodSet = new HashSet<String>();
     public static List<String> modifiedClassNameList = new ArrayList<String>();
     public static List<String> modifiedAnonymousInnerClassNameList = new ArrayList<String>();
+    public static List<String> lambdaDotClassNameList = new ArrayList<String>();
+    public static JarFile oldJar ;
+    public static JarFile newJar ;
+    public static HashMap<String,String> lambdaUnchangedReallyClassNameList = new HashMap<String, String>();
     public static List<String> hotfixPackageList = new ArrayList<>();
     public static List<String> exceptPackageList = new ArrayList<>();
     public static HashMap<String, String> methodMap = new HashMap<String, String>();

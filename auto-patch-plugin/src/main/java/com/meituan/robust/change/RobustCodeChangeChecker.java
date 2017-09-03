@@ -33,7 +33,7 @@ import java.util.jar.JarFile;
  */
 public class RobustCodeChangeChecker {
 
-    private static final Comparator<MethodNode> METHOD_COMPARATOR = new MethodNodeComparator();
+    private static final MethodNodeComparator METHOD_COMPARATOR = new MethodNodeComparator();
 
     private static final Comparator<FieldNode> FIELD_COMPARATOR = new FieldComparator();
     private static final Comparator<String> STRING_COMPARATOR = Objects::equal;
@@ -177,7 +177,7 @@ public class RobustCodeChangeChecker {
             } else {
                 if (methodNode.name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
                     //ignore // TODO: 17/8/24
-                    boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod);
+                    boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod, originalClass,  updatedClass);
                     if (isEqual) {
                         invariantMethods.add(updatedMethod);
                     } else {
@@ -185,7 +185,7 @@ public class RobustCodeChangeChecker {
                         changedMethods.add(updatedMethod);
                     }
                 } else {
-                    boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod);
+                    boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod, originalClass,  updatedClass);
                     if (isEqual) {
                         invariantMethods.add(updatedMethod);
                     } else {

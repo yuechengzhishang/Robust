@@ -362,8 +362,10 @@ public class CheckCodeChanges {
 
     public static void processChangedJar(JarFile backupJar, JarFile newJar, List<String> hotfixPackageList, List<String> exceptPackageList)
             throws IOException {
-
+        Config.oldJar = backupJar;
+        Config.newJar = newJar;
         Map<String, JarEntry> backupEntries = new HashMap<String, JarEntry>();
+        Map<String, JarEntry> newEntries = new HashMap<String, JarEntry>();
         Enumeration<JarEntry> backupJarEntries = backupJar.entries();
         while (backupJarEntries.hasMoreElements()) {
             JarEntry jarEntry = backupJarEntries.nextElement();
@@ -376,6 +378,7 @@ public class CheckCodeChanges {
             JarEntry jarEntry = jarEntries.nextElement();
             String className = jarEntry.getName();
 
+            newEntries.put(className,jarEntry);
             if (!className.endsWith(".class")) {
                 continue;
             }
@@ -477,6 +480,7 @@ public class CheckCodeChanges {
         }
 
         ChangeLog.print();
+//        RetrolambdaUtils.handleLambda(newEntries,backupEntries,backupJar,newJar);
     }
 
     public
