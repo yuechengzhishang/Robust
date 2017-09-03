@@ -41,28 +41,6 @@ public class DiffLineByLine {
         } else {
             return false;
         }
-//        LineNumberReader reader1 = new LineNumberReader(r1);
-//        LineNumberReader reader2 = new LineNumberReader(r2);
-//        String line1 = reader1.readLine();
-//        String line2 = reader2.readLine();
-//        while (line1 != null && line2 != null)
-//        {
-//            if (!line1.equals(line2))
-//            {
-//                diffs.add("File \"" + name1 + "\" and file \"" +
-//                        name2 + "\" differ at line " + reader1.getLineNumber() +
-//                        ":" + "\n" + line1 + "\n" + line2);
-//                break;
-//            }
-//            line1 = reader1.readLine();
-//            line2 = reader2.readLine();
-//        }
-//        if (line1 == null && line2 != null)
-//            diffs.add("File \"" + name2 + "\" has extra lines at line " +
-//                    reader2.getLineNumber() + ":\n" + line2);
-//        if (line1 != null && line2 == null)
-//            diffs.add("File \"" + name1 + "\" has extra lines at line " +
-//                    reader1.getLineNumber() + ":\n" + line1);
     }
 
     public static boolean isEqualReal(String line1, String line2, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass) {
@@ -70,8 +48,8 @@ public class DiffLineByLine {
             if (line1.equals(line2)) {
                 return true;
             } else {
-                System.err.println("line1: " + line1);
-                System.err.println("line2: " + line2);
+//                System.err.println("line1: " + line1);
+//                System.err.println("line2: " + line2);
 //                if (line1.contains(originalClass.name) && line2.contains(updatedClass.name)){
 //                    if (line1.replace(originalClass.name,updatedClass.name).equals(line2)){
 //                        return true;
@@ -92,8 +70,8 @@ public class DiffLineByLine {
                         int outerClassIndex = line1.indexOf(originalClass.name.replace(".class", ""));
                         int lambdaIndex = line1.indexOf(".lambdaFactory$");
                         String lambdaClassName = line1.substring(outerClassIndex, lambdaIndex);
-                        System.err.println("lambdaClassName: ");
-                        System.err.println(lambdaClassName);
+//                        System.err.println("lambdaClassName: ");
+//                        System.err.println(lambdaClassName);
                         lambdaClassNode1 = getLambdaClassNodeFromOldJar(lambdaClassName);
                     }
                     ClassNode lambdaClassNode2 =null;
@@ -101,8 +79,8 @@ public class DiffLineByLine {
                         int outerClassIndex = line2.indexOf(updatedClass.name.replace(".class", ""));
                         int lambdaIndex = line2.indexOf(".lambdaFactory$");
                         String lambdaClassName2 = line2.substring(outerClassIndex, lambdaIndex);
-                        System.err.println("lambdaClassName: ");
-                        System.err.println(lambdaClassName2);
+//                        System.err.println("lambdaClassName: ");
+//                        System.err.println(lambdaClassName2);
                         lambdaClassNode2 = getLambdaClassNodeFromNewJar(lambdaClassName2);
                     }
                     ClassNode changedLambdaClassNode2 = null;

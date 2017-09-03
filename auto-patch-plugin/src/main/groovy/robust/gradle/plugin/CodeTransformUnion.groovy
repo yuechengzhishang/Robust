@@ -58,7 +58,7 @@ public class CodeTransformUnion {
             System.err.println("================method signature to method id map unzip to file ================");
         }
         long cost = (System.currentTimeMillis() - startTime) / 1000
-        System.err.println("autoPatch cost" + cost + "second")
+        System.err.println("autoPatch cost " + cost + " second")
         throw new RuntimeException("auto patch end successfully")
     }
 
@@ -129,14 +129,14 @@ public class CodeTransformUnion {
 
         CheckCodeChanges.processChangedJar(originalJarFile, currentJarFile, Config.hotfixPackageList, Config.exceptPackageList)
 
-        println("modifiedClassNameList is ：")
-        JavaUtils.printList(Config.modifiedClassNameList)
-
-        println("newlyAddedClassNameList is ：")
-        JavaUtils.printList(Config.newlyAddedClassNameList)
-
-        println("modifiedAnonymousInnerClassNameList is :")
-        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
+//        println("modifiedClassNameList is ：")
+//        JavaUtils.printList(Config.modifiedClassNameList)
+//
+//        println("newlyAddedClassNameList is ：")
+//        JavaUtils.printList(Config.newlyAddedClassNameList)
+//
+//        println("modifiedAnonymousInnerClassNameList is :")
+//        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
 
         println("fix that unchanged lambda class really: ")
         //fix start
@@ -392,12 +392,12 @@ public class CodeTransformUnion {
 //                    nestedCtClass.
                     anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
                     classMap.put(oldName, newName)
-                    System.err.println("isAnonymousInnerClass:" + anonymousInnerClass.getName())
+//                    System.err.println("isAnonymousInnerClass:" + anonymousInnerClass.getName())
 
                 }
             }
 
-            System.err.println("replaceClassName :" + originalClassName)
+//            System.err.println("replaceClassName :" + originalClassName)
 
             CtClass patchClass = Config.classPool.get(NameManger.getInstance().getPatchNamWithoutRecord(originalClassName))
             patchClass.defrost()

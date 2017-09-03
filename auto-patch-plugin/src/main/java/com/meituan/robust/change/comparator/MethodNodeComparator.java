@@ -42,11 +42,11 @@ public class MethodNodeComparator {
 //            System.err.println();
 //            System.err.println("second:");
 //            System.err.println(secondText.toString());
-            System.err.println("DiffLineByLine:" + first.name + " " + first.desc);
+//            System.err.println("DiffLineByLine:" + first.name + " " + first.desc);
 
             boolean isRealSame =  DiffLineByLine.diff(firstText.toString(),secondText.toString(),originalClass,  updatedClass);
-            System.err.println("isRealSame if lambda1 == lambda2 :" + isRealSame);
-            System.err.println();
+//            System.err.println("isRealSame if lambda1 == lambda2 :" + isRealSame);
+//            System.err.println();
             return isRealSame;
         }
         return firstText.toString().equals(secondText.toString());

@@ -499,7 +499,7 @@ public class CheckCodeChanges {
         String declaringClassName = field.getDeclaringClass().getName();
         //静态字段
         if (isStatic) {
-            System.err.println("setFieldString static field " + field.getName() + "  declaringClass   " + declaringClassName);
+//            System.err.println("setFieldString static field " + field.getName() + "  declaringClass   " + declaringClassName);
 
             if (declaringClassName.equals(patchClassName)) {
                 //如果是本patch类的field
@@ -527,7 +527,7 @@ public class CheckCodeChanges {
             }
         } else {
             //非静态字段
-            System.err.println("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
+//            System.err.println("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
 
             if (declaringClassName.equals(patchClassName)) {
                 //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2

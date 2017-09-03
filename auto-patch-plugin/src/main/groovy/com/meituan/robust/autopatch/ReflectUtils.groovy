@@ -116,7 +116,7 @@ class ReflectUtils {
         boolean isStatic = isStatic(field.modifiers)
         StringBuilder stringBuilder = new StringBuilder("{");
         if (isStatic) {
-            println("setFieldString static field " + field.getName() + "  declaringClass   " + field.declaringClass.name)
+//            println("setFieldString static field " + field.getName() + "  declaringClass   " + field.declaringClass.name)
             if (AccessFlag.isPublic(field.modifiers)) {
                 if (field.declaringClass.name.equals(patchClassName)) {
                     stringBuilder.append(modifiedClassName+"."+field.name +" = \$1 ;");

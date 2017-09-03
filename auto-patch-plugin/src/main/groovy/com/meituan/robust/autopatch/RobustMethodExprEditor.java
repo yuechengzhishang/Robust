@@ -235,7 +235,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         if (outerMethodIsStatic == false && m.getMethodName().contains("lambdaFactory")) {
             //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
-            System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
+//            System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
 //            m.getMethod() : lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             try {
 
@@ -286,7 +286,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
             */
             //放在assist类处理了 case : MainActivity#super.oncreate()
-            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
+//            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
             m.replace(ReflectUtils.invokeSuperString(m));
             return;
         }
@@ -453,7 +453,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                     } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
                         //// TODO: 17/8/7 判断是否父类方法 或者本类方法
                         //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
-                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
+//                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
                         //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
                         replaceThisToOriginClassMethodDirectly(m);
                         return;
