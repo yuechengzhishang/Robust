@@ -135,13 +135,12 @@ public class RobustChangeInfo {
                                 //ctMethod.getSignature() (Landroid/os/Bundle;)V
                                 if (methodNode.desc.equals(signature)) {
                                     return true;
-                                } else {
-                                    return false;
                                 }
                             }
                         }
+                        return false;
                     } else {
-                        return true;
+                        return false;
                     }
                 }
             }
