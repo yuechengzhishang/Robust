@@ -43,6 +43,7 @@ public final class Config {
     public static List<String> hotfixPackageList = new ArrayList<>();
     public static List<String> exceptPackageList = new ArrayList<>();
     public static HashMap<String, String> methodMap = new HashMap<String, String>();
+    public static HashMap<String, String> newMethodMap = new HashMap<String, String>();
     public static String robustGenerateDirectory;
     public static Map<String, List<CtMethod>> invokeSuperMethodMap = new HashMap<>();
     public static ClassPool classPool = new ClassPool();

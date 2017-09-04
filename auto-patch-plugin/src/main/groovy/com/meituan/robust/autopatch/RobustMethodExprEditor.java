@@ -55,14 +55,16 @@ public class RobustMethodExprEditor extends ExprEditor {
         this.sourceClass = sourceClass;
         this.patchClass = patchClass;
         this.ctMethod = ctMethod;
-        this.hasRobustProxyCode = true;
+        this.hasRobustProxyCode = HasRobustProxyUtils.hasRobustProxy(sourceClass,patchClass,ctMethod);
     }
 
     @Override
     public void edit(FieldAccess f) throws CannotCompileException {
 
-        if (repalceWithEmpty(f)) {
-            return;
+        if (hasRobustProxyCode){
+            if (repalceWithEmpty(f)) {
+                return;
+            }
         }
 
         if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
@@ -86,15 +88,19 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
-        if (repalceWithEmpty(a)) {
-            return;
+        if (hasRobustProxyCode){
+            if (repalceWithEmpty(a)) {
+                return;
+            }
         }
     }
 
     @Override
     public void edit(NewExpr e) throws CannotCompileException {
-        if (repalceWithEmpty(e)) {
-            return;
+        if (hasRobustProxyCode){
+            if (repalceWithEmpty(e)) {
+                return;
+            }
         }
 //        if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
 //            return;
@@ -222,13 +228,19 @@ public class RobustMethodExprEditor extends ExprEditor {
 //    }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
-        if (isCallProxyAccessDispatchMethod(m)) {
+        if (hasRobustProxyCode){
+            if (isCallProxyAccessDispatchMethod(m)) {
 //            m.replace("$_ = ($r) new Object();");
-            hasHandledProxyCode = true;
-            return;
+                hasHandledProxyCode = true;
+                return;
+            }
+            if (repalceWithEmpty(m)) {
+                return;
+            }
         }
-        if (repalceWithEmpty(m)) {
-            return;
+
+        if (ctMethod.getName().contains("lambda$onCreate$3")){
+            System.err.println("lambda$onCreate$3 : "+ctMethod.getLongName());
         }
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
 

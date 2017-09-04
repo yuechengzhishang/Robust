@@ -183,6 +183,7 @@ public class RobustMethodCallEditorUtils2 {
         CtMethod callCtMethod = null;
         try {
             callCtMethod = m.getMethod();
+            lambdaClassName = callCtMethod.getDeclaringClass().getName();
         } catch (NotFoundException e){
             if (e.getMessage().startsWith("lambdaFactory$(..) is not found in ")){
                 lambdaClassName =  e.getMessage().replace("lambdaFactory$(..) is not found in ","").trim();
@@ -233,8 +234,11 @@ public class RobustMethodCallEditorUtils2 {
             paramsStr = stringBuilder.toString();
         }
 
-        if (null == Config.classPool.get(lambdaClassName)){
+        if (null == Config.classPool.getOrNull(lambdaClassName)){
             lambdaClassName =  lambdaClassName.replace(sourceClass.getName(),patchClass.getName());
+        }
+        if (null == lambdaCtClass){
+            lambdaCtClass = Config.classPool.getOrNull(lambdaClassName);
         }
 
         String statement1 = lambdaClassName +  " lambdaInstance = "+ "("+lambdaClassName+ ")" + lambdaClassName + "." + m.getMethodName() + paramsStr +";";

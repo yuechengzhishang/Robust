@@ -281,6 +281,9 @@ class PatchesFactory {
             return;
         }
         for (CtMethod method : ctMethods) {
+            if (com.meituan.robust.change.RobustChangeInfo.isInvariantMethod(method)){
+                return;
+            }
             int originModifiers = method.getModifiers();
             int publicModifiers = AccessFlag.setPublic(originModifiers);
             int unAbstractModifiers = AccessFlag.clear(publicModifiers, AccessFlag.ABSTRACT);
