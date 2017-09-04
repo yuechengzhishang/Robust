@@ -346,6 +346,7 @@ public class CodeTransformUnion {
             patchClass.writeFile(patchPath)
             patchClass.defrost()
             CtClass sourceClass = Config.classPool.get(fullClassName)
+            PatchesFactory.createPublicMethodForPrivate(patchClass) //create static method for private method
             createControlClass(patchPath, sourceClass)
         }
         handleAnonymousInnerAndLambdaClass();
