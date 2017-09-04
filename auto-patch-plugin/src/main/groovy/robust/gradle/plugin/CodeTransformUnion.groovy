@@ -4,6 +4,7 @@ import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
 import com.meituan.robust.autopatch.AnonymousClassOuterClassMethodUtils
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
+import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
 import javassist.*
@@ -311,7 +312,7 @@ public class CodeTransformUnion {
                     patchClas.addMethod(fakeConstructor)
                 }
             }
-        } catch (NotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -347,22 +348,22 @@ public class CodeTransformUnion {
             CtClass sourceClass = Config.classPool.get(fullClassName)
             createControlClass(patchPath, sourceClass)
         }
-        handleAnonymousInnerClass();
+        handleAnonymousInnerAndLambdaClass();
         createPatchesInfoClass(patchPath);
     }
 
-    public static handleAnonymousInnerClass() {
+    public static handleAnonymousInnerAndLambdaClass() {
         Config.classPool.appendClassPath(Config.robustGenerateDirectory)
         for (String originalClassName : Config.modifiedClassNameList) {
-            CtClass sourceClass = Config.classPool.get(originalClassName)
+//            CtClass sourceClass = Config.classPool.get(originalClassName)
 //            CtClass[] ctClasses = sourceClass.getNestedClasses();
             List<CtClass> ctClasses = new ArrayList<CtClass>()
-            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里 todo 9-1
+//            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里 todo 9-1
 
             for (String newAddClassName:Config.newlyAddedClassNameList) { //处理lambda表达式
-               if(CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newAddClassName)) {
-                   String lambdaSourceClass = originalClassName + "\$\$Lambda\$";
-                    if (newAddClassName.contains(lambdaSourceClass)){
+                if (newAddClassName.startsWith(originalClassName)){
+                    boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(newAddClassName)||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newAddClassName)
+                    if (is_$1_or_$$lambda$1){
                         ctClasses.add(Config.classPool.get(newAddClassName));
                     }
                 }
@@ -371,10 +372,12 @@ public class CodeTransformUnion {
             ClassMap classMap = new ClassMap()
             for (CtClass nestedCtClass : ctClasses) {
                 boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
-                System.err.println("nestedCtClass :" + nestedCtClass.getName())
+//                System.err.println("nestedCtClass :" + nestedCtClass.getName())
                 if (isAnonymousInnerClass) {
                     nestedCtClass.defrost()
-                    nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))
+                    int modifiers1 = AccessFlag.setPublic(nestedCtClass.getModifiers())
+                    modifiers1 = AccessFlag.clear(modifiers1,AccessFlag.SYNTHETIC);
+                    nestedCtClass.setModifiers(modifiers1)
                     for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()) {
                         ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
                     }
@@ -392,6 +395,7 @@ public class CodeTransformUnion {
 //                    nestedCtClass.
                     anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
                     classMap.put(oldName, newName)
+
 //                    System.err.println("isAnonymousInnerClass:" + anonymousInnerClass.getName())
 
                 }
@@ -403,6 +407,24 @@ public class CodeTransformUnion {
             patchClass.defrost()
             patchClass.replaceClassName(classMap)
             patchClass.setModifiers(AccessFlag.setPublic(patchClass.getModifiers()))
+            if (true){
+                List<CtMethod> toDeletedCtMethods = new ArrayList<CtMethod>();
+                for (CtMethod ctMethod:patchClass.getDeclaredMethods()){
+                    if (RobustChangeInfo.isInvariantMethod(ctMethod)){
+                        toDeletedCtMethods.add(ctMethod);
+                    }
+                    int modifiers = ctMethod.getModifiers();
+                    boolean  isSynthetic= modifiers & AccessFlag.SYNTHETIC
+                    if (isSynthetic){
+                        int newModifiers = AccessFlag.clear(modifiers,AccessFlag.SYNTHETIC)
+                        ctMethod.setModifiers(newModifiers);
+                    }
+                }
+
+                for (CtMethod ctMethod: toDeletedCtMethods){
+                    patchClass.removeMethod(ctMethod);
+                }
+            }
             patchClass.writeFile(Config.robustGenerateDirectory)
         }
     }

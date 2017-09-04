@@ -37,11 +37,18 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
 
     private boolean isAccessMethod(MethodCall methodCall) {
 //        static synthetic access$000
+        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
+        boolean isAccess = methodCall.getMethodName().contains("access$");
+
+        if (isAccess){
+            return true;
+        }
+
         try {
             int modifiers = methodCall.getMethod().getModifiers();
             if (isStatic(modifiers)){
                 if ((modifiers & AccessFlag.SYNTHETIC) != 0){
-                    if (methodCall.getMethodName().matches("access\\$[0-9]{1,10}")){
+                    if (methodCall.getMethodName().contains("access$")){
                         return true;
                     }
                 }

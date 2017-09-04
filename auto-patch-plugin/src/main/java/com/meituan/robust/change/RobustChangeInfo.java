@@ -40,11 +40,13 @@ public class RobustChangeInfo {
 
     public static boolean isInvariantMethod(CtMethod ctMethod) {
         String dotClass = ctMethod.getDeclaringClass().getName();
+        String patchClassName = new String(dotClass);
         if (dotClass.endsWith("Patch")) {
             dotClass = dotClass + "ROBUST_FOR_DELETE";
             String tempStr = "Patch" + "ROBUST_FOR_DELETE";
             dotClass = dotClass.replace(tempStr,"");
         }
+        String sourceClassName = new String(dotClass);
         String methodName = ctMethod.getName();
         String signature = ctMethod.getSignature();
         for (ClassChange classChange : changeClasses) {
@@ -59,6 +61,12 @@ public class RobustChangeInfo {
                                 if (methodNode.desc.equals(signature)) {
                                     return true;
                                 } else {
+                                    if (!patchClassName.equals(sourceClassName)){
+                                        String signature2 = signature.replace(patchClassName.replace(".","/"),sourceClassName.replace(".","/"));
+                                        if (methodNode.desc.equals(signature2)){
+                                            return true;
+                                        }
+                                    }
                                     return false;
                                 }
                             }
