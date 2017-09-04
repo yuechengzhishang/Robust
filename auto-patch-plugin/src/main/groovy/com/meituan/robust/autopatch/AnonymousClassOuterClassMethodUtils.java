@@ -39,6 +39,16 @@ public class AnonymousClassOuterClassMethodUtils {
 //        outerMethod: onCreate
 //        outerMethodDesc: (Landroid/os/Bundle;)V
 
+//todo 解决类似于这种问题
+//            private View.OnClickListener listener = new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    Log.e("robust","hello click");
+//                }
+//            };
+            if (null == outerMethod){
+                return;
+            }
             if (changedAnonymousOuterMethodInfoMap.containsKey(anonymousInnerClassclassName)){
                 System.err.println("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
             } else {

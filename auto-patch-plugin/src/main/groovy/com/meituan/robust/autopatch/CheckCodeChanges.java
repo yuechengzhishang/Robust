@@ -465,12 +465,12 @@ public class CheckCodeChanges {
                             Config.newlyAddedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
 
 //                            //todo just for test only
-                            if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
-                                byte[] newClassBytes = new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
-                                ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);
-                                ClassNode newAnonymousInnerClass = newClassNode;
-                                AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
-                            }
+//                            if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
+//                                byte[] newClassBytes = new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
+//                                ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);
+//                                ClassNode newAnonymousInnerClass = newClassNode;
+//                                AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
+//                            }
                         }
                         //end
 
