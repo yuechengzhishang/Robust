@@ -35,40 +35,47 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
         this.ctMethod = ctMethod;
     }
 
+
+    private boolean is_access$lambda$_method(MethodCall methodCall) {
+        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
+        return isLambdaAccess;
+    }
+
     private boolean isAccessMethod(MethodCall methodCall) {
 //        static synthetic access$000
         boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
         boolean isAccess = methodCall.getMethodName().contains("access$");
 
-        if (isAccess){
+        if (isAccess) {
             return true;
         }
 
         try {
             int modifiers = methodCall.getMethod().getModifiers();
-            if (isStatic(modifiers)){
-                if ((modifiers & AccessFlag.SYNTHETIC) != 0){
-                    if (methodCall.getMethodName().contains("access$")){
+            if (isStatic(modifiers)) {
+                if ((modifiers & AccessFlag.SYNTHETIC) != 0) {
+                    if (methodCall.getMethodName().contains("access$")) {
                         return true;
                     }
                 }
             }
-        } catch (NotFoundException e){
+        } catch (NotFoundException e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    public static void main(String[] args){
-        if ("access$000".matches("access\\$[0-9]{1,5}")){
+    public static void main(String[] args) {
+        if ("access$000".matches("access\\$[0-9]{1,5}")) {
             System.err.println("it is access method");
         }
     }
+
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
 //        System.err.println("MethodCall :" + m.getMethodName());
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
-        if (outerMethodIsStatic){
+        if (outerMethodIsStatic) {
             return;
         }
         //static synthetic access$000
@@ -85,11 +92,55 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
             //replace access method
             //replace params
 //            stringBuilder.append("}");
+            if (is_access$lambda$_method(m)) {
+                final List<CtMethod> ctMethods = new ArrayList<>();
+                try {
+                    m.getMethod().instrument(new ExprEditor() {
+                        /**
+                         * Edits a method call (overridable).
+                         *
+                         * The default implementation performs nothing.
+                         */
+                        @Override
+                        public void edit(MethodCall m) throws CannotCompileException {
+                            try {
+                                ctMethods.add(m.getMethod());
+                            } catch (NotFoundException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+                CtMethod ctMethod1 = ctMethods.get(0);
+                if (!isStatic(ctMethod1.getModifiers())) {
+                    String lambda$onCreate$3_methodName = ctMethod1.getName();
+                    List<String> params = new ArrayList<>();
+                    try {
+                        if (m.getMethod().getParameterTypes().length == ctMethod1.getParameterTypes().length +1){
+                            int index = 0;
+                            while (index < ctMethod1.getParameterTypes().length){
+                                index++;
+                                params.add("$"+(index+1));
+                            }
+                        }
+                    } catch (NotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    String statement = "this." + "outerPatchClassName" + "." + lambda$onCreate$3_methodName + "(" + String.join(",",params)+");";
+                    m.replace(statement);
+                    return;
+                }
+            }
+
+
             try {
-                String statement = "$_=($r) "+ outerPatchClassName+"."+ m.getMethodName() + getParamsStr(m) + " ; ";
+                String statement = "$_=($r) " + outerPatchClassName + "." + m.getMethodName() + getParamsStr(m) + " ; ";
                 m.replace(statement);
-            } catch (javassist.CannotCompileException e){
-                String statement = "$_=($r) "+ outerSourceClassName+"."+ m.getMethodName() + getParamsStr(m) + " ; ";
+            } catch (javassist.CannotCompileException e) {
+                String statement = "$_=($r) " + outerSourceClassName + "." + m.getMethodName() + getParamsStr(m) + " ; ";
                 m.replace(statement);
 
             }
@@ -100,7 +151,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
     }
 
 
-    private String getParamsStr(MethodCall methodCall){
+    private String getParamsStr(MethodCall methodCall) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("(");
         CtClass[] params = null;
@@ -109,7 +160,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
         } catch (NotFoundException e) {
             e.printStackTrace();
         }
-        if (null !=params && params.length > 0){
+        if (null != params && params.length > 0) {
             List<String> paramList = new ArrayList<String>();
             int index = 0;
             for (CtClass param : params) {
@@ -120,12 +171,11 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
                     paramList.add("$" + index);
                 }
             }
-            stringBuilder.append(String.join(",",paramList));
+            stringBuilder.append(String.join(",", paramList));
         }
         stringBuilder.append(")");
         return stringBuilder.toString();
     }
-
 
 
     public static String setFieldString(CtField field, CtClass patchClass, CtClass sourceClass) {
