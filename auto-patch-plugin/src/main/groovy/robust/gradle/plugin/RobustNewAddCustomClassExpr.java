@@ -113,9 +113,31 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
 
             if (isAccessModifiedClass(callCtField)){
                 if (RobustChangeInfo.isNewAddField(callCtField)){
+                    String modifyClassName = callCtField.getDeclaringClass().getName();
+                    HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
+                    String patchClassName = customModifiedClasses.get(modifyClassName);
                     //// TODO: 17/9/1
                     if (fieldAccess.isStatic()){
+                        if (fieldAccess.isReader()){
+                            StringBuilder stringBuilder = new StringBuilder();
+                            stringBuilder.append("{");
+                            String statement = " $_=($r) " + patchClassName + "." + callCtField.getName() + ";";
+                            stringBuilder.append(statement);
+                            stringBuilder.append("}");
+                            fieldAccess.replace(stringBuilder.toString());
+                            return;
+                        }
+                        if (fieldAccess.isWriter()){
+                            StringBuilder stringBuilder = new StringBuilder();
+                            stringBuilder.append("{");
+                            String statement = patchClassName + "." + callCtField.getName() + " = ($r) $proceed($$);" +  ";";
+                            stringBuilder.append(statement);
+                            stringBuilder.append("}");
+                            fieldAccess.replace(stringBuilder.toString());
+                            return;
+                        }
 
+                        return;
                     }
                 }
             }
