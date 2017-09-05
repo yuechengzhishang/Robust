@@ -353,6 +353,7 @@ public class CodeTransformUnion {
         handleAnonymousInnerAndLambdaClass();
         createPatchesInfoClass(patchPath);
         handleCustomAddClass();
+        handleCustomInnerClassAccess$Method();
     }
 
     public static handleCustomAddClass() {
@@ -379,6 +380,30 @@ public class CodeTransformUnion {
                 }
             }
             customAddCtClass.writeFile(Config.robustGenerateDirectory)
+        }
+    }
+
+
+    public static void handleCustomInnerClassAccess$Method() {
+        HashSet<CtClass> customInnerCtClassList = new HashSet<CtClass>();
+        for (String customInnerClassName : Config.modifiedClassNameList) {
+            boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(customInnerClassName) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(customInnerClassName)
+
+            if (is_$1_or_$$lambda$1) {
+
+            } else {
+                CtClass customInnerCtClass = Config.classPool.get(customInnerClassName);
+                if (null != customInnerCtClass.getDeclaringClass()) {
+                    customInnerCtClassList.add(customInnerCtClass);
+                }
+            }
+        }
+        for (CtClass customCtClass : customInnerCtClassList) {
+            CtBehavior[] ctBehaviors = customCtClass.getDeclaredBehaviors();
+            for (CtBehavior ctBehavior : ctBehaviors) {
+                ctBehavior.instrument(new RobustHandleAccessMethodExpr());
+            }
+            customCtClass.writeFile(Config.robustGenerateDirectory)
         }
     }
 

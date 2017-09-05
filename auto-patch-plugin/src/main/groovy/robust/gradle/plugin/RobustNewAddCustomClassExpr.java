@@ -168,15 +168,6 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
             }
         }
 
-        methodCall.getSignature();
-        methodCall.getMethodName();
-        try {
-            methodCall.getMethod();
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        }
-
-
         try {
             CtMethod callCtMethod = methodCall.getMethod();
 
