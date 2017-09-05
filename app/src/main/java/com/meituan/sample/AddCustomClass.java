@@ -13,5 +13,8 @@ public class AddCustomClass {
         Log.e("robust", "AddCustomClass : " + testPatchActivity.toString());
         TestPatchActivity.hello(new Thread());
         Log.e("robust", "AddCustomClass : 2");
+        TestPatchActivity.TestPatchAddSubClass subClass = new TestPatchActivity.TestPatchAddSubClass();
+        subClass.voidMethod();
+        TestPatchActivity.TestPatchAddSubClass.hello();
     }
 }
