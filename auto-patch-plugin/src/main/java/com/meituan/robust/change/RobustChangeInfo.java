@@ -46,6 +46,13 @@ public class RobustChangeInfo {
                 if (classChange.classNode.name.replace("/", ".").equals(dotClass)) {
                     if (null != classChange.methodChange) {
                         List<MethodNode> changeMethodList = classChange.methodChange.addList;
+                        // 如果改变的方法是access$，则视为新增方法处理，访问patch里面的
+                        for (MethodNode changedMethodNode:classChange.methodChange.changeList){
+                            if (changedMethodNode.name.contains("access$")){
+                                changeMethodList.add(changedMethodNode);
+                            }
+                        }
+
                         for (MethodNode methodNode : changeMethodList) {
                             if (methodName.equals(methodNode.name)) {
                                 //methodNode.desc (Landroid/os/Bundle;)V

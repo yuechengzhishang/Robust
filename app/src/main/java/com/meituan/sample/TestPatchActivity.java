@@ -144,6 +144,7 @@ public class TestPatchActivity extends AppCompatActivity{
             }
         });
         AddCustomClass.visit();
+        new TestPatchAddSubNonStaticClass();
     }
 
     private static String hello(){
@@ -163,6 +164,24 @@ public class TestPatchActivity extends AppCompatActivity{
         public static String Sex = "0";
         public static void hello(){
             Log.e("robust","TestPatchAddSubClass" + " public static void hello");
+        }
+
+        public void voidMethod(){
+            Log.e("robust","TestPatchAddSubClass" + " public void voidMethod");
+        }
+    }
+
+    public  class TestPatchAddSubNonStaticClass{
+        public TestPatchAddSubNonStaticClass(){
+            Log.e("robust","new TestPatchAddSubNonStaticClass");
+            hello();
+            Log.e("robust","new TestPatchAddSubNonStaticClass: " +TestPatchActivity.this.getLocalClassName());
+        }
+        private  String Name = "TestPatchAddSubClass";
+        public  String Sex = "0";
+        public  void hello(){
+            Log.e("robust","TestPatchAddSubClass" + " public static void hello");
+            Toast.makeText(TestPatchActivity.this, "Toast in TestPatchAddSubNonStaticClass", Toast.LENGTH_SHORT).show();
         }
 
         public void voidMethod(){
