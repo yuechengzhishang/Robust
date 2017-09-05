@@ -393,7 +393,7 @@ public class CodeTransformUnion {
 
             } else {
                 CtClass customInnerCtClass = Config.classPool.get(customInnerClassName);
-                if (null != customInnerCtClass.getDeclaringClass()) {
+                if (customInnerCtClass.name.contains("\$")) {
                     customInnerCtClassList.add(customInnerCtClass);
                 }
             }
