@@ -8,8 +8,8 @@ import org.objectweb.asm.Type;
 import java.io.File;
 import java.util.HashMap;
 
+import javassist.CtBehavior;
 import javassist.CtClass;
-import javassist.CtMethod;
 
 /**
  * Created by hedingxu on 17/9/4.
@@ -20,7 +20,7 @@ public class HasRobustProxyUtils {
 
     static HashMap<String, String> methodMaps;
 
-    public static boolean hasRobustProxy(CtClass sourceClass, CtClass patchClass, CtMethod ctMethod) {
+    public static boolean hasRobustProxy(CtClass sourceClass, CtClass patchClass, CtBehavior ctMethod) {
         if (null == methodMaps){
             File methodMap = new File(Config.robustGenerateDirectory, METHOD_MAP);
             methodMaps = JavaUtils.getMapFromZippedFile(methodMap.getAbsolutePath());

@@ -142,8 +142,8 @@ public class CodeTransformUnion {
         println("fix that unchanged lambda class really: ")
         //fix start
         List<String> newModifiedClassNameList = new ArrayList<>();
-        for (String className : Config.modifiedClassNameList){
-            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)){
+        for (String className : Config.modifiedClassNameList) {
+            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)) {
 
             } else {
                 newModifiedClassNameList.add(className);
@@ -152,8 +152,8 @@ public class CodeTransformUnion {
         Config.modifiedClassNameList = newModifiedClassNameList;
 
         List<String> newlyAddedClassNameList = new ArrayList<>();
-        for (String className : Config.newlyAddedClassNameList){
-            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)){
+        for (String className : Config.newlyAddedClassNameList) {
+            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)) {
 
             } else {
                 newlyAddedClassNameList.add(className);
@@ -162,8 +162,8 @@ public class CodeTransformUnion {
         Config.newlyAddedClassNameList = newlyAddedClassNameList;
 
         List<String> modifiedAnonymousInnerClassNameList = new ArrayList<>();
-        for (String className : Config.modifiedAnonymousInnerClassNameList){
-            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)){
+        for (String className : Config.modifiedAnonymousInnerClassNameList) {
+            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)) {
 
             } else {
                 modifiedAnonymousInnerClassNameList.add(className);
@@ -184,17 +184,17 @@ public class CodeTransformUnion {
 
 
         println("convert modifiedAnonymousInnerClassNameList to newAddClassNameList:")
-        for (String anonymousClassName: Config.modifiedAnonymousInnerClassNameList){
-            if (Config.newlyAddedClassNameList.contains(anonymousClassName)){
+        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
+            if (Config.newlyAddedClassNameList.contains(anonymousClassName)) {
             } else {
                 Config.newlyAddedClassNameList.add(anonymousClassName)
             }
         }
 
         println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
-        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList){
+        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
             AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
-            if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)){
+            if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
                 //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
             } else {
                 Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
@@ -330,8 +330,8 @@ public class CodeTransformUnion {
         HashMap<String, HashSet<AnonymousClassOuterClassMethodUtils.OuterMethodInfo>> changedAnonymousInfoMap =
                 AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap;
 
-        if (changedAnonymousInfoMap.size()>0){
-            for (String anonymousClassName:changedAnonymousInfoMap.keySet()){
+        if (changedAnonymousInfoMap.size() > 0) {
+            for (String anonymousClassName : changedAnonymousInfoMap.keySet()) {
 
             }
         }
@@ -346,7 +346,8 @@ public class CodeTransformUnion {
             patchClass.writeFile(patchPath)
             patchClass.defrost()
             CtClass sourceClass = Config.classPool.get(fullClassName)
-            PatchesFactory.createPublicMethodForPrivate(patchClass) //create static method for private method
+            PatchesFactory.createPublicMethodForPrivate(patchClass)
+            //create static method for private method
             createControlClass(patchPath, sourceClass)
         }
         handleAnonymousInnerAndLambdaClass();
@@ -354,23 +355,33 @@ public class CodeTransformUnion {
         handleCustomAddClass();
     }
 
-    public static handleCustomAddClass(){
+    public static handleCustomAddClass() {
         HashSet<String> customAddClassList = new HashSet<>();
-        for (String newClassName : Config.newlyAddedClassNameList){
-            boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(newClassName)||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newClassName)
+        for (String newClassName : Config.newlyAddedClassNameList) {
+            boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(newClassName) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newClassName)
 
-            if (is_$1_or_$$lambda$1){
+            if (is_$1_or_$$lambda$1) {
 
             } else {
                 customAddClassList.add(newClassName);
             }
         }
 
-        for (String customAddClassName : customAddClassList){
+        for (String customAddClassName : customAddClassList) {
             CtClass customAddCtClass = Config.classPool.get(customAddClassName);
+            customAddCtClass.defrost()
+            CtBehavior[] ctBehaviors = customAddCtClass.getDeclaredBehaviors();
+            for (CtBehavior ctBehavior : ctBehaviors) {
+                if (ctBehavior.name.contains("initRobustPatch")) {
+                    customAddCtClass.removeMethod((CtMethod) ctBehavior)
+                } else {
+                    ctBehavior.instrument(new RobustNewAddCustomClassExpr(customAddCtClass, ctBehavior));
+                }
+            }
             customAddCtClass.writeFile(Config.robustGenerateDirectory)
         }
     }
+
     public static handleAnonymousInnerAndLambdaClass() {
         Config.classPool.appendClassPath(Config.robustGenerateDirectory)
         for (String originalClassName : Config.modifiedClassNameList) {
@@ -379,10 +390,10 @@ public class CodeTransformUnion {
             List<CtClass> ctClasses = new ArrayList<CtClass>()
 //            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里 todo 9-1
 
-            for (String newAddClassName:Config.newlyAddedClassNameList) { //处理lambda表达式
-                if (newAddClassName.startsWith(originalClassName)){
-                    boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(newAddClassName)||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newAddClassName)
-                    if (is_$1_or_$$lambda$1){
+            for (String newAddClassName : Config.newlyAddedClassNameList) { //处理lambda表达式
+                if (newAddClassName.startsWith(originalClassName)) {
+                    boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(newAddClassName) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newAddClassName)
+                    if (is_$1_or_$$lambda$1) {
                         ctClasses.add(Config.classPool.get(newAddClassName));
                     }
                 }
@@ -390,12 +401,12 @@ public class CodeTransformUnion {
 
             ClassMap classMap = new ClassMap()
             for (CtClass nestedCtClass : ctClasses) {
-                boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName())||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
+                boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass(nestedCtClass.getName()) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
 //                System.err.println("nestedCtClass :" + nestedCtClass.getName())
                 if (isAnonymousInnerClass) {
                     nestedCtClass.defrost()
                     int modifiers1 = AccessFlag.setPublic(nestedCtClass.getModifiers())
-                    modifiers1 = AccessFlag.clear(modifiers1,AccessFlag.SYNTHETIC);
+                    modifiers1 = AccessFlag.clear(modifiers1, AccessFlag.SYNTHETIC);
                     nestedCtClass.setModifiers(modifiers1)
                     for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()) {
                         ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
@@ -426,21 +437,21 @@ public class CodeTransformUnion {
             patchClass.defrost()
             patchClass.replaceClassName(classMap)
             patchClass.setModifiers(AccessFlag.setPublic(patchClass.getModifiers()))
-            if (true){
+            if (true) {
                 List<CtMethod> toDeletedCtMethods = new ArrayList<CtMethod>();
-                for (CtMethod ctMethod:patchClass.getDeclaredMethods()){
-                    if (RobustChangeInfo.isInvariantMethod(ctMethod)){
+                for (CtMethod ctMethod : patchClass.getDeclaredMethods()) {
+                    if (RobustChangeInfo.isInvariantMethod(ctMethod)) {
                         toDeletedCtMethods.add(ctMethod);
                     }
                     int modifiers = ctMethod.getModifiers();
-                    boolean  isSynthetic= modifiers & AccessFlag.SYNTHETIC
-                    if (isSynthetic){
-                        int newModifiers = AccessFlag.clear(modifiers,AccessFlag.SYNTHETIC)
+                    boolean isSynthetic = modifiers & AccessFlag.SYNTHETIC
+                    if (isSynthetic) {
+                        int newModifiers = AccessFlag.clear(modifiers, AccessFlag.SYNTHETIC)
                         ctMethod.setModifiers(newModifiers);
                     }
                 }
 
-                for (CtMethod ctMethod: toDeletedCtMethods){
+                for (CtMethod ctMethod : toDeletedCtMethods) {
                     patchClass.removeMethod(ctMethod);
                 }
             }

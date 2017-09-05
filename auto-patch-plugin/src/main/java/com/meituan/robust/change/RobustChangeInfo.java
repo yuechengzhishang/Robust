@@ -37,6 +37,60 @@ public class RobustChangeInfo {
         public FieldChange fieldChange;
     }
 
+    public static boolean isNewAddMethod(CtMethod ctMethod){
+        String dotClass = ctMethod.getDeclaringClass().getName();
+        String methodName = ctMethod.getName();
+        String signature = ctMethod.getSignature();
+        for (ClassChange classChange : changeClasses) {
+            if (null != classChange) {
+                if (classChange.classNode.name.replace("/", ".").equals(dotClass)) {
+                    if (null != classChange.methodChange) {
+                        List<MethodNode> changeMethodList = classChange.methodChange.addList;
+                        for (MethodNode methodNode : changeMethodList) {
+                            if (methodName.equals(methodNode.name)) {
+                                //methodNode.desc (Landroid/os/Bundle;)V
+                                //ctMethod.getSignature() (Landroid/os/Bundle;)V
+                                if (methodNode.desc.equals(signature)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean isNewAddField(CtField ctField){
+        String dotClass = ctField.getDeclaringClass().getName();
+        String methodName = ctField.getName();
+        String signature = ctField.getSignature();
+        for (ClassChange classChange : changeClasses) {
+            if (null != classChange) {
+                if (classChange.classNode.name.replace("/", ".").equals(dotClass)) {
+                    if (null != classChange.fieldChange) {
+                        List<FieldNode> changeMethodList = classChange.fieldChange.addList;
+                        for (FieldNode methodNode : changeMethodList) {
+                            if (methodName.equals(methodNode.name)) {
+                                //methodNode.desc (Landroid/os/Bundle;)V
+                                //ctMethod.getSignature() (Landroid/os/Bundle;)V
+                                if (methodNode.desc.equals(signature)) {
+                                    return true;
+                                }
+                            }
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 
     public static boolean isInvariantMethod(CtMethod ctMethod) {
         String dotClass = ctMethod.getDeclaringClass().getName();
@@ -67,10 +121,11 @@ public class RobustChangeInfo {
                                             return true;
                                         }
                                     }
-                                    return false;
                                 }
                             }
                         }
+                    } else {
+                        return true;
                     }
                 }
             }
@@ -100,8 +155,6 @@ public class RobustChangeInfo {
                                 //ctMethod.getSignature() (Landroid/os/Bundle;)V
                                 if (fieldNode.desc.equals(signature)) {
                                     return true;
-                                } else {
-                                    return false;
                                 }
                             }
                         }

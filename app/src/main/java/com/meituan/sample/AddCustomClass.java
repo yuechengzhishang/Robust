@@ -11,5 +11,7 @@ public class AddCustomClass {
         int value = 2;
         TestPatchActivity testPatchActivity = new TestPatchActivity(value);
         Log.e("robust", "AddCustomClass : " + testPatchActivity.toString());
+        TestPatchActivity.hello(new Thread());
+        Log.e("robust", "AddCustomClass : 2");
     }
 }
