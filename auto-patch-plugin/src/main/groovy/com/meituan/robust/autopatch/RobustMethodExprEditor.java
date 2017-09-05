@@ -239,9 +239,9 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         }
 
-        if (ctMethod.getName().contains("lambda$onCreate$3")){
-            System.err.println("lambda$onCreate$3 : "+ctMethod.getLongName());
-        }
+//        if (ctMethod.getName().contains("lambda$onCreate$3")){
+//            System.err.println("lambda$onCreate$3 : "+ctMethod.getLongName());
+//        }
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
 
         if (outerMethodIsStatic == false && m.getMethodName().contains("lambdaFactory")) {

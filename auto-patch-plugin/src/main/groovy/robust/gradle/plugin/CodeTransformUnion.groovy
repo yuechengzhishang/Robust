@@ -351,8 +351,26 @@ public class CodeTransformUnion {
         }
         handleAnonymousInnerAndLambdaClass();
         createPatchesInfoClass(patchPath);
+        handleCustomAddClass();
     }
 
+    public static handleCustomAddClass(){
+        HashSet<String> customAddClassList = new HashSet<>();
+        for (String newClassName : Config.newlyAddedClassNameList){
+            boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(newClassName)||CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newClassName)
+
+            if (is_$1_or_$$lambda$1){
+
+            } else {
+                customAddClassList.add(newClassName);
+            }
+        }
+
+        for (String customAddClassName : customAddClassList){
+            CtClass customAddCtClass = Config.classPool.get(customAddClassName);
+            customAddCtClass.writeFile(Config.robustGenerateDirectory)
+        }
+    }
     public static handleAnonymousInnerAndLambdaClass() {
         Config.classPool.appendClassPath(Config.robustGenerateDirectory)
         for (String originalClassName : Config.modifiedClassNameList) {
