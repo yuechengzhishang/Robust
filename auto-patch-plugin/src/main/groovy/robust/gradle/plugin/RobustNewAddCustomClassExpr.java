@@ -5,7 +5,9 @@ import com.meituan.robust.autopatch.Config;
 import com.meituan.robust.autopatch.HasRobustProxyUtils;
 import com.meituan.robust.change.RobustChangeInfo;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -191,7 +193,23 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
 //                        *参数如果含有TestPatchActivity，需要替换成TestPatchActivityPatch
                         StringBuilder stringBuilder = new StringBuilder();
                         stringBuilder.append("{");
-                        String statement = " $_=($r) " + patchClassName + "." + methodCall.getMethodName() + "($$);";
+                        CtClass[] params = callCtMethod.getParameterTypes();
+                        List<String> paramList = new ArrayList<String>();
+                        int index = 0;
+                        for (CtClass param : params) {
+                            index++;
+                            if (param.getName().equals(modifyClassName)) {
+//                    System.err.println("param.getName(): " +param.getName());
+//                    System.err.println("sourceClassName Patch: " +patchClassName+"Patch");
+                                stringBuilder.append(patchClassName + " patchInstance" + index + " = new " + patchClassName+ "();");
+                                stringBuilder.append(" patchInstance" + index + "." + ORIGINCLASS  + " = $" + index + ";");
+                                paramList.add("patchInstance" + index);
+                            } else {
+                                paramList.add("$" + index);
+                            }
+                        }
+
+                        String statement = " $_=($r) " + patchClassName + "." + methodCall.getMethodName() + "("+String.join(",",paramList)+");";
                         stringBuilder.append(statement);
                         stringBuilder.append("}");
                         methodCall.replace(stringBuilder.toString());
@@ -208,7 +226,22 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
                         stringBuilder.append("{");
                         stringBuilder.append(" " + patchClassName + " instancePatch = new " + patchClassName + "();");
                         stringBuilder.append(" instancePatch."+ ORIGINCLASS + " = $0 ;");
-                        String statement = "$_=($r)" + " instancePatch" + "." + methodCall.getMethodName() + "($$);";
+
+                        CtClass[] params = callCtMethod.getParameterTypes();
+                        List<String> paramList = new ArrayList<String>();
+                        int index = 0;
+                        for (CtClass param : params) {
+                            index++;
+                            if (param.getName().equals(modifyClassName)) {
+                                stringBuilder.append(patchClassName + " patchInstance" + index + " = new " + patchClassName+ "();");
+                                stringBuilder.append(" patchInstance" + index + "." + ORIGINCLASS  + " = $" + index + ";");
+                                paramList.add("patchInstance" + index);
+                            } else {
+                                paramList.add("$" + index);
+                            }
+                        }
+
+                        String statement = "$_=($r)" + " instancePatch" + "." + methodCall.getMethodName() + "("+String.join(",",paramList)+");";
                         stringBuilder.append(statement);
                         stringBuilder.append("}");
                         methodCall.replace(stringBuilder.toString());

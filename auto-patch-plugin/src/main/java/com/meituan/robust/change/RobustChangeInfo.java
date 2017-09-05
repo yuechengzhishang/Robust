@@ -37,6 +37,43 @@ public class RobustChangeInfo {
         public FieldChange fieldChange;
     }
 
+    public static boolean isAddOrChangedAccess$Method(CtMethod ctMethod){
+
+        String dotClass = ctMethod.getDeclaringClass().getName();
+        String methodName = ctMethod.getName();
+        String signature = ctMethod.getSignature();
+        for (ClassChange classChange : changeClasses) {
+            if (null != classChange) {
+                if (classChange.classNode.name.replace("/", ".").equals(dotClass)) {
+                    if (null != classChange.methodChange) {
+                        List<MethodNode> changeMethodList = new ArrayList<MethodNode>();
+                        changeMethodList.addAll(classChange.methodChange.addList);
+                        // 如果改变的方法是access$，则视为新增方法处理，访问patch里面的
+                        for (MethodNode changedMethodNode:classChange.methodChange.changeList){
+                            if (changedMethodNode.name.contains("access$")){
+                                changeMethodList.add(changedMethodNode);
+                            }
+                        }
+
+                        for (MethodNode methodNode : changeMethodList) {
+                            if (methodName.equals(methodNode.name)) {
+                                //methodNode.desc (Landroid/os/Bundle;)V
+                                //ctMethod.getSignature() (Landroid/os/Bundle;)V
+                                if (methodNode.desc.equals(signature)) {
+                                    return true;
+                                }
+                            }
+                        }
+
+
+                    }
+                }
+            }
+        }
+        return false;
+
+    }
+
     public static boolean isNewAddMethod(CtMethod ctMethod){
         String dotClass = ctMethod.getDeclaringClass().getName();
         String methodName = ctMethod.getName();
@@ -45,7 +82,8 @@ public class RobustChangeInfo {
             if (null != classChange) {
                 if (classChange.classNode.name.replace("/", ".").equals(dotClass)) {
                     if (null != classChange.methodChange) {
-                        List<MethodNode> changeMethodList = classChange.methodChange.addList;
+                        List<MethodNode> changeMethodList = new ArrayList<MethodNode>();
+                        changeMethodList.addAll(classChange.methodChange.addList);
                         // 如果改变的方法是access$，则视为新增方法处理，访问patch里面的
                         for (MethodNode changedMethodNode:classChange.methodChange.changeList){
                             if (changedMethodNode.name.contains("access$")){

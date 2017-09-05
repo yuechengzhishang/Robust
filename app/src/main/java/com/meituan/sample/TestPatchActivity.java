@@ -173,7 +173,7 @@ public class TestPatchActivity extends AppCompatActivity{
 
     public  class TestPatchAddSubNonStaticClass{
         public TestPatchAddSubNonStaticClass(){
-            Log.e("robust","new TestPatchAddSubNonStaticClass");
+            Log.e("robust","new TestPatchAddSubNonStaticClass " + publicString + " " +privateString);
             hello();
             Log.e("robust","new TestPatchAddSubNonStaticClass: " +TestPatchActivity.this.getLocalClassName());
         }
