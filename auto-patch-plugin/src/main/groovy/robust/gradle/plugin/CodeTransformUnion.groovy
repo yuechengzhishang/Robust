@@ -392,9 +392,10 @@ public class CodeTransformUnion {
             if (is_$1_or_$$lambda$1) {
 
             } else {
-                CtClass customInnerCtClass = Config.classPool.get(customInnerClassName);
-                if (customInnerCtClass.name.contains("\$")) {
-                    customInnerCtClassList.add(customInnerCtClass);
+                if (customInnerClassName.contains("\$")){
+                    String patchCustomInnerClassName = customInnerClassName + "Patch";
+                    CtClass patchCustomInnerCtClass = Config.classPool.get(patchCustomInnerClassName);
+                    customInnerCtClassList.add(patchCustomInnerCtClass);
                 }
             }
         }
