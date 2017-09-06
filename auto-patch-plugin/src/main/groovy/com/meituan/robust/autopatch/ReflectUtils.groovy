@@ -84,6 +84,7 @@ class ReflectUtils {
             }
         } else {
             if (AccessFlag.isPublic(field.modifiers)) {
+
                 stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
                 stringBuilder.append("\$_ =(\$r)((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + ";");
                 stringBuilder.append("}else{");
