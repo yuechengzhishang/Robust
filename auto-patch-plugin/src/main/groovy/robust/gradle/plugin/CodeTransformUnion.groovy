@@ -400,6 +400,7 @@ public class CodeTransformUnion {
             }
         }
         for (CtClass customCtClass : customInnerCtClassList) {
+            customCtClass.defrost();
             CtBehavior[] ctBehaviors = customCtClass.getDeclaredBehaviors();
             for (CtBehavior ctBehavior : ctBehaviors) {
                 ctBehavior.instrument(new RobustHandleAccessMethodExpr());

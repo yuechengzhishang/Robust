@@ -147,6 +147,13 @@ public class TestPatchActivity extends AppCompatActivity{
         new TestPatchAddSubNonStaticClass();
     }
 
+    private void setPrivateString(String privateString){
+        this.privateString = privateString;
+    }
+
+    private void setProtectedString(String protectedString){
+        this.protectedString = protectedString;
+    }
     private static String hello(){
         return "private static String hello";
     }
@@ -176,6 +183,8 @@ public class TestPatchActivity extends AppCompatActivity{
             Log.e("robust","new TestPatchAddSubNonStaticClass " + publicString + " " +privateString);
             hello();
             Log.e("robust","new TestPatchAddSubNonStaticClass: " +TestPatchActivity.this.getLocalClassName());
+//            setPrivateString("TestPatchAddSubNonStaticClass.set private");
+//            setProtectedString("TestPatchAddSubNonStaticClass.set Protected");
         }
         private  String Name = "TestPatchAddSubClass";
         public  String Sex = "0";
