@@ -88,14 +88,12 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             int originAccess = access;
             //把所有的package方法都改成public
-            if (isProtect(access) || isACCSYNTHETIC(access) || AsmUtils.CONSTRUCTOR.equals(name) || ASMAccessUtils.isPackage(access)) {
+            if (isProtect(access) ||  AsmUtils.CONSTRUCTOR.equals(name) || ASMAccessUtils.isPackage(access)) {
                 access = setPublic(access);
             }
             //
             MethodVisitor mv = super.visitMethod(access, name,
                     desc, signature, exceptions);
-
-
             if (AsmUtils.CONSTRUCTOR.equals(name)) {
                 final int tempAccess = access;
                 final String tempDesc = desc;
@@ -131,15 +129,17 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 return mv;
             }
 
-            boolean needInsertCode;
-            if (isStatic(originAccess)) {
-                //静态方法必须插桩 , access$000 是静态方法，需要排除
+            boolean needInsertCode = true;
+            if (needInsertCode && isStatic(originAccess)) {
+                //静态方法必须插桩 , access$000 access$lambda$0 是静态方法，需要排除
                 if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
                     needInsertCode = false;
                 } else {
                     needInsertCode = true;
                 }
-            } else {
+            }
+
+            if (needInsertCode){
                 needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
             }
             if (needInsertCode) {
@@ -318,9 +318,6 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 //        printlnMap(isNeedInsertCodeMethodMap);
 
 
-        if (RobustActivityUtils.isActivityClass()) {
-
-        }
 
         InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, isNeedInsertCodeMethodMap);
         cr.accept(insertMethodBodyAdapter, ClassReader.EXPAND_FRAMES);
@@ -330,13 +327,13 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
     public static void main(String[] args) throws IOException {
 
-        AsmInsertImpl asmInsert = new AsmInsertImpl(null, null, null, null, false, false);
+//        AsmInsertImpl asmInsert = new AsmInsertImpl(null, null, null, null, false, false);
 //        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Downloads/asm-5.2/asm/com/meituan/robust/PatchProxy.class"));
 //        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Downloads/asm-5.2/com/meituan/robust/Patch.class"));
-        byte[] bytes = org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People.class"));
+//        byte[] bytes = org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People.class"));
 //        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Downloads/asm-5.2/asm/com/meituan/robust/PatchProxy2.class"),asmInsert.transformCode2(bytes,"com.meituan.robust.PatchProxy","1231"));
 //        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Downloads/asm-5.2/com/meituan/robust/Patch2.class"),asmInsert.transformCode2(bytes,"com.meituan.robust.Patch","1231"));
-        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People2.class"), asmInsert.transformCode2(bytes, "com.meituan.sample.robusttest.People"));
+//        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People2.class"), asmInsert.transformCode2(bytes, "com.meituan.sample.robusttest.People"));
     }
 
     private void printlnMap(Map<String, Boolean> map) {

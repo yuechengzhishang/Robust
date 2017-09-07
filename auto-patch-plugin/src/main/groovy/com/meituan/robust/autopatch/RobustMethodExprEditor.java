@@ -97,7 +97,11 @@ public class RobustMethodExprEditor extends ExprEditor {
             RobustLogUtils.log("Field access replace NotFoundException", e);
 //            throw new RuntimeException(e.getMessage());
         } catch (javassist.CannotCompileException e) {
-            RobustLogUtils.log("Field access replace NotFoundException", e);
+            if (e.getMessage().contains("no such field:")){
+
+            } else {
+                RobustLogUtils.log("Field access replace NotFoundException", e);
+            }
         }
     }
 
@@ -706,7 +710,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 if (AccessFlag.isPublic(methodCall.getMethod().getModifiers())) {
                     stringBuilder.append("$_ = $proceed($$);");
                 } else {
-                    if (signatureBuilder.toString().length() > 1) {
+                    if (signatureBuilder.toString().length() > 0) {
                         stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + methodCall.getMethod().getName() + "\"," + sourceClassName + ".class,$args,new Class[]{" + signatureBuilder.toString() + "});");
                     } else
                         stringBuilder.append("$_=($r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + methodCall.getMethod().getName() + "\"," + sourceClassName + ".class,$args,null);");
@@ -717,7 +721,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             } else {
                 //在非static method中使用static method
                 stringBuilder.append("java.lang.Object parameters[]=" + Constants.GET_REAL_PARAMETER + "($args);");
-                if (signatureBuilder.toString().length() > 1) {
+                if (signatureBuilder.toString().length() > 0) {
                     stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + methodCall.getMethod().getName() + "\"," + sourceClassName + ".class,parameters,new Class[]{" + signatureBuilder.toString() + "});");
                 } else
                     stringBuilder.append("$_=($r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + methodCall.getMethod().getName() + "\"," + sourceClassName + ".class,parameters,null);");
@@ -738,7 +742,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 stringBuilder.append("}else{");
                 stringBuilder.append("instance=$0;");
                 stringBuilder.append("}");
-                if (signatureBuilder.toString().length() > 1) {
+                if (signatureBuilder.toString().length() > 0) {
                     stringBuilder.append("java.lang.Object parameters[]=" + Constants.GET_REAL_PARAMETER + "($args);");
                     stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,parameters,new Class[]{" + signatureBuilder.toString() + "}," + methodTargetClassName + ".class);");
                 } else
@@ -758,7 +762,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 //                    EnhancedRobustUtils.invokeReflectMethod("setPrivateString", var5, new Object[]{x1}, new Class[]{String.class}, TestPatchActivity.class);
 //                }
 //               todo 考虑使用这个 RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class();
-                if (signatureBuilder.toString().length() > 1) {
+                if (signatureBuilder.toString().length() > 0) {
                     //// TODO: 17/9/7  parameters
                     String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null,methodCall,patchClass,Config.classPool.get(sourceClassName));
                     paramsStr = paramsStr.replace("(","").replace(")","");

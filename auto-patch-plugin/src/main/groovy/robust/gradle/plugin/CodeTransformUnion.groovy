@@ -194,6 +194,8 @@ public class CodeTransformUnion {
         println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
         for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
             AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
+            //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
+
             if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
                 //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
             } else {

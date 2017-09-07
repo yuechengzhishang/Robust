@@ -56,7 +56,7 @@ public class JavaUtils {
 //        HashMap<String, String> hashMap2 = getMapFromZippedFile(path2);
 //        System.err.println(hashMap1.equals(hashMap2));
 
-        parseRobustMethodsMap2File(path0, new File("/Users/hedingxu/robust-github/Robust/app/robust/methodsMap0_bak.robust"));
+        parseRobustMethodsMap2File(path0, new File(path0 + ".txt"));
         if (true) {
             return;
         }
