@@ -22,9 +22,6 @@ import static com.meituan.robust.Constants.DEFAULT_MAPPING_FILE;
  */
 
 public final class Config {
-    public static final String ROBUST_TRANSFORM_MAIN_JAR = "robust_transform_main.jar";
-    public static final String ROBUST_PROGUARD_MAIN_JAR = "robust_proguard_main.jar";
-
     public static boolean catchReflectException = false;
     public static boolean supportProGuard = true;
     public static boolean isLogging = true;

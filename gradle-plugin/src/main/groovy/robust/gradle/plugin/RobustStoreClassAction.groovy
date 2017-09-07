@@ -32,7 +32,7 @@ public class RobustStoreClassAction implements Action<Project> {
 
                     if (proGuardJar != null && proGuardJar.exists()) {
                         File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
-                        File storeMainJarFile = new File(robustOutDirFile, "proguard_main.jar")
+                        File storeMainJarFile = new File(robustOutDirFile, Constants.ROBUST_PROGUARD_MAIN_JAR)
                         FileUtil.copyFile(proGuardJar, storeMainJarFile)
                     } else {
                         println("The proguard's jar doesn't exist.");

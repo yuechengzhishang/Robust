@@ -163,7 +163,7 @@ class RobustTransform extends Transform implements Plugin<Project> {
         //todo 在混淆task后，dex task之前 :aimeituan:transformClassesWithDexForPreloadedRelease
         //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
-        File storeMainJarFile = new File(robustOutDirFile,"robust_main.jar")
+        File storeMainJarFile = new File(robustOutDirFile,Constants.ROBUST_MAIN_JAR)
         FileUtil.createFile(storeMainJarFile.absolutePath)
         ZipOutputStream outStream= new JarOutputStream(new FileOutputStream(storeMainJarFile));
         for(CtClass ctClass:box) {
@@ -188,7 +188,7 @@ class RobustTransform extends Transform implements Plugin<Project> {
         //todo 在混淆task后，dex task之前 :aimeituan:transformClassesWithDexForPreloadedRelease
         //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         String robustOutDir = project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY
-        File robustMainJar = new File(robustOutDir,"robust_transform_main.jar")
+        File robustMainJar = new File(robustOutDir,Constants.ROBUST_TRANSFORM_MAIN_JAR)
         FileUtil.copyFile(jarFile,robustMainJar)
 
 

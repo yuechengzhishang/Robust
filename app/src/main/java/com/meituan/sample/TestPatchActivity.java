@@ -164,6 +164,7 @@ public class TestPatchActivity extends AppCompatActivity{
 
     public static void hello(Thread thread){
         thread.getName();
+        Log.e("robust","***** "+thread.getName());
     }
 
     public static class TestPatchAddSubClass{

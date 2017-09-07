@@ -100,13 +100,13 @@ public class CodeTransformUnion {
 //        clearPatchPath(patchPath);
 
         //1. get last class.jar
-        File oldMainJarFile = new File(ROBUST_DIR, Config.ROBUST_TRANSFORM_MAIN_JAR)
-        File oldProGuardJarFile = new File(ROBUST_DIR, Config.ROBUST_PROGUARD_MAIN_JAR)
+        File oldMainJarFile = new File(ROBUST_DIR, Constants.ROBUST_TRANSFORM_MAIN_JAR)
+        File oldProGuardJarFile = new File(ROBUST_DIR, Constants.ROBUST_PROGUARD_MAIN_JAR)
 
         //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
         //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
-        File newMainJarFile = new File(patchPath, Config.ROBUST_TRANSFORM_MAIN_JAR)
-        File newProGuradJarFile = new File(patchPath, Config.ROBUST_PROGUARD_MAIN_JAR)
+        File newMainJarFile = new File(patchPath, Constants.ROBUST_TRANSFORM_MAIN_JAR)
+        File newProGuradJarFile = new File(patchPath, Constants.ROBUST_PROGUARD_MAIN_JAR)
         if (newMainJarFile.exists() || newProGuradJarFile.exists()) {
             //如果proguard打开了，就使用proguard的包
             //todo test proguard

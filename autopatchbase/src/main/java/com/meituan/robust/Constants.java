@@ -124,4 +124,9 @@ public class Constants {
     public static final int PATCH_DEX_TYPE = 0;
     public static final int PATCH_RESOURCE_TYPE = 1;
     public static final int PATCH_DEX_RESOURCE_TYPE = 2;
+
+    public static final String ROBUST_MAIN_JAR = "robust_main.jar";
+    public static final String ROBUST_TRANSFORM_MAIN_JAR = "robust_transform_main.jar";
+    public static final String ROBUST_PROGUARD_MAIN_JAR = "robust_proguard_main.jar";
+
 }

@@ -43,18 +43,19 @@ public class PatchesControlFactory {
 
     private
     static String getAccessDispatchMethodBody(CtClass patchClass, String modifiedClassName) throws NotFoundException {
+        //replace paramArrayOfObject to $2
         StringBuilder accessDispatchMethodBody = new StringBuilder();
         if (Config.catchReflectException) {
             accessDispatchMethodBody.append("try{");
         }
         if (Constants.isLogging) {
-            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"arrivied in AccessDispatch \"+methodName+\" paramArrayOfObject  \" +paramArrayOfObject);");
+            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"arrivied in AccessDispatch \"+methodName+\" paramArrayOfObject  \");");
         }
         //create patch instance
         accessDispatchMethodBody.append(patchClass.getName() + " patch = new " + patchClass.getName() + "();\n");
         accessDispatchMethodBody.append(" String isStatic=$1.split(\":\")[2];");
         accessDispatchMethodBody.append(" if (isStatic.equals(\"false\")) {\n");
-        accessDispatchMethodBody.append("patch." + ORIGINCLASS + " = (" + modifiedClassName + ")paramArrayOfObject[paramArrayOfObject.length - 1];");
+        accessDispatchMethodBody.append("patch." + ORIGINCLASS + " = (" + modifiedClassName + ")$2[$2.length - 1];");
 //        accessDispatchMethodBody.append(" if (keyToValueRelation.get(paramArrayOfObject[paramArrayOfObject.length - 1]) == null) {\n");
 //        if (Constants.isLogging) {
 //            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"keyToValueRelation not contain\" );");
@@ -130,13 +131,13 @@ public class PatchesControlFactory {
                 }
                 for (int index = 0; index < parametertypes.length; index++) {
                     if (booleanPrimeType(parametertypes[index].getName())) {
-                        accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") (fixObj(paramArrayOfObject[" + index + "]))");
+                        accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") (fixObj($2[" + index + "]))");
                         accessDispatchMethodBody.append(")" + JavaUtils.wrapperToPrime(parametertypes[index].getName()));
                         if (index != parametertypes.length - 1) {
                             accessDispatchMethodBody.append(",");
                         }
                     } else {
-                        accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") (paramArrayOfObject[" + index + "])");
+                        accessDispatchMethodBody.append("((" + JavaUtils.getWrapperClass(parametertypes[index].getName()) + ") ($2[" + index + "])");
                         accessDispatchMethodBody.append(")" + JavaUtils.wrapperToPrime(parametertypes[index].getName()));
                         if (index != parametertypes.length - 1) {
                             accessDispatchMethodBody.append(",");
@@ -181,10 +182,11 @@ public class PatchesControlFactory {
     }
 
     private static String getIsSupportMethodBody(CtClass patchClass, String modifiedClassName) throws NotFoundException {
+        //replace paramArrayOfObject to $2
         StringBuilder isSupportBuilder = new StringBuilder();
         StringBuilder methodsIdBuilder = new StringBuilder();
         if (Constants.isLogging) {
-            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+methodName+\" paramArrayOfObject  \" +paramArrayOfObject);");
+            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+methodName+\" paramArrayOfObject  \");");
         }
         isSupportBuilder.append("String methodNo=$1.split(\":\")[3];\n");
         if (Constants.isLogging) {
@@ -209,7 +211,7 @@ public class PatchesControlFactory {
         }
 
         if (Constants.isLogging) {
-            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+methodName+\" paramArrayOfObject  \" +paramArrayOfObject+\" isSupport result is \"+\"" + methodsIdBuilder.toString() + "\".contains(methodNo));");
+            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+methodName+\" paramArrayOfObject  \" +\" isSupport result is \"+\"" + methodsIdBuilder.toString() + "\".contains(methodNo));");
         }
         isSupportBuilder.append("return \"" + methodsIdBuilder.toString() + "\".contains(methodNo);");
         return isSupportBuilder.toString();

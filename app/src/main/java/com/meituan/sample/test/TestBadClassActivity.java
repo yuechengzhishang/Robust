@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -300,6 +301,7 @@ public class TestBadClassActivity extends AppCompatActivity {
      */
     public static int dip2px(Context context, float dipValue) {
         final float scale = context.getResources().getDisplayMetrics().density;
+        Log.e("robust","******dip2px*** "+scale);
         return (int) (dipValue * scale + 0.5f);
     }
 
