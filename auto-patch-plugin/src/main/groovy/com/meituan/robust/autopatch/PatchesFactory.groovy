@@ -125,8 +125,14 @@ class PatchesFactory {
 
         //暂时先删除掉classInitMethod todo 解决如果改了静态字段的赋值问题
         try {
-            CtMethod classInitMethod = temPatchClass.getDeclaredMethod(ByteCodeUtils.CLASS_INITIALIZER);
-            temPatchClass.removeMethod(classInitMethod)
+            for (CtBehavior ctBehavior: temPatchClass.getDeclaredBehaviors()){
+                if (ctBehavior instanceof CtConstructor){
+                    CtConstructor ctConstructor1 = (CtConstructor)ctBehavior;
+                    if (ctConstructor1.name.equals(ByteCodeUtils.CLASS_INITIALIZER)){
+                        temPatchClass.removeConstructor(ctConstructor1);
+                    }
+                }
+            }
         } catch (NotFoundException e){
 //            有的有clinit，有的没有这个
 //            e.printStackTrace()
