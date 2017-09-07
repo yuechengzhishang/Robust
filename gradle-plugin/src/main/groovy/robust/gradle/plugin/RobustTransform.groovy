@@ -100,12 +100,14 @@ class RobustTransform extends Transform implements Plugin<Project> {
             isHotfixMethodLevel = true;
         }
 
-        if (null != robust.switch.useAsm && "false".equals(String.valueOf(robust.switch.useAsm.text()))) {
-            useASM = false;
-        }else {
-            //默认使用asm
-            useASM = true;
-        }
+//        if (null != robust.switch.useAsm && "false".equals(String.valueOf(robust.switch.useAsm.text()))) {
+//            useASM = false;
+//        }else {
+//            //默认使用asm
+//            useASM = true;
+//        }
+        //默认使用asm
+        useASM = true;
 
         if (null != robust.switch.filterMethod && "true".equals(String.valueOf(robust.switch.turnOnExceptMethod.text()))) {
             isExceptMethodLevel = true;
