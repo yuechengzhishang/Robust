@@ -544,7 +544,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                         }
 
                         if (isOuterMethod) {
-                            replaceThisToOriginClassMethodDirectly(m);
+                            replaceThisToOriginClassMethodDirectlyByCallOuterMethod(m);
                         }
                         return;
                     }
@@ -600,6 +600,21 @@ public class RobustMethodExprEditor extends ExprEditor {
         stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
         stringBuilder.append("}");
         m.replace(stringBuilder.toString());
+    }
+
+    public void replaceThisToOriginClassMethodDirectlyByCallOuterMethod(MethodCall m) throws NotFoundException, CannotCompileException {
+        int accessFlag = m.getMethod().getModifiers();
+        if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
+            //反射
+           System.err.println("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("{");
+            stringBuilder.append(getParamsThisReplacedString(m));
+            stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
+            stringBuilder.append("}");
+            m.replace(stringBuilder.toString());
+        }
     }
 
     public void replaceParam_ThisToOriginalClassInstance(MethodCall m) throws NotFoundException, CannotCompileException {
