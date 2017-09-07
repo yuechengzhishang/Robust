@@ -65,12 +65,19 @@ public class RobustMethodExprEditor extends ExprEditor {
         try {
             CtClass outerCtClass = sourceClass.getDeclaringClass();
             String outerClassName = outerCtClass.getName();
-            if (outerClassName.equals(f.getField().getType().getName())) {
-                //this$0.publicField
-                isThis$0 = true;
+            if (null == outerClassName || "".equals(outerClassName)){
+
+            } else {
+                if (outerClassName.equals(f.getField().getType().getName())) {
+                    //this$0.publicField
+                    isThis$0 = true;
+                }
             }
         } catch (NotFoundException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
+            RobustLogUtils.log("NotFoundException e",e);
+        } catch (NullPointerException e){
+//            RobustLogUtils.log("NullPointerException e",e);
         }
         if (false == isThis$0) {
             if (hasRobustProxyCode) {
@@ -156,7 +163,8 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
 
 //            stringBuilder.append("$_= ($r) new " + newExprClassName + "(this.originClass);");
-            if (CheckCodeChanges.isAnonymousInnerClass_$1(newExprClassName)) {
+            boolean isChangeOrNewAdd_AnonymousInnerClass_$1 = Config.modifiedClassNameList.contains(newExprClassName) || Config.newlyAddedClassNameList.contains(newExprClassName);
+            if (isChangeOrNewAdd_AnonymousInnerClass_$1 && CheckCodeChanges.isAnonymousInnerClass_$1(newExprClassName)) {
                 //create public Field outerPatchClassName
                 CtClass anonymousInnerCtClass = Config.classPool.getOrNull(newExprClassName);
                 CtField ctField = new CtField(patchClass, "outerPatchClassName", anonymousInnerCtClass);
@@ -520,13 +528,16 @@ public class RobustMethodExprEditor extends ExprEditor {
                         boolean isOuterMethod = false;
                         try {
                             CtClass outerCtClass = sourceClass.getDeclaringClass();
-                            String outerClassName = outerCtClass.getName();
-                            if (m.getMethodName().contains("hello")){
-                                System.err.println("hello");
-                            }
-                            if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
-                                //this$0.publicField
-                                isOuterMethod = true;
+                            if (null != outerCtClass){
+                                String outerClassName = outerCtClass.getName();
+                                if (null == outerClassName || "".equals(outerClassName)){
+
+                                } else {
+                                    if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
+                                        //this$0.publicField
+                                        isOuterMethod = true;
+                                    }
+                                }
                             }
                         } catch (Exception e) {
                             RobustLogUtils.log("Exception", e);

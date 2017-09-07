@@ -234,6 +234,16 @@ public class RobustMethodCallEditorUtils2 {
             paramsStr = stringBuilder.toString();
         }
 
+        if (Config.modifiedClassNameList.contains(lambdaClassName) || Config.newlyAddedClassNameList.contains(lambdaClassName)){
+
+        } else {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("{");
+            stringBuilder.append("$_ = $proceed"+paramsStr+";");
+            stringBuilder.append("}");
+            m.replace(stringBuilder.toString());
+            return true;
+        }
         if (null == Config.classPool.getOrNull(lambdaClassName)){
             lambdaClassName =  lambdaClassName.replace(sourceClass.getName(),patchClass.getName());
         }
