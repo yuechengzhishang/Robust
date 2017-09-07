@@ -192,6 +192,7 @@ public class TestPatchActivity extends AppCompatActivity{
             Log.e("robust","TestPatchAddSubNonStaticClass.set Protected");
             setProtectedString("TestPatchAddSubNonStaticClass.set Protected");
             Log.e("robust","TestPatchAddSubNonStaticClass.set Protected");
+            innerClassPrivateMethod();
         }
         private  String Name = "TestPatchAddSubClass";
         public  String Sex = "0";
@@ -202,6 +203,14 @@ public class TestPatchActivity extends AppCompatActivity{
 
         public void voidMethod(){
             Log.e("robust","TestPatchAddSubClass" + " public void voidMethod");
+        }
+
+        private void innerClassPrivateMethod(){
+            Log.e("robust","TestPatchAddSubClass" + " **********");
+            Log.e("robust","TestPatchAddSubClass" + " innerClassPrivateMethod");
+            setPrivateString("TestPatchAddSubNonStaticClass.set private");
+            setProtectedString("TestPatchAddSubNonStaticClass.set Protected");
+            Log.e("robust","TestPatchAddSubNonStaticClass.set Protected");
         }
     }
 }
