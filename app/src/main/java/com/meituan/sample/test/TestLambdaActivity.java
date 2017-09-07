@@ -42,8 +42,8 @@ public class TestLambdaActivity extends AppCompatActivity {
             String toastMsg = "";
             switch (lambdaPatchType) {
                 case ORIGINAL_METHOD_PRIVATE:
-                    functionInterface = () -> "bad originalPrivateMethod";
-//                        functionInterface = () -> "patch" + originalPrivateMethod();
+//                    functionInterface = () -> "bad originalPrivateMethod";
+                        functionInterface = () -> "patch" + originalPrivateMethod();
                     break;
 
                 case ORIGINAL_METHOD_STATIC:

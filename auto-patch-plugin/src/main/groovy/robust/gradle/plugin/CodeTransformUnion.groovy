@@ -464,6 +464,26 @@ public class CodeTransformUnion {
 
             CtClass patchClass = Config.classPool.get(NameManger.getInstance().getPatchNamWithoutRecord(originalClassName))
             patchClass.defrost()
+            //add lambda class
+            HashSet<String> lambdaHashSet = getLambdaClassChangedOrNewList()
+            for (String lambdaClassName : lambdaHashSet){
+                String tempPatchClassName = patchClass.getName();
+                if (tempPatchClassName.endsWith("Patch")){
+                    tempPatchClassName = tempPatchClassName + "ROBUST_FOR_DELETE";
+                    String tempStr = "Patch" + "ROBUST_FOR_DELETE";
+                    String sourceClassName  = tempPatchClassName.replace(tempStr,"");
+                    String sourceClassName_prefix_lambda = sourceClassName + "\$\$Lambda\$";
+                    if (lambdaClassName.startsWith(sourceClassName_prefix_lambda)){
+//                        CtClass lambdaCtClass = Config.classPool.getOrNull(lambdaClassName);
+//                       app/build/outputs/robust/com/meituan/sample/test/TestLambdaActivity$$Lambda$2Patch.class
+                        String lambdaPatchClassName = lambdaClassName + "Patch";
+                        CtClass lambdaPatchCtClass = Config.classPool.getOrNull(lambdaPatchClassName);
+                        if (null != lambdaPatchCtClass){
+                            classMap.put(lambdaClassName,lambdaPatchClassName)
+                        }
+                    }
+                }
+            }
             patchClass.replaceClassName(classMap)
             patchClass.setModifiers(AccessFlag.setPublic(patchClass.getModifiers()))
             if (true) {
@@ -486,6 +506,28 @@ public class CodeTransformUnion {
             }
             patchClass.writeFile(Config.robustGenerateDirectory)
         }
+    }
+
+    public static HashSet<String> getLambdaClassChangedOrNewList(){
+        HashSet<String> lambdaDotClassNameSet = new HashSet<String>();
+        for (String dotClassName : Config.modifiedClassNameList) {
+            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+                lambdaDotClassNameSet.add(dotClassName);
+            }
+        }
+
+        for (String dotClassName : Config.newlyAddedClassNameList) {
+            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+                lambdaDotClassNameSet.add(dotClassName);
+            }
+        }
+
+        for (String dotClassName : Config.modifiedAnonymousInnerClassNameList) {
+            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+                lambdaDotClassNameSet.add(dotClassName);
+            }
+        }
+        return lambdaDotClassNameSet;
     }
 
     public static setAnonymousInnerClassPublic(String originalClassName) {

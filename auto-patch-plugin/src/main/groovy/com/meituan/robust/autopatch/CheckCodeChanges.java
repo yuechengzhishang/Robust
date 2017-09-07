@@ -445,18 +445,12 @@ public class CheckCodeChanges {
                                     RobustChangeInfo.changeClasses.add(classChange);
 //                                  //todo 这里File_SEPARATOR需要考虑windows里面的是否兼容
                                     if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
-//                                        ClassNode newAnonymousInnerClass = newClassNode;
-//                                        String outerClass = newAnonymousInnerClass.outerClass;
-//                                        String outerMethod = newAnonymousInnerClass.outerMethod;
-//                                        String outerMethodDesc = newAnonymousInnerClass.outerMethodDesc;
-//                                        System.err.println("======MMMMM");
-//                                        System.err.println("isAnonymousInnerClass: " + newAnonymousInnerClass.name);
-//                                        System.err.println("outerClass: " + outerClass);
-//                                        System.err.println("outerMethod: " + outerMethod);
-//                                        System.err.println("outerMethodDesc: " + outerMethodDesc);
-//                                        System.err.println("======NNNNN");
                                         ClassNode newAnonymousInnerClass = newClassNode;
                                         AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
+                                    }
+
+                                    if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(className.replace(".class", "").replace(File_SEPARATOR, "."))){
+                                        //// TODO: 17/9/7 记录改了lambda表达式的所包含的方法
                                     }
                                 }
                             }

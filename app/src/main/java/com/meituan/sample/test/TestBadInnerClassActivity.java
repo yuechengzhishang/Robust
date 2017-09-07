@@ -771,8 +771,8 @@ public class TestBadInnerClassActivity extends AppCompatActivity {
 
             sb
                     .append(publicStaticOuterMethod()).append("\n")
-                    .append(privateNewOuterMethod()).append("\n")
-                    .append(privateNewStaticOuterMethod()).append("\n")
+//                    .append(privateNewOuterMethod()).append("\n")
+//                    .append(privateNewStaticOuterMethod()).append("\n")
                     .append(protectedOuterMethod()).append("\n")
                     .append(protectedStaticOuterMethod()).append("\n")
             ;
