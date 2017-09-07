@@ -613,7 +613,12 @@ public class RobustMethodExprEditor extends ExprEditor {
             stringBuilder.append(getParamsThisReplacedString(m));
             stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
             stringBuilder.append("}");
-            m.replace(stringBuilder.toString());
+            try {
+                m.replace(stringBuilder.toString());
+            } catch (Throwable e){
+                RobustLogUtils.log("replace error",e);
+            }
+
         }
     }
 

@@ -314,12 +314,12 @@ public class TestBadInnerClassActivity extends AppCompatActivity {
         return s;
     }
 
-//    private String privateNewOuterMethod() {
-//        log("enter privateOuterMethod");
-//        String s = "bad private OuterMethod";
-////            s = "patch " + s;
-//        return s;
-//    }
+    private String privateNewOuterMethod() {
+        log("enter privateOuterMethod");
+        String s = "bad private OuterMethod";
+//            s = "patch " + s;
+        return s;
+    }
 
     String defaultOuterMethod() {
         log("enter defaultOuterMethod");
@@ -349,12 +349,12 @@ public class TestBadInnerClassActivity extends AppCompatActivity {
         return s;
     }
 
-//    private static String privateNewStaticOuterMethod() {
-//        log("enter privateStaticOuterMethod");
-//        String s = "bad static privateStaticOuterMethod";
-////            s = "patch " + s;
-//        return s;
-//    }
+    private static String privateNewStaticOuterMethod() {
+        log("enter privateStaticOuterMethod");
+        String s = "bad static privateStaticOuterMethod";
+//            s = "patch " + s;
+        return s;
+    }
 
     protected static String protectedStaticOuterMethod() {
         log("enter protectedStaticOuterMethod2");
@@ -771,8 +771,8 @@ public class TestBadInnerClassActivity extends AppCompatActivity {
 
             sb
                     .append(publicStaticOuterMethod()).append("\n")
-//                    .append(privateNewOuterMethod()).append("\n")
-//                    .append(privateNewStaticOuterMethod()).append("\n")
+                    .append(privateNewOuterMethod()).append("\n")
+                    .append(privateNewStaticOuterMethod()).append("\n")
                     .append(protectedOuterMethod()).append("\n")
                     .append(protectedStaticOuterMethod()).append("\n")
             ;
