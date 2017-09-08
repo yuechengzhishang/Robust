@@ -1,30 +1,19 @@
 package com.meituan.robust.autopatch;
 
 import com.android.build.gradle.internal.incremental.ByteCodeUtils;
-import com.meituan.robust.utils.JavaUtils;
+import com.meituan.robust.utils.ProguardUtils;
 
 import org.objectweb.asm.Type;
-
-import java.io.File;
-import java.util.HashMap;
 
 import javassist.CtBehavior;
 import javassist.CtClass;
 
 /**
- * Created by hedingxu on 17/9/4.
+ * Created by hedingxu on 17/8/4.
  */
 
 public class HasRobustProxyUtils {
-    public static final String METHOD_MAP = "methodsMap.robust";
-
-    static HashMap<String, String> methodMaps;
-
     public static boolean hasRobustProxy(CtClass sourceClass, CtClass patchClass, CtBehavior ctMethod) {
-        if (null == methodMaps){
-            File methodMap = new File(Config.robustGenerateDirectory, METHOD_MAP);
-            methodMaps = JavaUtils.getMapFromZippedFile(methodMap.getAbsolutePath());
-        }
 
         StringBuilder parameters = new StringBuilder();
         Type[] types = Type.getArgumentTypes(ctMethod.getSignature());
@@ -41,7 +30,14 @@ public class HasRobustProxyUtils {
         }
         String key = sourceClass.getName().replace('/', '.') + "." + methodName + "(" + parameters.toString() + ")";
 
-        boolean isHas = methodMaps.containsKey(key);
+        String methodID = ProguardUtils.getMethodID(key);
+
+        boolean isHas;
+        if (null == methodID || "".equals(methodID)){
+            isHas = false;
+        } else {
+            isHas = true;
+        }
         System.err.println(key + " hasRobustProxy : " + isHas);
         return isHas;
     }

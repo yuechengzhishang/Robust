@@ -3,6 +3,7 @@ package com.meituan.robust.autopatch;
 import com.meituan.robust.Constants;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.JavaUtils;
+import com.meituan.robust.utils.ProguardUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,10 +82,11 @@ public class PatchesControlFactory {
             CtClass[] parametertypes = method.getParameterTypes();
             String methodSignure = JavaUtils.getJavaMethodSignure(method).replaceAll(patchClass.getName(), modifiedClassName);
             String methodLongName = modifiedClassName + "." + methodSignure;
-            String methodNumber = Config.methodMap.get(methodLongName);
+            String methodNumber = ProguardUtils.getMethodID(methodLongName);
             if (methodLongName.contains(INIT_ROBUST_PATCH)) {
                 String tempMethodLongName = methodLongName.replace(INIT_ROBUST_PATCH, "<init>");
-                methodNumber = Config.methodMap.get(tempMethodLongName);
+                //// TODO: test
+                methodNumber = ProguardUtils.getMethodID(tempMethodLongName);
             }
             //just Forward methods with methodNumber
             if (methodNumber != null) {
@@ -195,13 +197,13 @@ public class PatchesControlFactory {
         for (CtMethod method : getModifiedCtMethod(patchClass)) {
             String methodSignure = JavaUtils.getJavaMethodSignure(method).replaceAll(patchClass.getName(), modifiedClassName);
             String methodLongName = modifiedClassName + "." + methodSignure;
-            String methodNumber = Config.methodMap.get(methodLongName);
+            String methodNumber = ProguardUtils.getMethodID(methodLongName);
             //just Forward methods with methodNumber
 
             if (methodNumber == null){
                 if (methodLongName.contains(INIT_ROBUST_PATCH)) {
                     String tempMethodLongName = methodLongName.replace(INIT_ROBUST_PATCH, "<init>");
-                    methodNumber = Config.methodMap.get(tempMethodLongName);
+                    methodNumber = ProguardUtils.getMethodID(tempMethodLongName);
                 }
             }
 

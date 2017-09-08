@@ -30,13 +30,13 @@ public class ProGuardMappingUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        for (String className : classMappings.keySet()) {
-            if (className.contains("com")){
-                ClassMapping classMapping = classMappings.get(className);
-                System.out.print(classMapping.toString());
-            }
-
-        }
+//        for (String className : classMappings.keySet()) {
+//            if (className.contains("com.meituan.sample.test.BadClass")){
+//                ClassMapping classMapping = classMappings.get(className);
+//                System.out.print(classMapping.toString());
+//            }
+//
+//        }
     }
 
 }

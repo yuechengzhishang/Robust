@@ -9,10 +9,10 @@ import java.util.List;
  */
 
 public class ClassMapping {
-    String className;
-    String newClassName;
-    List<ClassFieldMapping> fieldMappings;
-    List<ClassMethodMapping> methodMappings;
+    public String className;
+    public String newClassName;
+    public List<ClassFieldMapping> fieldMappings;
+    public List<ClassMethodMapping> methodMappings;
 
     public ClassMapping(String className, String newClassName) {
         this.className = className;

@@ -15,7 +15,6 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     @Override
     void apply(Project target) {
         this.project = target
-//        project.android.registerTransform(this)
         target.afterEvaluate(new RobustAutoPatchAction())
     }
 

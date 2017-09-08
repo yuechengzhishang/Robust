@@ -1,5 +1,7 @@
 package com.meituan.robust.change;
 
+import com.meituan.robust.utils.ProguardUtils;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -222,6 +224,12 @@ public class RobustChangeInfo {
         }
         String methodName = ctMethod.getName();
         String signature = ctMethod.getSignature();
+        {
+            //// TODO: 17/9/8  
+            String javaSignature = ProguardUtils.getParameterTypeSignature(ctMethod);
+            System.err.println("isChangedMethod ctMethod 1:" + dotClass + " " + methodName + " " + signature);
+            System.err.println("isChangedMethod ctMethod 2:" + dotClass + " " + methodName + " " + javaSignature);
+        }
         for (ClassChange classChange : changeClasses) {
             if (null != classChange) {
                 if (classChange.classNode.name.replace("/",".").equals(dotClass)) {
@@ -231,6 +239,7 @@ public class RobustChangeInfo {
                             if (methodName.equals(methodNode.name)) {
                                 //methodNode.desc (Landroid/os/Bundle;)V
                                 //ctMethod.getSignature() (Landroid/os/Bundle;)V
+                                // TODO: 17/9/8 如果desc含有patch class type ？
                                 if (methodNode.desc.equals(signature)) {
                                     return true;
                                 }

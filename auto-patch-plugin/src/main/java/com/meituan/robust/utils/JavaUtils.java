@@ -137,10 +137,13 @@ public class JavaUtils {
             parseMethodInfo();
         }
 
+        public MethodInfo(){
+
+        }
+        String leftBrace = "(";
+        String rightBrace = ")";
+        String comma = ",";
         private void parseMethodInfo() {
-            String leftBrace = "(";
-            String rightBrace = ")";
-            String comma = ",";
             // originalMethodStr = com.meituan.sample.SecondActivity.getReflectField(java.lang.String,java.lang.Object)
             int paramStart = originalMethodStr.indexOf(leftBrace);
             int paramEnd = originalMethodStr.indexOf(rightBrace);
@@ -158,6 +161,22 @@ public class JavaUtils {
                         this.className = classAndMethod.replace("." + methodName, "");//com.meituan.sample.SecondActivity
                     }
                 }
+            }
+
+        }
+
+        public String getOriginalMethodStr(){
+            if (null != originalMethodStr){
+                return originalMethodStr;
+            } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(className);
+                stringBuilder.append(".");
+                stringBuilder.append(methodName);
+                stringBuilder.append(leftBrace);
+                stringBuilder.append(String.join(comma,paramTypes));
+                stringBuilder.append(rightBrace);
+                return stringBuilder.toString();
             }
 
         }

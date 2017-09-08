@@ -7,6 +7,7 @@ import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTran
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.JavaUtils
+import com.meituan.robust.utils.RobustProguardMapping
 import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.expr.ExprEditor
@@ -111,8 +112,13 @@ public class CodeTransformUnion {
             //如果proguard打开了，就使用proguard的包
             //todo test proguard
             if (newProGuradJarFile.exists()) {
+                if (null == oldProGuardJarFile || !oldProGuardJarFile.exists()){
+                    throw new RuntimeException("you are use proguard, please copy your last build/outputs/robust/" + Constants.ROBUST_PROGUARD_MAIN_JAR + " to app/robust dir ")
+                }
                 newMainJarFile = newProGuradJarFile
                 oldMainJarFile = oldProGuardJarFile
+                //todo read mapping
+                RobustProguardMapping.readMapping(Config.mappingFilePath);
             }
         } else {
             throw new RuntimeException("please apply plugin: 'robust'")
