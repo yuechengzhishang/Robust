@@ -17,7 +17,8 @@ public class BadClass {
         ADD_METHOD_PRAM_PRIMITIVE_TYPE, ADD_METHOD_PRAM_WRAPPER_PRIMITIVE_TYPE, ADD_METHOD_PRAM_BOOLEAN, ADD_METHOD_PRAM_ARRAY, /*ADD_METHOD_PRAM_NONE, ADD_METHOD_PRAM_ONE, ADD_METHOD_PRAM_MULTI,*/ ADD_METHOD_PRAM_VARIABLE_LENGTH,
         /*ADD_CONSTRUCTOR_PRAM_ARRAY, *//*ADD_CONSTRUCTOR_PRAM_NONE,*//* ADD_CONSTRUCTOR_PRAM_ONE, ADD_CONSTRUCTOR_PRAM_MULTI, ADD_CONSTRUCTOR_PRAM_VARIABLE_LENGTH,*/
         ADD_FIELD_PRIVATE, ADD_FIELD_DEFAULT, ADD_FIELD_PROTECTED, ADD_FIELD_PUBLIC, ADD_FIELD_STATIC, ADD_FIELD_FINAL,
-        ADD_CLASS_METHOD, ADD_CLASS_CONSTRUCTOR, ADD_CLASS_FIELD, ADD_CLASS_INNER_CLASS
+        ADD_CLASS_METHOD, ADD_CLASS_CONSTRUCTOR, ADD_CLASS_FIELD, ADD_CLASS_INNER_CLASS,
+        ACCESS_INNER_PRIVATE_METHOD, ACCESS_INNER_PRIVATE_CONSTRUCTOR, ACCESS_INNER_STATIC_METHOD, ACCESS_INNER_PRIVATE_FIELD, ACCESS_INNER_STATIC_FIELD
     }
 
     public PatchType patchType = PatchType.ADD_METHOD_PRIVATE;
@@ -62,6 +63,42 @@ public class BadClass {
         constructorMsg = "bad public constructor with variable prams double:" + d + "  String...:"+ strings;
 //        constructorMsg = "patch " + constructorMsg;
     }
+
+    String accessInnerPrivateMethod() {
+        log("enter accessInnerPrivateMethod");
+        String s = "to accessInnerPrivateMethod";
+//        s = "patch " + new InnerClass().privateInnerMethod();
+        return s;
+    }
+
+    String accessInnerPrivateConstructor() {
+        log("enter callInnerPrivateConstructor");
+        String s = "to callInnerPrivateConstructor";
+//        s = "patch " + new InnerClass("callInnerPrivateConstructor").constructorMsg;
+        return s;
+    }
+
+    String accessInnerPrivateFiled() {
+        log("enter getInnerFiled");
+        String s = "to getInnerFiled";
+//        s = "patch " + new InnerClass().privateInnerString;
+        return s;
+    }
+
+    String accessInnerStaticMethod() {
+        log("enter callInnerStaticMethod");
+        String s = "to callInnerStaticMethod";
+//        s = "patch " + InnerStaticClass.staticMethod() + new InnerStaticClass().privateInnerMethod();
+        return s;
+    }
+
+    String accessInnerStaticFiled() {
+        log("enter getInnerStaticFiled");
+        String s = "to getInnerStaticFiled";
+//        s = "patch " + InnerStaticClass.privateStaticInnerString + new InnerStaticClass().privateInnerString;;
+        return s;
+    }
+
 
     private String privateMethod(){
         log("enter privateMethod");
@@ -401,4 +438,43 @@ public class BadClass {
         String name = Thread.currentThread().getName();
         Log.d(BadClass.class.getSimpleName(), name +" msg:" + msg);
     }
+
+
+    private class InnerClass {
+        private String privateInnerString = "privateInnerString";
+        private String constructorMsg;
+
+        private InnerClass() {
+
+        }
+
+        private InnerClass(String constructorMsg) {
+            this.constructorMsg = constructorMsg;
+        }
+
+        private String privateInnerMethod() {
+            log("enter privateInnerMethod");
+            String s = "private Inner method";
+            return s;
+        }
+    }
+
+    private static class InnerStaticClass {
+        private static String privateStaticInnerString = "privateStaticInnerString";
+        private String privateInnerString = "privateInnerString";
+
+        private String privateInnerMethod() {
+            log("enter privateInnerMethod");
+            String s = "private Inner method";
+            return s;
+        }
+
+        final static String staticMethod() {
+            log("enter staticMethod");
+            String s = "bad static method";
+//        s = "patch " + s;
+            return s;
+        }
+    }
+
 }

@@ -206,6 +206,27 @@ public class TestBadClassActivity extends AppCompatActivity {
                     case ADD_CLASS_INNER_CLASS:
                         toastMsg = item.addNewClassInnerClass();
                         break;
+
+                    case ACCESS_INNER_PRIVATE_METHOD:
+                        toastMsg = item.accessInnerPrivateMethod();
+                        break;
+
+                    case ACCESS_INNER_STATIC_METHOD:
+                        toastMsg = item.accessInnerStaticMethod();
+                        break;
+
+                    case ACCESS_INNER_PRIVATE_CONSTRUCTOR:
+                        toastMsg = item.accessInnerPrivateConstructor();
+                        break;
+
+                    case ACCESS_INNER_PRIVATE_FIELD:
+                        toastMsg = item.accessInnerPrivateFiled();
+                        break;
+
+                    case ACCESS_INNER_STATIC_FIELD:
+                        toastMsg = item.accessInnerStaticFiled();
+                        break;
+
                 }
 
                 Toast.makeText(TestBadClassActivity.this, toastMsg, Toast.LENGTH_SHORT).show();
@@ -265,6 +286,12 @@ public class TestBadClassActivity extends AppCompatActivity {
         badClassList.add(new BadClass(BadClass.PatchType.ADD_CLASS_CONSTRUCTOR));
         badClassList.add(new BadClass(BadClass.PatchType.ADD_CLASS_FIELD));
         badClassList.add(new BadClass(BadClass.PatchType.ADD_CLASS_INNER_CLASS));
+
+        badClassList.add(new BadClass(BadClass.PatchType.ACCESS_INNER_PRIVATE_METHOD));
+        badClassList.add(new BadClass(BadClass.PatchType.ACCESS_INNER_STATIC_METHOD));
+        badClassList.add(new BadClass(BadClass.PatchType.ACCESS_INNER_PRIVATE_CONSTRUCTOR));
+        badClassList.add(new BadClass(BadClass.PatchType.ACCESS_INNER_PRIVATE_FIELD));
+        badClassList.add(new BadClass(BadClass.PatchType.ACCESS_INNER_STATIC_FIELD));
     }
 
     class PatchAdapter extends BaseAdapter{
