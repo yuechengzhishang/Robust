@@ -253,7 +253,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
         if (null == customModifiedClasses){
             customModifiedClasses= new HashMap<String,String>();
             for (String className : Config.modifiedClassNameList){
-                boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass(className) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(className);
+                boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass_$1(className) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(className);
                 if (is_$1_or_$$lambda$1){
 
                 } else {

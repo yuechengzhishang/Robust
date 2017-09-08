@@ -57,7 +57,7 @@ public class AnonymousInnerClassUtil {
 //              case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
                 String nestedClassName = ctClass.getName();
                 String shortClassName = nestedClassName.replace(sourceClass.getName(), "");
-                if (CheckCodeChanges.isAnonymousInnerClass(shortClassName)){
+                if (CheckCodeChanges.isAnonymousInnerClass_$1(shortClassName)){
                     anonymousInnerClasses.add(ctClass.getName());
                 }
 //                String numberStr = shortClassName.replace("$$Lambda", "");

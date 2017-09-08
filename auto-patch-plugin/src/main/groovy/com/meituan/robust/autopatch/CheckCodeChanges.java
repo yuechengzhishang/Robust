@@ -4,6 +4,7 @@ import com.meituan.robust.Constants;
 import com.meituan.robust.change.ChangeLog;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.change.RobustCodeChangeChecker;
+import com.meituan.robust.utils.RobustProguardMapping;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -444,7 +445,7 @@ public class CheckCodeChanges {
                                     Config.modifiedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
                                     RobustChangeInfo.changeClasses.add(classChange);
 //                                  //todo 这里File_SEPARATOR需要考虑windows里面的是否兼容
-                                    if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
+                                    if (CheckCodeChanges.isAnonymousInnerClass_$1(className.replace(".class", "").replace(File_SEPARATOR, "."))){
                                         ClassNode newAnonymousInnerClass = newClassNode;
                                         AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
                                     }
@@ -614,6 +615,9 @@ public class CheckCodeChanges {
               case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
 */
         String newExprClassName = className;
+        if (RobustProguardMapping.isProguard()) {
+            newExprClassName = RobustProguardMapping.getUnProguardName(className);
+        }
         if (newExprClassName.contains("$AjcClosure")) {
             String[] splits = newExprClassName.split("\\$");
             int length = splits.length;
@@ -639,6 +643,9 @@ public class CheckCodeChanges {
               case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
 */
         String newExprClassName = className;
+        if (RobustProguardMapping.isProguard()) {
+            newExprClassName = RobustProguardMapping.getUnProguardName(className);
+        }
         if (newExprClassName.contains("$$Lambda$")) {
             String[] splits = newExprClassName.split("\\$");
             int length = splits.length;
@@ -671,7 +678,11 @@ public class CheckCodeChanges {
         if (isAnonymousInnerClass_$AjcClosure1(className)){
             return false;
         }
+
         String newExprClassName = className;
+        if (RobustProguardMapping.isProguard()) {
+            newExprClassName = RobustProguardMapping.getUnProguardName(className);
+        }
         if (newExprClassName.contains("$")) {
             String[] splits = newExprClassName.split("\\$");
             int length = splits.length;

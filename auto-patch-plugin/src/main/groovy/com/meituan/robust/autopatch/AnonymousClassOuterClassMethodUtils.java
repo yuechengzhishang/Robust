@@ -19,7 +19,7 @@ public class AnonymousClassOuterClassMethodUtils {
     }
 
     public static void recordOuterClassMethod(ClassNode anonymousClassNode) {
-        if (CheckCodeChanges.isAnonymousInnerClass(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
+        if (CheckCodeChanges.isAnonymousInnerClass_$1(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
             String anonymousInnerClassclassName = anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, ".");
             if (!Config.modifiedAnonymousInnerClassNameList.contains(anonymousInnerClassclassName)){
                 Config.modifiedAnonymousInnerClassNameList.add(anonymousInnerClassclassName);
