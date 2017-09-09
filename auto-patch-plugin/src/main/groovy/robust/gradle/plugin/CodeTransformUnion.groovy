@@ -1,8 +1,8 @@
 package robust.gradle.plugin
 
+import com.android.build.gradle.api.BaseVariant
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
-import com.meituan.robust.autopatch.AnonymousClassOuterClassMethodUtils
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
@@ -30,11 +30,10 @@ public class CodeTransformUnion {
     private static String jar2DexCommand;
     public static String ROBUST_DIR;
 
-    public static initConfig(Project project) {
+    public static initConfig(Project project, BaseVariant variant) {
         //clear
         NameManger.init();
-        InlineClassFactory.init();
-        ReadMapping.init();
+//        InlineClassFactory.init();
         Config.init();
 
         ROBUST_DIR = "${project.projectDir}${File.separator}robust${File.separator}"
@@ -46,6 +45,15 @@ public class CodeTransformUnion {
         smali2DexCommand = "   java -jar ${smaliFilePath} classout" + File.separator + " -o " + Constants.PATACH_DEX_NAME;
         jar2DexCommand = "   java -jar ${dxFilePath} --dex --output=$Constants.CLASSES_DEX_NAME  " + Constants.ZIP_FILE_NAME;
         ReadXML.readXMl(project.projectDir.path);
+        String variantPath = "";
+        String flavor = variant.flavorName;
+        String type = variant.buildType.name;
+        if (null == flavor || "".equals(flavor)){
+        } else {
+            variantPath = variantPath + File.separator
+        }
+        variantPath = variantPath + type + File.separator
+        Config.newMappingFilePath = "${project.buildDir}" + File.separator + Constants.PROGUARD_MAPPING_TXT + File.separator + variantPath + "mapping.txt";
         Config.methodMap = JavaUtils.getMapFromZippedFile(project.projectDir.path + Constants.METHOD_MAP_PATH)
     }
 
@@ -117,8 +125,8 @@ public class CodeTransformUnion {
                 }
                 newMainJarFile = newProGuradJarFile
                 oldMainJarFile = oldProGuardJarFile
-                //todo read mapping
-                RobustProguardMapping.readMapping(Config.mappingFilePath);
+                //todo read mapping 使用新的mapping文件
+                RobustProguardMapping.readMapping(Config.newMappingFilePath);
             }
         } else {
             throw new RuntimeException("please apply plugin: 'robust'")
@@ -201,11 +209,13 @@ public class CodeTransformUnion {
         for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
             AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
             //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
-
-            if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
-                //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
-            } else {
-                Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
+            if (null != outerMethodInfo){
+                if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
+                    //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
+                    //todo 9-9
+                } else {
+                    Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
+                }
             }
         }
 
@@ -218,12 +228,6 @@ public class CodeTransformUnion {
 
         println("newlyAddedClassNameList is ：")
         JavaUtils.printList(Config.newlyAddedClassNameList)
-
-
-
-        if (Config.supportProGuard) {
-            ReadMapping.getInstance().initMappingInfo();
-        }
 
         generatePatch(patchPath);
 

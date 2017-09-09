@@ -33,26 +33,30 @@ public class ProguardUtils {
     public static String getUnProguardMethodLongName(String methodLongName){
         if (RobustProguardMapping.isProguard()) {
             JavaUtils.MethodInfo proguardMethodInfo = new JavaUtils.MethodInfo(methodLongName);
-
-            JavaUtils.MethodInfo unProguardMethodInfo = new JavaUtils.MethodInfo();
-            unProguardMethodInfo.className = RobustProguardMapping.getUnProguardName(proguardMethodInfo.className);
-            unProguardMethodInfo.paramTypes = new String[proguardMethodInfo.paramTypes.length];
-            if (null != proguardMethodInfo.paramTypes) {
-                int index = 0;
-                while (index < proguardMethodInfo.paramTypes.length){
-                    String proguardClassNameTemp = proguardMethodInfo.paramTypes[index];
-                    String unProguardClassNameTemp = RobustProguardMapping.getUnProguardName(proguardClassNameTemp);
-                    unProguardMethodInfo.paramTypes[index] = unProguardClassNameTemp;
-                    index++;
+            if (null != proguardMethodInfo){
+                JavaUtils.MethodInfo unProguardMethodInfo = new JavaUtils.MethodInfo();
+                unProguardMethodInfo.className = RobustProguardMapping.getUnProguardName(proguardMethodInfo.className);
+                if (null != proguardMethodInfo.paramTypes) {
+                    unProguardMethodInfo.paramTypes = new String[proguardMethodInfo.paramTypes.length];
+                    int index = 0;
+                    while (index < proguardMethodInfo.paramTypes.length){
+                        String proguardClassNameTemp = proguardMethodInfo.paramTypes[index];
+                        String unProguardClassNameTemp = RobustProguardMapping.getUnProguardName(proguardClassNameTemp);
+                        unProguardMethodInfo.paramTypes[index] = unProguardClassNameTemp;
+                        index++;
+                    }
                 }
+
+                String methodParams = "";
+                if (null != unProguardMethodInfo.paramTypes){
+                    methodParams = String.join(",",unProguardMethodInfo.paramTypes);
+                }
+                String unProguardName = getUnProguardMethodName(proguardMethodInfo.className,proguardMethodInfo.methodName,null,methodParams);
+
+                unProguardMethodInfo.methodName = unProguardName;
+
+                return unProguardMethodInfo.getOriginalMethodStr();
             }
-
-            String methodParams = String.join(",",unProguardMethodInfo.paramTypes);
-            String unProguardName = getUnProguardMethodName(proguardMethodInfo.className,proguardMethodInfo.methodName,null,methodParams);
-
-            unProguardMethodInfo.methodName = unProguardName;
-
-            return unProguardMethodInfo.getOriginalMethodStr();
         }
         return methodLongName;
     }

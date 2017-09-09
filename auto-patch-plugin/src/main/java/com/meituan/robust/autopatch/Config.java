@@ -28,6 +28,7 @@ public final class Config {
     public static boolean isManual = false;
     public static String patchPackageName = Constants.PATCH_PACKAGENAME;
     public static String mappingFilePath;
+    public static String newMappingFilePath;
     public static Set<String> patchMethodSignatureSet = new HashSet<>();
     public static List<String> newlyAddedClassNameList = new ArrayList<String>();
     public static Set newlyAddedMethodSet = new HashSet<String>();

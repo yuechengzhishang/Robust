@@ -39,7 +39,7 @@ public class Constants {
     public static final String ROBUST_UTILS_FULL_NAME = "com.meituan.robust.utils.EnhancedRobustUtils";
 
     public static final String ROBUST_GENERATE_DIRECTORY = "outputs/robust".replace("/",File_SEPARATOR);
-
+    public static final String PROGUARD_MAPPING_TXT = "outputs/mapping".replace("/",File_SEPARATOR);
     //FILE_MD5_PATH is a copy from RobustTransform.FILE_MD5_PATH ,please make sure the two is the same
     public static final String METHOD_MAP_PATH = "/robust/methodsMap.robust".replace("/",File_SEPARATOR);
     public static final String DEFAULT_MAPPING_FILE = "/robust/mapping.txt".replace("/",File_SEPARATOR);

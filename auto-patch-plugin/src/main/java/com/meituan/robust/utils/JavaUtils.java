@@ -174,7 +174,9 @@ public class JavaUtils {
                 stringBuilder.append(".");
                 stringBuilder.append(methodName);
                 stringBuilder.append(leftBrace);
-                stringBuilder.append(String.join(comma,paramTypes));
+                if (null != paramTypes){
+                    stringBuilder.append(String.join(comma,paramTypes));
+                }
                 stringBuilder.append(rightBrace);
                 return stringBuilder.toString();
             }

@@ -18,7 +18,7 @@ public class RobustAutoPatchAction implements Action<Project> {
 
                 def dexTask = project.tasks.findByName(GradleUtils.getDexTaskName(project, variant));
                 dexTask.doFirst {
-                    CodeTransformUnion.initConfig(project);
+                    CodeTransformUnion.initConfig(project,variant);
                     CodeTransformUnion.transform(project)
                 }
 

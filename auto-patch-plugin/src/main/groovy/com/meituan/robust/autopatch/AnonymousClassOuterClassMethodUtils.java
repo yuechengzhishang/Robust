@@ -39,14 +39,14 @@ public class AnonymousClassOuterClassMethodUtils {
 //        outerMethod: onCreate
 //        outerMethodDesc: (Landroid/os/Bundle;)V
 
-//todo 解决类似于这种问题
+//todo 解决类似于这种问题 9-9
 //            private View.OnClickListener listener = new View.OnClickListener() {
 //                @Override
 //                public void onClick(View v) {
 //                    Log.e("robust","hello click");
 //                }
 //            };
-            if (null == outerMethod){
+            if (null == outerMethod){//outerMethod sometime is null
                 return;
             }
             if (changedAnonymousOuterMethodInfoMap.containsKey(anonymousInnerClassclassName)){

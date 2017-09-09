@@ -6,8 +6,6 @@ import com.meituan.robust.utils.JavaUtils
 import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.bytecode.ClassFile
-import javassist.expr.MethodCall
-
 /**
  * Created by zhangmeng on 16/12/2.
  * <p>
@@ -230,34 +228,6 @@ class PatchesFactory {
             Config.addedSuperMethodList.add(ctMethod);
             patchClass.addMethod(ctMethod);
         }
-    }
-
-    private Map getClassMappingInfo(String className) {
-        ClassMapping classMapping = ReadMapping.getInstance().getClassMapping(className);
-        if (null == classMapping) {
-//            logger.warn("getClassMappingInfo~~~~~~~~~~~~~~~~class " + className + "  robust can not find in mapping ")
-            classMapping = new ClassMapping();
-        }
-        return classMapping.getMemberMapping();
-    }
-
-    private String getClassValue(String className) {
-        ClassMapping classMapping = ReadMapping.getInstance().getClassMappingOrDefault(className);
-        if (classMapping.getValueName() == null) {
-//            logger.warn("~~~~~~~~~~~~~~~~class " + className + "  robust can not find in mapping ")
-            return className;
-        } else {
-            return classMapping.getValueName();
-        }
-    }
-
-    public boolean repalceInlineMethod(MethodCall m, CtMethod method, boolean isNewClass) throws NotFoundException, CannotCompileException {
-        ClassMapping classMapping = ReadMapping.getInstance().getClassMapping(m.getMethod().getDeclaringClass().getName());
-        if (null != classMapping && classMapping.getMemberMapping().get(ReflectUtils.getJavaMethodSignureWithReturnType(m.getMethod())) == null) {
-            m.replace(ReflectUtils.getInLineMemberString(m.getMethod(), ReflectUtils.isStatic(method.getModifiers()), isNewClass));
-            return true;
-        }
-        return false;
     }
 
     public

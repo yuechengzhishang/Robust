@@ -3,4 +3,4 @@
 -keep class com.google.gson.**{*;}
 -keepattributes *Annotation*
 -optimizations !method/removal/parameter,!method/marking/final
-
+-keepattributes EnclosingMethod
