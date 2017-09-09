@@ -1,5 +1,7 @@
 package com.meituan.robust.autopatch;
 
+import com.meituan.robust.utils.AnonymousLambdaUtils;
+
 import org.objectweb.asm.tree.ClassNode;
 
 import java.util.HashMap;
@@ -19,7 +21,7 @@ public class AnonymousClassOuterClassMethodUtils {
     }
 
     public static void recordOuterClassMethod(ClassNode anonymousClassNode) {
-        if (CheckCodeChanges.isAnonymousInnerClass_$1(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
+        if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
             String anonymousInnerClassclassName = anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, ".");
             if (!Config.modifiedAnonymousInnerClassNameList.contains(anonymousInnerClassclassName)){
                 Config.modifiedAnonymousInnerClassNameList.add(anonymousInnerClassclassName);

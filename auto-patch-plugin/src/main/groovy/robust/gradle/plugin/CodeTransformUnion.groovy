@@ -6,6 +6,7 @@ import com.meituan.robust.autopatch.*
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
+import com.meituan.robust.utils.AnonymousLambdaUtils
 import com.meituan.robust.utils.JavaUtils
 import com.meituan.robust.utils.RobustProguardMapping
 import javassist.*
@@ -371,7 +372,7 @@ public class CodeTransformUnion {
     public static handleCustomAddClass() {
         HashSet<String> customAddClassList = new HashSet<>();
         for (String newClassName : Config.newlyAddedClassNameList) {
-            boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass_$1(newClassName) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newClassName)
+            boolean is_$1_or_$$lambda$1 = AnonymousLambdaUtils.isAnonymousInnerClass_$1(newClassName) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(newClassName)
 
             if (is_$1_or_$$lambda$1) {
 
@@ -399,7 +400,7 @@ public class CodeTransformUnion {
     public static void handleCustomInnerClassAccess$Method() {
         HashSet<CtClass> customInnerCtClassList = new HashSet<CtClass>();
         for (String customInnerClassName : Config.modifiedClassNameList) {
-            boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass_$1(customInnerClassName) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(customInnerClassName)
+            boolean is_$1_or_$$lambda$1 = AnonymousLambdaUtils.isAnonymousInnerClass_$1(customInnerClassName) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(customInnerClassName)
 
             if (is_$1_or_$$lambda$1) {
 
@@ -431,7 +432,7 @@ public class CodeTransformUnion {
 
             for (String newAddClassName : Config.newlyAddedClassNameList) { //处理lambda表达式
                 if (newAddClassName.startsWith(originalClassName)) {
-                    boolean is_$1_or_$$lambda$1 = CheckCodeChanges.isAnonymousInnerClass_$1(newAddClassName) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(newAddClassName)
+                    boolean is_$1_or_$$lambda$1 = AnonymousLambdaUtils.isAnonymousInnerClass_$1(newAddClassName) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(newAddClassName)
                     if (is_$1_or_$$lambda$1) {
                         ctClasses.add(Config.classPool.get(newAddClassName));
                     }
@@ -440,7 +441,7 @@ public class CodeTransformUnion {
 
             ClassMap classMap = new ClassMap()
             for (CtClass nestedCtClass : ctClasses) {
-                boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass_$1(nestedCtClass.getName()) || CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
+                boolean isAnonymousInnerClass = AnonymousLambdaUtils.isAnonymousInnerClass_$1(nestedCtClass.getName()) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
 //                System.err.println("nestedCtClass :" + nestedCtClass.getName())
                 if (isAnonymousInnerClass) {
                     nestedCtClass.defrost()
@@ -521,19 +522,19 @@ public class CodeTransformUnion {
     public static HashSet<String> getLambdaClassChangedOrNewList(){
         HashSet<String> lambdaDotClassNameSet = new HashSet<String>();
         for (String dotClassName : Config.modifiedClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 lambdaDotClassNameSet.add(dotClassName);
             }
         }
 
         for (String dotClassName : Config.newlyAddedClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 lambdaDotClassNameSet.add(dotClassName);
             }
         }
 
         for (String dotClassName : Config.modifiedAnonymousInnerClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 lambdaDotClassNameSet.add(dotClassName);
             }
         }
@@ -544,7 +545,7 @@ public class CodeTransformUnion {
         CtClass sourceClass = Config.classPool.get(originalClassName)
         CtClass[] ctClasses = sourceClass.getNestedClasses();
         for (CtClass nestedCtClass : ctClasses) {
-            boolean isAnonymousInnerClass = CheckCodeChanges.isAnonymousInnerClass_$1(nestedCtClass.getName())
+            boolean isAnonymousInnerClass = AnonymousLambdaUtils.isAnonymousInnerClass_$1(nestedCtClass.getName())
             if (isAnonymousInnerClass) {
                 nestedCtClass.defrost()
                 nestedCtClass.setModifiers(AccessFlag.setPublic(nestedCtClass.getModifiers()))

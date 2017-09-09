@@ -1,6 +1,8 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.utils.ProguardUtils;
+import com.meituan.robust.utils.RobustProguardMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,25 +45,34 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
 
     private boolean isAccessMethod(MethodCall methodCall) {
 //        static synthetic access$000
-        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
-        boolean isAccess = methodCall.getMethodName().contains("access$");
+//        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
+        boolean isAccess = methodCall.getMethodName().contains("access$");// access$100 + access$lambda$oncreate3
 
+        if (isAccess){
+            return true;
+        }
+        if (RobustProguardMapping.isProguard()){
+            String unProguardMethodName = ProguardUtils.getUnProguardMethodName(methodCall);
+            if (unProguardMethodName.contains("access$")){
+                isAccess = true;
+            }
+        }
         if (isAccess) {
             return true;
         }
 
-        try {
-            int modifiers = methodCall.getMethod().getModifiers();
-            if (isStatic(modifiers)) {
-                if ((modifiers & AccessFlag.SYNTHETIC) != 0) {
-                    if (methodCall.getMethodName().contains("access$")) {
-                        return true;
-                    }
-                }
-            }
-        } catch (NotFoundException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            int modifiers = methodCall.getMethod().getModifiers();
+//            if (isStatic(modifiers)) {
+//                if ((modifiers & AccessFlag.SYNTHETIC) != 0) {
+//                    if (methodCall.getMethodName().contains("access$")) {
+//                        return true;
+//                    }
+//                }
+//            }
+//        } catch (NotFoundException e) {
+//            e.printStackTrace();
+//        }
         return false;
     }
 
@@ -347,9 +358,9 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
         if (isStatic(ctMethod.getModifiers())) {
             return "";
         }
-        if (m.getSignature().contains("isGrantSDCardReadPermission")) {
-            System.err.println("isGrantSDCardReadPermission");
-        }
+//        if (m.getSignature().contains("isGrantSDCardReadPermission")) {
+//            System.err.println("isGrantSDCardReadPermission");
+//        }
         StringBuilder stringBuilder = new StringBuilder();
         CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //      System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());

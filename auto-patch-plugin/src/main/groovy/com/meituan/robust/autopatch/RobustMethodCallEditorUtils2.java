@@ -176,7 +176,7 @@ public class RobustMethodCallEditorUtils2 {
 
     //PatchClass get(this) -> get(this.OriginClass)
     public static boolean handleLambdaFactory(CtMethod ctMethod, MethodCall m, CtClass patchClass, CtClass sourceClass) throws NotFoundException, CannotCompileException {
-        if (!m.getMethodName().contains("lambdaFactory")) {
+        if (!m.getMethodName().contains("lambdaFactory$")) {
             return false;
         }
         String lambdaClassName = null;

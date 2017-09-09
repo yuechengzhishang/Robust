@@ -2,7 +2,9 @@ package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
 import com.meituan.robust.change.RobustChangeInfo;
-import com.meituan.robust.utils.RobustLogUtils;
+import com.meituan.robust.utils.AnonymousLambdaUtils;
+import com.meituan.robust.utils.ProguardUtils;
+import com.meituan.robust.utils.RobustLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,9 +77,9 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         } catch (NotFoundException e) {
 //            e.printStackTrace();
-            RobustLogUtils.log("NotFoundException e",e);
+            RobustLog.log("NotFoundException e",e);
         } catch (NullPointerException e){
-//            RobustLogUtils.log("NullPointerException e",e);
+//            RobustLog.log("NullPointerException e",e);
         }
         if (false == isThis$0) {
             if (hasRobustProxyCode) {
@@ -101,13 +103,13 @@ public class RobustMethodExprEditor extends ExprEditor {
                 f.replace(ReflectUtils.setFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
             }
         } catch (NotFoundException e) {
-            RobustLogUtils.log("Field access replace NotFoundException", e);
+            RobustLog.log("Field access replace NotFoundException", e);
 //            throw new RuntimeException(e.getMessage());
         } catch (javassist.CannotCompileException e) {
             if (e.getMessage().contains("no such field:")){
 
             } else {
-                RobustLogUtils.log("Field access replace NotFoundException", e);
+                RobustLog.log("Field access replace NotFoundException", e);
             }
         }
     }
@@ -164,7 +166,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
 //            stringBuilder.append("$_= ($r) new " + newExprClassName + "(this.originClass);");
             boolean isChangeOrNewAdd_AnonymousInnerClass_$1 = Config.modifiedClassNameList.contains(newExprClassName) || Config.newlyAddedClassNameList.contains(newExprClassName);
-            if (isChangeOrNewAdd_AnonymousInnerClass_$1 && CheckCodeChanges.isAnonymousInnerClass_$1(newExprClassName)) {
+            if (isChangeOrNewAdd_AnonymousInnerClass_$1 && AnonymousLambdaUtils.isAnonymousInnerClass_$1(newExprClassName)) {
                 //create public Field outerPatchClassName
                 CtClass anonymousInnerCtClass = Config.classPool.getOrNull(newExprClassName);
                 CtField ctField = new CtField(patchClass, "outerPatchClassName", anonymousInnerCtClass);
@@ -271,7 +273,15 @@ public class RobustMethodExprEditor extends ExprEditor {
 //        }
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
 
-        if (outerMethodIsStatic == false && m.getMethodName().contains("lambdaFactory")) {
+//  com.meituan.sample.TestPatchActivity$$Lambda$1 -> com.meituan.sample.s:
+//        com.meituan.robust.ChangeQuickRedirect changeQuickRedirect -> a
+//        com.meituan.sample.TestPatchActivity arg$1 -> b
+//        void <init>(com.meituan.sample.TestPatchActivity) -> <init>
+//        void onClick(android.view.View) -> onClick
+//        android.view.View$OnClickListener lambdaFactory$(com.meituan.sample.TestPatchActivity) -> a
+
+//m.getMethodName().contains("lambdaFactory$")
+        if (outerMethodIsStatic == false && ProguardUtils.isLambdaFactoryMethod(sourceClass.getName(),patchClass.getName(),m.getClassName(),m.getMethodName(),m.getSignature())) {
             //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
 //            System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
@@ -334,6 +344,9 @@ public class RobustMethodExprEditor extends ExprEditor {
             callCtMethod = m.getMethod();
         } catch (NotFoundException e) {
             e.printStackTrace();
+        }
+        if (null == callCtMethod){
+            RobustLog.log("it is");
         }
         boolean callMethodIsStatic = isStatic(callCtMethod.getModifiers());
         //callMethodIsStatic
@@ -489,7 +502,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                     }
                 }
             } catch (Exception e){
-                RobustLogUtils.log("Exception 480 ",e);
+                RobustLog.log("Exception 480 ",e);
             }
 
 
@@ -540,7 +553,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                                 }
                             }
                         } catch (Exception e) {
-                            RobustLogUtils.log("Exception", e);
+                            RobustLog.log("Exception", e);
                         }
 
                         if (isOuterMethod) {
@@ -616,7 +629,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             try {
                 m.replace(stringBuilder.toString());
             } catch (Throwable e){
-                RobustLogUtils.log("replace error",e);
+                RobustLog.log("replace error",e);
             }
 
         }

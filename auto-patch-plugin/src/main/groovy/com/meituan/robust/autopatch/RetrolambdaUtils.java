@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.change.RobustCodeChangeChecker;
+import com.meituan.robust.utils.AnonymousLambdaUtils;
 import com.meituan.robust.utils.JavaUtils;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -61,19 +62,19 @@ public class RetrolambdaUtils {
 //        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList);
 
         for (String dotClassName : Config.modifiedClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 Config.lambdaDotClassNameList.add(dotClassName);
             }
         }
 
         for (String dotClassName : Config.newlyAddedClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 Config.lambdaDotClassNameList.add(dotClassName);
             }
         }
 
         for (String dotClassName : Config.modifiedAnonymousInnerClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 Config.lambdaDotClassNameList.add(dotClassName);
             }
         }
@@ -178,19 +179,19 @@ public class RetrolambdaUtils {
         JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList);
 
         for (String dotClassName : Config.modifiedClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 Config.lambdaDotClassNameList.add(dotClassName);
             }
         }
 
         for (String dotClassName : Config.newlyAddedClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 Config.lambdaDotClassNameList.add(dotClassName);
             }
         }
 
         for (String dotClassName : Config.modifiedAnonymousInnerClassNameList) {
-            if (CheckCodeChanges.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 Config.lambdaDotClassNameList.add(dotClassName);
             }
         }

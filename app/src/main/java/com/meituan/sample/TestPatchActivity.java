@@ -88,14 +88,14 @@ public class TestPatchActivity extends AppCompatActivity{
         Toast.makeText(this, "publicStaticString: " + str4, Toast.LENGTH_SHORT).show();
 
 //        // TODO: 17/8/26 需要解决 lambda表达式
-//        View view = findViewById(R.id.patch_text);
-//        View.OnClickListener clickListener =
-//                v -> {
-//                    Log.d("robust", " onclick  in Listener" + hello());
-//                    Toast.makeText(getApplicationContext(), "T onclick Listener in lambda ", Toast.LENGTH_SHORT).show();
-//                };
-//
-//        view.setOnClickListener(clickListener);
+        View view = findViewById(R.id.patch_text);
+        View.OnClickListener clickListener =
+                v -> {
+                    Log.d("robust", " onclick  in Listener" + hello());
+                    Toast.makeText(getApplicationContext(), "T onclick Listener in lambda ", Toast.LENGTH_SHORT).show();
+                };
+
+        view.setOnClickListener(clickListener);
 
 //        EnhancedRobustUtils.invokeReflectMethod("lambda$onCreate$3",this,new Object[]{view},new Class[]{View.class},TestPatchActivity.class);
 //

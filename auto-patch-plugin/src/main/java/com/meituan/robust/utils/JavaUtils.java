@@ -158,7 +158,8 @@ public class JavaUtils {
                     int tempLength = tempStrArray.length;
                     if (tempStrArray.length > 0) {
                         this.methodName = tempStrArray[tempLength - 1];//getReflectField
-                        this.className = classAndMethod.replace("." + methodName, "");//com.meituan.sample.SecondActivity
+                        //com.meituan.sample.test.a.a()
+                        this.className = (classAndMethod + leftBrace+rightBrace).replace("." + methodName + leftBrace+rightBrace,"" );//com.meituan.sample.SecondActivity
                     }
                 }
             }
@@ -465,12 +466,17 @@ public class JavaUtils {
         StringBuilder methodSignure = new StringBuilder();
         methodSignure.append(ctMethod.getName());
         methodSignure.append("(");
-        for (int i = 0; i < ctMethod.getParameterTypes().length; i++) {
-            methodSignure.append(ctMethod.getParameterTypes()[i].getName());
-            if (i != ctMethod.getParameterTypes().length - 1) {
-                methodSignure.append(",");
+        try {
+            for (int i = 0; i < ctMethod.getParameterTypes().length; i++) {
+                methodSignure.append(ctMethod.getParameterTypes()[i].getName());
+                if (i != ctMethod.getParameterTypes().length - 1) {
+                    methodSignure.append(",");
+                }
             }
+        } catch (Throwable throwable){
+            RobustLog.log("Throwable getJavaMethodSignure ",throwable);
         }
+
         methodSignure.append(")");
         return methodSignure.toString();
     }

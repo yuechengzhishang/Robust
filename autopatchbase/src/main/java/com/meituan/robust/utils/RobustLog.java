@@ -8,11 +8,15 @@ import java.net.UnknownHostException;
  * Created by hedingxu on 17/9/6.
  */
 
-public class RobustLogUtils {
+public class RobustLog {
 
     public static void log(String exceptionName , Throwable throwable){
         System.err.println("robust log -> " + exceptionName + ":");
         System.err.println(getStackTraceString(throwable));
+    }
+
+    public static void log(String info){
+        System.err.println("robust log -> " + info + ".");
     }
 
     /**

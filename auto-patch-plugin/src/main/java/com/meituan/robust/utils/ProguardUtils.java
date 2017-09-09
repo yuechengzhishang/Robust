@@ -7,7 +7,10 @@ import com.meituan.robust.mapping.ClassMethodMapping;
 import java.util.ArrayList;
 import java.util.List;
 
+import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.NotFoundException;
+import javassist.expr.MethodCall;
 
 import static com.meituan.robust.utils.RobustProguardMapping.proguardClassMappings;
 
@@ -132,5 +135,116 @@ public class ProguardUtils {
             return Config.methodMap.get(unProguardMethodLongName);
         }
         return Config.methodMap.get(proguardMethodLongName);
+    }
+
+    public static String getUnProguardMethodName(MethodCall methodCall){
+        String proguardMethodName = methodCall.getMethodName();
+        if (RobustProguardMapping.isProguard()){
+            CtMethod ctMethod = null;
+            try {
+                ctMethod = methodCall.getMethod();
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+            if (null == ctMethod){
+                RobustLog.log("ctMethod is null",new RuntimeException("ctMethod is null ,info :" + methodCall.getClassName() + " " + methodCall.getMethodName() + " " + methodCall.getSignature()));
+            } else {
+                String methodSignure = null;
+                try {
+                    methodSignure = JavaUtils.getJavaMethodSignure(ctMethod);
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+                String modifiedClassName = methodCall.getClassName();
+                String patchClassName = new String(modifiedClassName);
+
+                if (modifiedClassName.endsWith("Patch")) {
+                    modifiedClassName = modifiedClassName + "ROBUST_FOR_DELETE";
+                    String tempStr = "Patch" + "ROBUST_FOR_DELETE";
+                    modifiedClassName = modifiedClassName.replace(tempStr,"");
+                }
+                String originClassName = new String(modifiedClassName);
+                String methodLongName = modifiedClassName + "." + methodSignure;
+                methodLongName = methodLongName.replace(patchClassName,originClassName);
+                String unProguardMethodLongName =getUnProguardMethodLongName(methodLongName);
+                JavaUtils.MethodInfo methodInfo = new JavaUtils.MethodInfo(unProguardMethodLongName);
+                if (null != methodInfo){
+                    if (null != methodInfo.methodName){
+//                        RobustLog.log(" -getUnProguardMethodName-> 1 ：" + methodLongName);
+//                        RobustLog.log(" -getUnProguardMethodName-> 2 ：" + unProguardMethodLongName);
+                        return methodInfo.methodName;
+                    }
+                }
+            }
+
+        }
+        return proguardMethodName;
+
+    }
+
+    public static boolean isLambdaFactoryMethod(String originClassName,String patchClassName,String lambdaClassName,String methodName,String methodSignature) {
+        if (!AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(lambdaClassName)){
+            return false;
+        }
+        if (RobustProguardMapping.isProguard()){
+            String proguardLambdaClassName = lambdaClassName;
+            String proguardMethodName = methodName;
+            String proguardMethodSignature = methodSignature;
+            String proguardOriginClassName = originClassName;
+            String proguardPatchClassName = patchClassName;
+
+
+            if (null != proguardMethodSignature){
+                String tempproguardOriginClassName = proguardOriginClassName.replace(".","/");
+                String tempproguardPatchClassName = proguardPatchClassName.replace(".","/");
+                proguardMethodSignature = proguardMethodSignature.replace(tempproguardPatchClassName,tempproguardOriginClassName);
+            }
+            CtClass lambdaCtClass = null;
+            try {
+                lambdaCtClass = Config.classPool.getCtClass(lambdaClassName);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+
+            if (null == lambdaCtClass){
+                RobustLog.log("null == lambdaCtClass 221");
+            }
+
+            CtMethod lambdaCtMethod = null;
+            try {
+                lambdaCtMethod = lambdaCtClass.getMethod(proguardMethodName,proguardMethodSignature);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+            if (null == lambdaCtMethod){
+                RobustLog.log("null == lambdaCtMethod 226");
+            }
+
+            String methodSignure = null;
+            try {
+                methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+
+
+            String unProguardMethodName = null ;
+
+            String methodLongName = proguardLambdaClassName + "." + methodSignure;
+            methodLongName = methodLongName.replace(patchClassName,originClassName);
+            String unProguardMethodLongName =getUnProguardMethodLongName(methodLongName);
+            JavaUtils.MethodInfo methodInfo = new JavaUtils.MethodInfo(unProguardMethodLongName);
+            if (null != methodInfo){
+                if (null != methodInfo.methodName){
+                    unProguardMethodName = methodInfo.methodName;
+                }
+            }
+
+            if (null != unProguardMethodName && unProguardMethodName.contains("lambdaFactory$")){
+                return true;
+            }
+            return false;
+        }
+        return methodName.contains("lambdaFactory$");
     }
 }
