@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.change.RobustChangeInfo;
+import com.meituan.robust.utils.ProguardUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +30,7 @@ public class RobustHandleAccessMethodExpr extends ExprEditor {
      * The default implementation performs nothing.
      */
     public void edit(MethodCall methodCall) throws CannotCompileException {
-        if (!methodCall.getMethodName().contains("access$")){
+        if (!ProguardUtils.isAccess$Method(methodCall)){
             return;
         }
         try {
@@ -37,7 +38,6 @@ public class RobustHandleAccessMethodExpr extends ExprEditor {
 
             if (isAccessModifiedClass(callCtMethod)){
                 if (RobustChangeInfo.isNewAddMethod(callCtMethod)){
-                    // TODO: 17/9/1
                     String modifyClassName = callCtMethod.getDeclaringClass().getName();
                     HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
                     String patchClassName = customModifiedClasses.get(modifyClassName);

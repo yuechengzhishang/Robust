@@ -5,6 +5,7 @@ import com.meituan.robust.mapping.ClassMapping;
 import com.meituan.robust.mapping.ClassMethodMapping;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import javassist.CtClass;
@@ -14,6 +15,7 @@ import javassist.expr.MethodCall;
 
 import static com.meituan.robust.Constants.File_SEPARATOR;
 import static com.meituan.robust.utils.RobustProguardMapping.proguardClassMappings;
+import static robust.gradle.plugin.RobustNewAddCustomClassExpr.getCustomModifiedClasses;
 
 /**
  * Created by hedingxu on 17/8/8.
@@ -247,6 +249,89 @@ public class ProguardUtils {
             return false;
         }
         return methodName.contains("lambdaFactory$");
+    }
+
+
+
+    public static boolean isAccess$Method(MethodCall methodCall) {
+        if (!RobustProguardMapping.isProguard()){
+            return methodCall.getMethodName().contains("access$");
+        }
+
+        String originClassName = "";
+        String patchClassName = "";
+        try {
+            CtMethod callCtMethod = methodCall.getMethod();
+            originClassName = callCtMethod.getDeclaringClass().getName();
+            HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
+            patchClassName = customModifiedClasses.get(originClassName);
+        } catch (Exception e){
+            RobustLog.log("get ctmethod from method call null",e);
+        }
+
+        String callClassName = methodCall.getClassName();
+        String callMethodName = methodCall.getMethodName();
+        String callMethodSignature = methodCall.getSignature();
+
+        if (RobustProguardMapping.isProguard()) {
+            String proguardLambdaClassName = callClassName;
+            String proguardMethodName = callMethodName;
+            String proguardMethodSignature = callMethodSignature;
+            String proguardOriginClassName = originClassName;
+            String proguardPatchClassName = patchClassName;
+
+
+            if (null != proguardMethodSignature) {
+                String tempproguardOriginClassName = proguardOriginClassName.replace(".", "/");
+                String tempproguardPatchClassName = proguardPatchClassName.replace(".", "/");
+                proguardMethodSignature = proguardMethodSignature.replace(tempproguardPatchClassName, tempproguardOriginClassName);
+            }
+            CtClass innerCtClass = null;
+            try {
+                innerCtClass = Config.classPool.getCtClass(callClassName);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+
+            if (null == innerCtClass) {
+                RobustLog.log("null == lambdaCtClass 221");
+            }
+
+            CtMethod accessCtMethod = null;
+            try {
+                accessCtMethod = innerCtClass.getMethod(proguardMethodName, proguardMethodSignature);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+            if (null == accessCtMethod) {
+                RobustLog.log("null == lambdaCtMethod 226");
+            }
+
+            String methodSignure = null;
+            try {
+                methodSignure = JavaUtils.getJavaMethodSignure(accessCtMethod);
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+
+
+            String unProguardMethodName = null;
+
+            String methodLongName = proguardLambdaClassName + "." + methodSignure;
+            methodLongName = methodLongName.replace(patchClassName, originClassName);
+            String unProguardMethodLongName = getUnProguardMethodLongName(methodLongName);
+            JavaUtils.MethodInfo methodInfo = new JavaUtils.MethodInfo(unProguardMethodLongName);
+            if (null != methodInfo) {
+                if (null != methodInfo.methodName) {
+                    unProguardMethodName = methodInfo.methodName;
+                }
+            }
+
+            if (null != unProguardMethodName && unProguardMethodName.contains("access$")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isInHotfixPackage(String dotClassName, String packageName) {
