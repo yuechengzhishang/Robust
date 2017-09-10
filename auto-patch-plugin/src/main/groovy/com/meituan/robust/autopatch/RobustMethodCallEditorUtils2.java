@@ -174,23 +174,19 @@ public class RobustMethodCallEditorUtils2 {
 //    lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
 
 
-    //PatchClass get(this) -> get(this.OriginClass)
     public static boolean handleLambdaFactory(CtMethod ctMethod, MethodCall m, CtClass patchClass, CtClass sourceClass) throws NotFoundException, CannotCompileException {
-        if (!m.getMethodName().contains("lambdaFactory$")) {
-            return false;
-        }
-        String lambdaClassName = null;
+        String lambdaClassName = m.getClassName();
         CtMethod callCtMethod = null;
-        try {
-            callCtMethod = m.getMethod();
-            lambdaClassName = callCtMethod.getDeclaringClass().getName();
-        } catch (NotFoundException e){
-            if (e.getMessage().startsWith("lambdaFactory$(..) is not found in ")){
-                lambdaClassName =  e.getMessage().replace("lambdaFactory$(..) is not found in ","").trim();
-            } else {
-                throw new RuntimeException(e);
-            }
-        }
+//        try {
+//            callCtMethod = m.getMethod();
+//            lambdaClassName = callCtMethod.getDeclaringClass().getName();
+//        } catch (NotFoundException e){
+//            if (e.getMessage().startsWith("lambdaFactory$(..) is not found in ")){
+//                lambdaClassName =  e.getMessage().replace("lambdaFactory$(..) is not found in ","").trim();
+//            } else {
+//                throw new RuntimeException(e);
+//            }
+//        }
 
         CtClass lambdaCtClass = null;
         if (null != lambdaClassName ){
