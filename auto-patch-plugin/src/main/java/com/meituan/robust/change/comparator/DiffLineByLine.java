@@ -68,8 +68,8 @@ public class DiffLineByLine {
                 }
 
                 if (ProguardUtils.isHasLambdaFactory$InLine1_Line2(line1,line2)) {
-                    String lambdaClassName1 = null;
-                    String lambdaClassName2 = null;
+                    String lambdaClassName1 ;
+                    String lambdaClassName2 ;
                     if (ProguardUtils.isProguard()){
                         lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine(line1);
                         lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine(line2);
@@ -85,10 +85,11 @@ public class DiffLineByLine {
                             lambdaClassName2 = line2.substring(outerClassIndex2, lambdaIndex2);
                         }
                     }
-                    if (null == lambdaClassName1 || null == lambdaClassName2){
+                    if (null == lambdaClassName1 || null == lambdaClassName2 || "".equals(lambdaClassName1) || "".equals(lambdaClassName2)){
                         RobustLog.log("null == lambdaClassName1 || null == lambdaClassName2 88");
                         return false;
                     }
+
                     ClassNode lambdaClassNode1 = getLambdaClassNodeFromOldJar(lambdaClassName1);
                     ClassNode lambdaClassNode2 = getLambdaClassNodeFromNewJar(lambdaClassName2);
 
