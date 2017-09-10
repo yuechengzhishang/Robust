@@ -12,6 +12,7 @@ import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.expr.MethodCall;
 
+import static com.meituan.robust.Constants.File_SEPARATOR;
 import static com.meituan.robust.utils.RobustProguardMapping.proguardClassMappings;
 
 /**
@@ -246,5 +247,25 @@ public class ProguardUtils {
             return false;
         }
         return methodName.contains("lambdaFactory$");
+    }
+
+    public static boolean isInHotfixPackage(String dotClassName, String packageName){
+        if (RobustProguardMapping.isProguard()){
+            String proguardDotClassName = dotClassName;
+            String unProguardDotClassName = RobustProguardMapping.getUnProguardName(proguardDotClassName);
+            dotClassName = unProguardDotClassName;
+        }
+        boolean isInHotfixPackage = dotClassName.startsWith(packageName.trim()) || dotClassName.startsWith(packageName.trim().replace(".", File_SEPARATOR));
+        return isInHotfixPackage;
+    }
+
+    public static boolean isInExceptPackage(String dotClassName, String exceptPackage){
+        if (RobustProguardMapping.isProguard()){
+            String proguardDotClassName = dotClassName;
+            String unProguardDotClassName = RobustProguardMapping.getUnProguardName(proguardDotClassName);
+            dotClassName = unProguardDotClassName;
+        }
+        boolean isInExceptPackage = dotClassName.startsWith(exceptPackage.trim()) || dotClassName.startsWith(exceptPackage.trim().replace(".", File_SEPARATOR));
+        return isInExceptPackage;
     }
 }

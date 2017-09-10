@@ -5,6 +5,7 @@ import com.meituan.robust.change.ChangeLog;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.change.RobustCodeChangeChecker;
 import com.meituan.robust.utils.AnonymousLambdaUtils;
+import com.meituan.robust.utils.ProguardUtils;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -401,19 +402,20 @@ public class CheckCodeChanges {
 //                className.startsWith("com/meituan/robust")
                 boolean isExceptPackage = false;
                 for (String exceptPackage : exceptPackageList) {
-                    if (dotClassName.startsWith(exceptPackage.trim()) || dotClassName.startsWith(exceptPackage.trim().replace(".", File_SEPARATOR))) {
-                        isExceptPackage = true;
-                    }
+                    isExceptPackage = ProguardUtils.isInExceptPackage(dotClassName,exceptPackage);
                 }
                 if (isExceptPackage) {
                     continue;
                 }
             }
 
+            //这里是混淆之后的className
             // is in except package list
             if (null != hotfixPackageList) {
                 for (String packageName : hotfixPackageList) {
-                    if (dotClassName.startsWith(packageName.trim()) || dotClassName.startsWith(packageName.trim().replace(".", File_SEPARATOR))) {
+                    boolean isInHotfixPackage = ProguardUtils.isInHotfixPackage(dotClassName,packageName);
+//                            dotClassName.startsWith(packageName.trim()) || dotClassName.startsWith(packageName.trim().replace(".", File_SEPARATOR));
+                    if (isInHotfixPackage) {
                         //yes it is , class in hotfix package list
 
                         //start
