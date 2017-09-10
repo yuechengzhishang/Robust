@@ -94,8 +94,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
 
         try {
-            //TODO: 17/8/29 尽量不使用反射
-            //todo 根据field的访问类型
+            //根据field的访问类型
             if (f.isReader()) {
                 //reader done
                 f.replace(ReflectUtils.getFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
@@ -130,10 +129,6 @@ public class RobustMethodExprEditor extends ExprEditor {
                 return;
             }
         }
-//        if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
-//            return;
-//        }
-
 
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
         if (outerMethodIsStatic) {
@@ -165,7 +160,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
 
 //            stringBuilder.append("$_= ($r) new " + newExprClassName + "(this.originClass);");
-            boolean isChangeOrNewAdd_AnonymousInnerClass_$1 = Config.modifiedClassNameList.contains(newExprClassName) || Config.newlyAddedClassNameList.contains(newExprClassName);
+            boolean isChangeOrNewAdd_AnonymousInnerClass_$1 = Config.modifiedAnonymousClassNameList.contains(newExprClassName);
             if (isChangeOrNewAdd_AnonymousInnerClass_$1 && AnonymousLambdaUtils.isAnonymousInnerClass_$1(newExprClassName)) {
                 //create public Field outerPatchClassName
                 CtClass anonymousInnerCtClass = Config.classPool.getOrNull(newExprClassName);
@@ -186,34 +181,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
-
-//        try {
-//            CtClass newExpClass = Config.classPool.get(newExprClassName);
-//            replaceParamThisToOriginalClassInstance2(e);
-//        } catch (NotFoundException e1) {
-//            e1.printStackTrace();
-//        }
-
-
-//        if (isAnonymousInnerClass_$1(newExprClassName)) {
-//
-//            //// TODO: 17/8/14 优化
-//            try {
-//                if (!ReflectUtils.isStatic(Config.classPool.get(e.getClassName()).getModifiers()) && JavaUtils.isInnerClassInModifiedClass(e.getClassName(), anonymousInnerClass)) {
-//                    e.replace(ReflectUtils.getNewInnerClassString(e.getSignature(), outerClass.getName(), ReflectUtils.isStatic(Config.classPool.get(e.getClassName()).getModifiers()), e.getClassName()));
-//                    return;
-//                }
-//            } catch (NotFoundException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//            e.replace(ReflectUtils.getCreateClassString(e, e.getClassName(), outerClass.getName(), ReflectUtils.isStatic(ctMethod.getModifiers())));
-//            return;
-//        }
-
-
-        //其他情况不用处理(// TODO: 17/8/3 需要将所有新增的class都设置成public的
-        //需要处理 package访问属性的method,直接在插桩的时候改成public好了(同样的，把那个字段的也改了，这里就可以少很多代码了）
     }
 
 
@@ -294,7 +261,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             e.printStackTrace();
         }
 
-        //todo 如何区分super方法 MainActivity#super.oncreate()
         if (m.isSuper()) {
             /*
             protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -445,7 +411,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 Toast.makeText(this, "Hello onCreate TestPatchActivity", Toast.LENGTH_SHORT).show();
             }
             */
-            //// TODO: 17/9/6
+
             try {
                 CtClass methodTargetClass = m.getMethod().getDeclaringClass();
                 if (patchClass.getName().equals(methodTargetClass.getName())) {
@@ -552,15 +518,6 @@ public class RobustMethodExprEditor extends ExprEditor {
 //                                    return;
 //                                }
 
-        //处理内联？  proguard之后做，保存之前打包的jar，与现在对比;
-        //就不用处理内联了?
-        //做合成？
-        //old.jar(same diff1)
-        //new.jar(same diff2)
-        //changed.jar(same diff1/diff2)
-        //combined.jar(same
-
-        //repalceInlineMethod(m, method, false)
     }
 
     static boolean isStatic(int modifiers) {
