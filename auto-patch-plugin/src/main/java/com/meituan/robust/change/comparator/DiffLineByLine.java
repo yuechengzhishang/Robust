@@ -68,23 +68,8 @@ public class DiffLineByLine {
                 }
 
                 if (ProguardUtils.isHasLambdaFactory$InLine1_Line2(line1,line2)) {
-                    String lambdaClassName1 ;
-                    String lambdaClassName2 ;
-                    if (ProguardUtils.isProguard()){
-                        lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine(line1);
-                        lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine(line2);
-                    } else {
-                        {
-                            int outerClassIndex1 = line1.indexOf(originalClass.name.replace(".class", ""));
-                            int lambdaIndex1 = line1.indexOf(".lambdaFactory$");
-                            lambdaClassName1 = line1.substring(outerClassIndex1, lambdaIndex1);
-                        }
-                        {
-                            int outerClassIndex2 = line2.indexOf(updatedClass.name.replace(".class", ""));
-                            int lambdaIndex2 = line2.indexOf(".lambdaFactory$");
-                            lambdaClassName2 = line2.substring(outerClassIndex2, lambdaIndex2);
-                        }
-                    }
+                    String lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine1(line1,originalClass.name);
+                    String lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine2(line2,updatedClass.name);
                     if (null == lambdaClassName1 || null == lambdaClassName2 || "".equals(lambdaClassName1) || "".equals(lambdaClassName2)){
                         RobustLog.log("null == lambdaClassName1 || null == lambdaClassName2 88");
                         return false;
