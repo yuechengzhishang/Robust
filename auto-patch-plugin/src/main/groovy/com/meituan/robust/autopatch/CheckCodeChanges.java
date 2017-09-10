@@ -68,8 +68,9 @@ public class CheckCodeChanges {
 //                className.startsWith("com/meituan/robust")
                 boolean isExceptPackage = false;
                 for (String exceptPackage : exceptPackageList) {
-                    if (dotClassName.startsWith(exceptPackage.trim()) || dotClassName.startsWith(exceptPackage.trim().replace(".", File_SEPARATOR))) {
-                        isExceptPackage = true;
+                    isExceptPackage = ProguardUtils.isInExceptPackage(dotClassName,exceptPackage.trim());
+                    if (isExceptPackage){
+                        break;
                     }
                 }
                 if (isExceptPackage) {
@@ -80,7 +81,7 @@ public class CheckCodeChanges {
             // is in except package list
             if (null != hotfixPackageList) {
                 for (String packageName : hotfixPackageList) {
-                    if (dotClassName.startsWith(packageName.trim()) || dotClassName.startsWith(packageName.trim().replace(".", File_SEPARATOR))) {
+                    if (ProguardUtils.isInHotfixPackage(dotClassName,packageName.trim())) {
                         //yes it is , class in hotfix package list
                         classNames.add(dotClassName);
                     }
