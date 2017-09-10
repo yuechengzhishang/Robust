@@ -5,6 +5,7 @@ import com.meituan.robust.autopatch.Config;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.change.RobustCodeChangeChecker;
 import com.meituan.robust.utils.ProguardUtils;
+import com.meituan.robust.utils.RobustLog;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -65,28 +66,34 @@ public class DiffLineByLine {
                         }
                     }
                 }
-                if (line1.contains(".lambdaFactory$") && line2.contains(".lambdaFactory$")) {
-                    ClassNode lambdaClassNode1 = null;
-                    {
-                        int outerClassIndex = line1.indexOf(originalClass.name.replace(".class", ""));
-                        int lambdaIndex = line1.indexOf(".lambdaFactory$");
-                        String lambdaClassName = line1.substring(outerClassIndex, lambdaIndex);
-//                        System.err.println("lambdaClassName: ");
-//                        System.err.println(lambdaClassName);
-                        lambdaClassNode1 = getLambdaClassNodeFromOldJar(lambdaClassName);
+
+                if (ProguardUtils.isHasLambdaFactory$InLine1_Line2(line1,line2)) {
+                    String lambdaClassName1 = null;
+                    String lambdaClassName2 = null;
+                    if (ProguardUtils.isProguard()){
+                        lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine(line1);
+                        lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine(line2);
+                    } else {
+                        {
+                            int outerClassIndex1 = line1.indexOf(originalClass.name.replace(".class", ""));
+                            int lambdaIndex1 = line1.indexOf(".lambdaFactory$");
+                            lambdaClassName1 = line1.substring(outerClassIndex1, lambdaIndex1);
+                        }
+                        {
+                            int outerClassIndex2 = line2.indexOf(updatedClass.name.replace(".class", ""));
+                            int lambdaIndex2 = line2.indexOf(".lambdaFactory$");
+                            lambdaClassName2 = line2.substring(outerClassIndex2, lambdaIndex2);
+                        }
                     }
-                    ClassNode lambdaClassNode2 =null;
-                    {
-                        int outerClassIndex = line2.indexOf(updatedClass.name.replace(".class", ""));
-                        int lambdaIndex = line2.indexOf(".lambdaFactory$");
-                        String lambdaClassName2 = line2.substring(outerClassIndex, lambdaIndex);
-//                        System.err.println("lambdaClassName: ");
-//                        System.err.println(lambdaClassName2);
-                        lambdaClassNode2 = getLambdaClassNodeFromNewJar(lambdaClassName2);
+                    if (null == lambdaClassName1 || null == lambdaClassName2){
+                        RobustLog.log("null == lambdaClassName1 || null == lambdaClassName2 88");
+                        return false;
                     }
+                    ClassNode lambdaClassNode1 = getLambdaClassNodeFromOldJar(lambdaClassName1);
+                    ClassNode lambdaClassNode2 = getLambdaClassNodeFromNewJar(lambdaClassName2);
+
                     ClassNode changedLambdaClassNode2 = null;
                     if (null != lambdaClassNode1 && null != lambdaClassNode2){
-                        //// TODO: 17/9/3 diff two lambda class
                         CtClass lambdaCtClass = null;
                         try {
                             lambdaCtClass = Config.classPool.get(lambdaClassNode2.name.replace("/","."));

@@ -279,4 +279,52 @@ public class ProguardUtils {
         }
         return updatedClassName.contains("$$Lambda$");
     }
+
+    public static String getLambdaClassNameFromLine(String line){
+//                DiffLineByLine:
+//                line1:     INVOKESTATIC com/meituan/sample/SecondActivity$$Lambda$4.lambdaFactory$ (Lcom/meituan/sample/SecondActivity;)Landroid/view/View$OnClickListener;
+//                line2:     INVOKESTATIC com/meituan/sample/SecondActivity$$Lambda$2.lambdaFactory$ (Lcom/meituan/sample/SecondActivity;)Landroid/view/View$OnClickListener;
+        String lineTemp = line.replace("INVOKESTATIC ","").trim();
+        int index_end = line.indexOf(".");
+        String lambdaClassName = lineTemp.substring(0,index_end);
+        return lambdaClassName;
+    }
+
+    public static boolean isMayBeLambdaFactory$InLine(String line){
+        if (line.contains("INVOKESTATIC ") && line.contains(".") ){
+            int index_start = line.indexOf("INVOKESTATIC ");
+            int index_end = line.indexOf(".");
+            return index_end > index_start;
+        }
+        return false;
+    }
+
+    //只处理新的line
+    public static boolean isLambdaFactory$InLine(String line){
+        if (isMayBeLambdaFactory$InLine(line)){
+            String lambdaClassName = getLambdaClassNameFromLine(line);
+            String lambdaDotClassName = lambdaClassName.replace("/",".").trim();
+            if (RobustProguardMapping.isProguard()){
+                String proguardDotClassName = lambdaDotClassName;
+                lambdaClassName = RobustProguardMapping.getUnProguardName(proguardDotClassName);
+            }
+            return AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(lambdaClassName);
+        }
+        return false;
+    }
+
+    public static boolean isHasLambdaFactory$InLine1_Line2(String line1 ,String line2){
+        if (RobustProguardMapping.isProguard()){
+            return isMayBeLambdaFactory$InLine(line1) && isLambdaFactory$InLine(line2);
+
+        } else {
+           return line1.contains(".lambdaFactory$") && line2.contains(".lambdaFactory$");
+        }
+    }
+
+    public static boolean isProguard(){
+        return RobustProguardMapping.isProguard();
+    }
+
+
 }
