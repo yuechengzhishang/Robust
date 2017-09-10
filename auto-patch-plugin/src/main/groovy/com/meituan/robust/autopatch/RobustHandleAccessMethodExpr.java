@@ -16,7 +16,7 @@ import javassist.expr.MethodCall;
 import robust.gradle.plugin.RobustNewAddCustomClassExpr;
 
 import static com.meituan.robust.Constants.ORIGINCLASS;
-import static robust.gradle.plugin.RobustNewAddCustomClassExpr.getCustomModifiedClasses;
+import static com.meituan.robust.utils.CustomModifiedClassUtils.getCustomModifiedClasses;
 import static robust.gradle.plugin.RobustNewAddCustomClassExpr.isAccessModifiedClass;
 
 /**

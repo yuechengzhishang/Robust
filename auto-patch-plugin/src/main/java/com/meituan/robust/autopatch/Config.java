@@ -30,14 +30,16 @@ public final class Config {
     public static String mappingFilePath;
     public static String newMappingFilePath;
     public static Set<String> patchMethodSignatureSet = new HashSet<>();
+
     public static List<String> newlyAddedClassNameList = new ArrayList<String>();
-    public static Set newlyAddedMethodSet = new HashSet<String>();
     public static List<String> modifiedClassNameList = new ArrayList<String>();
+    public static List<String> modifiedLambdaClassNameList = new ArrayList<String>();
+    public static List<String> modifiedAnonymousClassNameList = new ArrayList<String>();
+
     public static List<String> modifiedAnonymousInnerClassNameList = new ArrayList<String>();
-    public static List<String> lambdaDotClassNameList = new ArrayList<String>();
     public static JarFile oldJar ;
     public static JarFile newJar ;
-    public static HashMap<String,String> lambdaUnchangedReallyClassNameList = new HashMap<String, String>();
+    public static HashMap<String,String> lambdaUnchangedReallyClassNameHashMap = new HashMap<String, String>();
     public static List<String> hotfixPackageList = new ArrayList<>();
     public static List<String> exceptPackageList = new ArrayList<>();
     public static HashMap<String, String> methodMap = new HashMap<String, String>();
@@ -79,7 +81,6 @@ public final class Config {
         newlyAddedClassNameList = new ArrayList<String>();
         modifiedClassNameList = new ArrayList<String>();
         hotfixPackageList = new ArrayList<>();
-        newlyAddedMethodSet = new HashSet<>();
         invokeSuperMethodMap = new HashMap<>();
         classPool = new ClassPool();
         methodNeedPatchSet = new HashSet();

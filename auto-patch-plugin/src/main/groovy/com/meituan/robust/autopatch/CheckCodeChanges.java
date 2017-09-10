@@ -29,274 +29,6 @@ import static com.meituan.robust.Constants.File_SEPARATOR;
  */
 
 public class CheckCodeChanges {
-//    public static void main(String[] args) throws IOException, NotFoundException, CannotCompileException {
-//        ClassPool classPool = new ClassPool();
-//        String androidJar = "/Users/hedingxu/android-sdk-mac_x86/platforms/android-25/android.jar";
-//        String androidCompatJar = "/Users/hedingxu/robust-github/Robust/app/build/intermediates/exploded-aar/com.android.support/appcompat-v7/25.1.0/jars/classes.jar";
-//        classPool.appendClassPath("/Users/hedingxu/robust-github/Robust/app/build/intermediates/transforms/robust/release/jars/1/1f/main.jar");
-////        String classDir = "/Users/hedingxu/robust-github/Robust/app/robust/retrolambda/release";
-////        String autopatchDir = "/Users/hedingxu/robust-github/Robust/autopatchbase/build/classes/main";
-//        String patchClassDir = "/Users/hedingxu/robust-github/Robust/app/robust/";
-//        try {
-//            classPool.appendClassPath(androidJar);
-//            classPool.appendClassPath(androidCompatJar);
-//
-////            classPool.appendClassPath(classDir);
-////            classPool.appendClassPath(autopatchDir);
-////            classPool.appendClassPath("/Users/hedingxu/robust-github/Robust/patch/build/intermediates/classes/release");
-//        } catch (NotFoundException e) {
-//            e.printStackTrace();
-//        }
-//
-//        CtClass sourceClass1 = null;
-//        try {
-//            sourceClass1 = classPool.get("com.meituan.sample.MainActivity");
-//        } catch (NotFoundException e) {
-//            e.printStackTrace();
-//        }
-//        sourceClass1.setName(sourceClass1.getName() + "$RobustPatch");
-//        try {
-//
-//            sourceClass1.writeFile(patchClassDir);
-//        } catch (CannotCompileException e) {
-//            e.printStackTrace();
-//        }
-//
-//
-//        classPool.appendClassPath(patchClassDir);
-//
-//        final CtClass sourceClass = classPool.get("com.meituan.sample.MainActivity");
-//        final CtClass patchClass = classPool.get("com.meituan.sample.MainActivity$RobustPatch");
-//
-//        patchClass.defrost();
-////        if (true) {
-////            CtClass[] ctClasses = anonymousInnerClass.getNestedClasses();
-////            for (CtClass ctClass : ctClasses) {
-//////              case: com.dianping.ad.view.BannerAdView$$Lambda$1
-//////              case: com.meituan.sample.MainActivity$3
-//////              case: com.meituan.android.baby.poi.agent.BabyPoiPromoAgent$AjcClosure1 匿名内部类
-//////              case: android.support.design.widget.AppBarLayout$Behavior$SavedState$1 跟普通匿名内部类一样
-//////              case: android.support.design.widget.BaseTransientBottomBar$5$1 匿名内部类的匿名内部类
-////                String nestedClassName = ctClass.getName();
-////                String shortClassName = nestedClassName.replace(anonymousInnerClass.getName(), "");
-////                String numberStr = shortClassName.replace("$$Lambda", "");
-//////                numberStr = numberStr.replace("","");
-////                numberStr = numberStr.replace("$", "");
-////
-////                boolean isAnonymousInnerClass_$1 = false;
-////                String patternString = "[0-9]*";
-////                {
-////                    Pattern pattern = Pattern.compile(patternString);
-////                    Matcher matcher = pattern.matcher(numberStr);
-////                    boolean matches = matcher.matches();
-////                    isAnonymousInnerClass_$1 = matches;
-////                }
-////                boolean isAjcClosureAnonymousInnerClass = false;
-////                {
-////                    String ajcClosureAnonymousInnerClass = "AjcClosure" + patternString;
-////                    Pattern ajcClosurePattern = Pattern.compile(ajcClosureAnonymousInnerClass);
-////                    Matcher ajcClosureMatcher = ajcClosurePattern.matcher(numberStr);
-////                    boolean ajcClosureMatches = ajcClosureMatcher.matches();
-////                    isAjcClosureAnonymousInnerClass = ajcClosureMatches;
-////                }
-////
-////                if (isAnonymousInnerClass_$1 || isAjcClosureAnonymousInnerClass) {
-////                    System.err.println("isAnonymousInnerClass_$1 :" + ctClass.getName());
-////                } else {
-////                    System.err.println("notAnonymousInnerClass :" + ctClass.getName());
-////                }
-////            }
-////            return;
-////        }
-//
-////        JavaUtils.addField_OriginClass(outerClass, anonymousInnerClass);
-//
-//        CtField originField = new CtField(sourceClass, ORIGINCLASS, patchClass);
-//        originField.setModifiers(AccessFlag.setPublic(originField.getModifiers()));
-//
-//        //不支持interface，所以不用管interface这种情况
-//        patchClass.setModifiers(AccessFlag.clear(patchClass.getModifiers(), AccessFlag.ABSTRACT));
-//
-////        匿名内部类的换不换？
-////        new CallBack(this){
-////
-////        }
-//
-////        匿名内部类
-////        考虑这些this的事情，需要处理this参数，哪些this可以替换成OriginClass ,哪些不能替换??
-////        MainActivity$RobustPatch.class
-////        private void runRobust() {
-////            this.testAdd("nn");
-////            (new PatchExecutor(this.getApplicationContext(), new PatchManipulateImp(), new Callback(this))).start();
-////        }
-////      // TODO: 17/8/7 如果是匿名内部类，传进去的参数需要保持不变，其他的全部换成originalClass
-//
-//        for (final CtMethod method : patchClass.getDeclaredMethods()) {
-//            if (!Config.addedSuperMethodList.contains(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
-//                method.instrument(
-//                        new ExprEditor() {
-//                            public void edit(FieldAccess f) throws CannotCompileException {
-//
-//                                if (true) {
-//                                    return;
-//                                }
-//
-//                                if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
-//                                    return;
-//                                }
-//                                try {
-//                                    if (f.isWriter()) {
-//
-//                                        f.replace(setFieldString(f.getField(), patchClass, sourceClass));
-//                                    }
-//                                } catch (NotFoundException e) {
-//                                    e.printStackTrace();
-//                                    throw new RuntimeException(e.getMessage());
-//                                }
-//                            }
-//
-//                            @Override
-//                            public void edit(NewExpr e) throws CannotCompileException {
-//                                //inner class in the patched class ,not all inner class
-//                                if (Config.newlyAddedClassNameList.contains(e.getClassName()) || Config.noNeedReflectClassSet.contains(e.getClassName())) {
-//                                    return;
-//                                }
-//                                //需要处理参数为this的情况
-//
-//                                //其他情况不用处理(// TODO: 17/8/3 需要将所有新增的class都设置成public的
-//                                //需要处理 package访问属性的method,直接在插桩的时候改成public好了(同样的，把那个字段的也改了，这里就可以少很多代码了）
-//                            }
-//
-//                            @Override
-//                            public void edit(MethodCall m) throws CannotCompileException {
-//
-//                                //super方法使用Assistant class解决
-//                                if (m.isSuper()) {
-//                                    System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
-//                                    return;
-//                                }
-//                                if (true) {
-//                                    try {
-//                                        CtClass methodTargetClass = m.getMethod().getDeclaringClass();
-//
-////                                        System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + anonymousInnerClass.getName());
-//                                        if (sourceClass.subclassOf(methodTargetClass)) {
-//                                            //// TODO: 17/8/7 判断是否父类方法 或者本类方法
-//                                            System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
-//
-//                                        } else {
-//                                            System.err.println("" + methodTargetClass.getName() + "#" + m.getMethod().getName() /* + anonymousInnerClass.getName() + " is not sub class of "*/);
-//
-//                                        }
-//                                    } catch (NotFoundException e) {
-//                                        e.printStackTrace();
-//
-//                                        System.err.println("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
-//                                    }
-////                                    System.err.println(m.getClassName() + "," + m.getMethodName() + "");
-//                                    return;
-//                                }
-//                                //如果是新增的class就不用替换了
-//                                try {
-//                                    if (Config.newlyAddedClassNameList.contains(m.getMethod().getDeclaringClass().getName())) {
-//                                        return;
-//                                    }
-//                                } catch (NotFoundException e) {
-//                                    e.printStackTrace();
-//                                }
-//
-//
-//                                // 大部分情况下是需要替换this为originalClass的
-//                                {
-//                                    try {
-//                                        boolean isContainThis = false;
-//                                        m.getMethod().getReturnType();//// TODO: 17/8/7 处理builder 除了匿名内部类，都把this换成originalClass
-//                                        CtClass[] paramTypes = m.getMethod().getParameterTypes();
-//                                        StringBuilder stringBuilder = new StringBuilder();
-//
-//                                        if (null != paramTypes) {
-//                                            int index = 0;
-//                                            for (CtClass ctClass : paramTypes) {
-//                                                index++;
-//                                                //MainActivityPatch contains MainActivity and MainActivityPatch
-//                                                if (ctClass.getName().startsWith(sourceClass.getName())) {
-//                                                    //this ????// TODO: 17/8/7
-//                                                    isContainThis = true;
-//                                                    stringBuilder.append("$" + index + "= $" + index + "." + Constants.ORIGINCLASS + ";");
-//                                                }
-//                                            }
-//
-//                                        }
-//
-//                                        if (isContainThis) {
-//                                            stringBuilder.append("$_ = $proceed($$);");
-//                                            stringBuilder.toString();
-//                                        }
-//
-//                                    } catch (NotFoundException e) {
-//                                        e.printStackTrace();
-//                                    }
-//
-//                                }
-//
-////                                try {
-////                                    if (m.getMethod().getName().contains("getApplicationContext")) {
-////                                        System.err.println("getApplicationContext method");
-////
-////                                    }
-////                                    String methodDeclaringClassName = m.getMethod().getDeclaringClass().getName();
-////                                    if (isAnonymousInnerClass_$1(methodDeclaringClassName)) {
-////                                        HashSet<String> anonymousInnerClasses = changedClassAndItsAnonymousInnerClass.get(outerClass.getName());
-////                                        if (anonymousInnerClasses == null) {
-////                                            anonymousInnerClasses = new LinkedHashSet<String>();
-////                                        }
-////                                        anonymousInnerClasses.addClasses(methodDeclaringClassName);
-////                                        //记录需要变更的匿名内部类，需要处理匿名内部类里面的匿名内部类?
-////                                        changedClassAndItsAnonymousInnerClass.put(outerClass.getName(), anonymousInnerClasses);
-////                                        return;
-////                                    }
-////                                } catch (NotFoundException e) {
-////                                    e.printStackTrace();
-////                                }
-//
-//                                //可能会出现一个class，被修改多次，这时候如何预警？？？
-//                                //有一种问题，就是
-//                                // class A {
-//                                //   class InnerB{
-//                                //    //如果访问了A的私有方法，则A可能会出现Method的新增(access$200),对这部分的改动需要过滤掉，使用反射处理
-//                                //   }
-//                                // }
-////                                if (m.getMethodName().contains("access$")) {
-////                                    //method contain
-////
-////                                    m.replace(ReflectUtils.getNewInnerClassString(m.getSignature(), outerClass.getName(), ReflectUtils.isStatic(method.getModifiers()), /*getClassValue(*/m.getClassName()));
-////                                    return;
-////                                }
-//
-//                                //处理内联？  proguard之后做，保存之前打包的jar，与现在对比;
-//                                //就不用处理内联了?
-//                                //做合成？
-//                                //old.jar(same diff1)
-//                                //new.jar(same diff2)
-//                                //changed.jar(same diff1/diff2)
-//                                //combined.jar(same
-////                                try {
-////                                    if (!repalceInlineMethod(m, method, false)) {
-////                                        Map memberMappingInfo = new HashMap();
-////                                        m.replace(ReflectUtils.getMethodCallString(m, memberMappingInfo, outerClass, ReflectUtils.isStatic(method.getModifiers()), false));
-////                                    }
-////                                } catch (Throwable e) {
-////                                    e.printStackTrace();
-////                                }
-//                            }
-//                        });
-//            }
-//        }
-//
-//        patchClass.writeFile(patchClassDir);
-//    }
-
-
     public static HashSet<String> getTargetClassesFromJar(JarFile newJar){
         //只考虑newClass 与 changedClass即可，删除的class不用管（不需要处理)
         // go through the jar file, entry by entry.
@@ -395,7 +127,7 @@ public class CheckCodeChanges {
                 continue;
             }
 
-            String dotClassName = className.replace(".class", "").replace(File_SEPARATOR, ".");
+            String dotClassName = className.replace(".class", "").replace("/", ".");
 
             // is in except package list
             if (null != exceptPackageList) {
@@ -403,6 +135,9 @@ public class CheckCodeChanges {
                 boolean isExceptPackage = false;
                 for (String exceptPackage : exceptPackageList) {
                     isExceptPackage = ProguardUtils.isInExceptPackage(dotClassName,exceptPackage);
+                    if (isExceptPackage) {
+                        break;
+                    }
                 }
                 if (isExceptPackage) {
                     continue;
@@ -440,25 +175,48 @@ public class CheckCodeChanges {
                                 if (null == classChange.fieldChange && null == classChange.methodChange) {
 
                                 } else {
-                                    //field change or method change
-                                    Config.modifiedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
-                                    RobustChangeInfo.changeClasses.add(classChange);
-//                                  //todo 这里File_SEPARATOR需要考虑windows里面的是否兼容
-                                    if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(className.replace(".class", "").replace(File_SEPARATOR, "."))){
+                                    String dotClassNameTemp = className.replace(".class", "").replace("/", ".");
+                                    //如果lambda表达式&匿名内部类的变更，当做是新增的
+                                    if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(dotClassNameTemp)){
                                         ClassNode newAnonymousInnerClass = newClassNode;
                                         AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
-                                    }
-
-                                    if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(className.replace(".class", "").replace(File_SEPARATOR, "."))){
-                                        //// TODO: 17/9/7 记录改了lambda表达式的所包含的方法
+                                        RobustChangeInfo.changeClasses.add(classChange);
+                                        if (!Config.modifiedAnonymousClassNameList.contains(dotClassNameTemp)){
+                                            Config.modifiedAnonymousClassNameList.add(dotClassNameTemp);
+                                        }
+                                    } else if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassNameTemp)){
+                                        //TODO: 17/9/7 需要记录改了lambda表达式的所包含的方法
+                                        RobustChangeInfo.changeClasses.add(classChange);
+                                        if (!Config.modifiedLambdaClassNameList.contains(dotClassNameTemp)){
+                                            Config.modifiedLambdaClassNameList.add(dotClassNameTemp);
+                                        }
+                                    } else {
+                                        //field change or method change
+                                        Config.modifiedClassNameList.add(className.replace(".class", "").replace("/", "."));
+                                        RobustChangeInfo.changeClasses.add(classChange);
                                     }
                                 }
                             }
                         } else {
-                            RobustChangeInfo.addClasses.add(className.replace(File_SEPARATOR, "."));
-                            Config.newlyAddedClassNameList.add(className.replace(".class", "").replace(File_SEPARATOR, "."));
 
-//                            //todo just for test only
+                            String dotClassNameTemp = className.replace(".class", "").replace("/", ".");
+                            //如果lambda表达式&匿名内部类的变更，当做是新增的
+                            if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(dotClassNameTemp)) {
+                                RobustChangeInfo.addClasses.add(dotClassNameTemp);
+                                if (!Config.modifiedAnonymousClassNameList.contains(dotClassNameTemp)){
+                                    Config.modifiedAnonymousClassNameList.add(dotClassNameTemp);
+                                }
+                            } else if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassNameTemp)) {
+                                RobustChangeInfo.addClasses.add(dotClassNameTemp);
+                                if (!Config.modifiedLambdaClassNameList.contains(dotClassNameTemp)){
+                                    Config.modifiedLambdaClassNameList.add(dotClassNameTemp);
+                                }
+                            } else {
+                                RobustChangeInfo.addClasses.add(className.replace("/", "."));
+                                Config.newlyAddedClassNameList.add(className.replace(".class", "").replace("/", "."));
+                            }
+
+//                            //just for test only
 //                            if (CheckCodeChanges.isAnonymousInnerClass(className.replace(".class", "").replace(File_SEPARATOR, "."))){
 //                                byte[] newClassBytes = new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
 //                                ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);

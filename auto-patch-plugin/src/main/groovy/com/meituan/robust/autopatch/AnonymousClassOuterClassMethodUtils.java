@@ -54,7 +54,7 @@ public class AnonymousClassOuterClassMethodUtils {
             if (changedAnonymousOuterMethodInfoMap.containsKey(anonymousInnerClassclassName)){
                 System.err.println("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
             } else {
-                String dotOuterClass = outerClass.replace(File_SEPARATOR, ".");
+                String dotOuterClass = outerClass.replace("/", ".");
                 OuterMethodInfo outerMethodInfo = new OuterMethodInfo(dotOuterClass, outerMethod, outerMethodDesc);
                 changedAnonymousOuterMethodInfoMap.put(anonymousInnerClassclassName,outerMethodInfo);
             }

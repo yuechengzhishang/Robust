@@ -218,19 +218,17 @@ public class RobustChangeInfo {
 
     public static boolean isChangedMethod(CtMethod ctMethod) {
         String dotClass = ctMethod.getDeclaringClass().getName();
+        String originClass = dotClass;
+        String patchClass = dotClass;
         if (dotClass.endsWith("Patch")) {
+            patchClass = new String(dotClass);
             dotClass = dotClass + "ROBUST_FOR_DELETE";
             String tempStr = "Patch" + "ROBUST_FOR_DELETE";
             dotClass = dotClass.replace(tempStr,"");
+            originClass = new String(dotClass);
         }
         String methodName = ctMethod.getName();
         String signature = ctMethod.getSignature();
-        {
-            //// TODO: 17/9/8  
-            String javaSignature = ProguardUtils.getParameterTypeSignature(ctMethod);
-            System.err.println("isChangedMethod ctMethod 1:" + dotClass + " " + methodName + " " + signature);
-            System.err.println("isChangedMethod ctMethod 2:" + dotClass + " " + methodName + " " + javaSignature);
-        }
         for (ClassChange classChange : changeClasses) {
             if (null != classChange) {
                 if (classChange.classNode.name.replace("/",".").equals(dotClass)) {
@@ -240,8 +238,10 @@ public class RobustChangeInfo {
                             if (methodName.equals(methodNode.name)) {
                                 //methodNode.desc (Landroid/os/Bundle;)V
                                 //ctMethod.getSignature() (Landroid/os/Bundle;)V
-                                // TODO: 17/9/8 如果desc含有patch class type ？
                                 if (methodNode.desc.equals(signature)) {
+                                    return true;
+                                }
+                                if (methodNode.desc.equals(signature.replace(patchClass.replace(".","/"),originClass.replace(".","/")))){
                                     return true;
                                 }
                             }

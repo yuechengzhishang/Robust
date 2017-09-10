@@ -239,27 +239,10 @@ public class RobustMethodExprEditor extends ExprEditor {
         return false;
     }
 
-
-    //    public String staticMethodCall (MethodCall methodCall) throws NotFoundException {
-//        StringBuilder stringBuilder = new StringBuilder();
-//        stringBuilder.append("{");
-//        String signatureBuilder = getParameterClassString(methodCall.getMethod().getParameterTypes());
-//        stringBuilder.append(methodCall.getMethod().getDeclaringClass().getName() + " instance;");
-//        if (signatureBuilder.toString().length() > 1) {
-//            String state = "$_=($r)" +
-//                    Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(" +"\"" + methodCall.getMethod().getName() + "\"" + "," + sourceClass.getName() + ".class,$args,null);";
-//            stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + methodCall.getMethod() + "\"," + methodCall.method.declaringClass.name + ".class,\$args,new Class[]{" + signatureBuilder.toString() + "});");
-//        } else
-//            stringBuilder.append("$_=($r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(\"" + methodCall.getMethod() + "\"," + methodCall.method.declaringClass.name + ".class,\$args,null);");
-//
-//    stringBuilder.append("}");
-//    return "";
-//    }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
         if (hasRobustProxyCode) {
             if (isCallProxyAccessDispatchMethod(m)) {
-//            m.replace("$_ = ($r) new Object();");
                 hasHandledProxyCode = true;
                 return;
             }
@@ -268,9 +251,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         }
 
-//        if (ctMethod.getName().contains("lambda$onCreate$3")){
-//            System.err.println("lambda$onCreate$3 : "+ctMethod.getLongName());
-//        }
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
 
 //  com.meituan.sample.TestPatchActivity$$Lambda$1 -> com.meituan.sample.s:
@@ -280,24 +260,11 @@ public class RobustMethodExprEditor extends ExprEditor {
 //        void onClick(android.view.View) -> onClick
 //        android.view.View$OnClickListener lambdaFactory$(com.meituan.sample.TestPatchActivity) -> a
 
-//m.getMethodName().contains("lambdaFactory$")
+        //m.getMethodName().contains("lambdaFactory$")
         if (outerMethodIsStatic == false && ProguardUtils.isLambdaFactoryMethod(sourceClass.getName(),patchClass.getName(),m.getClassName(),m.getMethodName(),m.getSignature())) {
-            //ignore // TODO: 17/8/26 because below
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
-//            System.err.println("OutMethod : " + ctMethod.getName() + " , method call : " + m.getMethodName());
-//            m.getMethod() : lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             try {
-
-//                getParamsThisReplacedString(m);
-//                replaceParam_ThisToOriginalClassInstance(m);
-//                String params = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(ctMethod,m,patchClass,sourceClass);
-//                StringBuilder stringBuilder = new StringBuilder();
-//                stringBuilder.append("{");
-//                stringBuilder.append("$_ = $proceed" +params+ ";");
-//                stringBuilder.append("}");
-//                m.replace(stringBuilder.toString());
                 RobustMethodCallEditorUtils2.handleLambdaFactory(ctMethod, m, patchClass, sourceClass);
-
             } catch (NotFoundException e) {
                 e.printStackTrace();
             }

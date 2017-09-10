@@ -103,7 +103,7 @@ public class DiffLineByLine {
                                 lambdaCtClass.setName(lambdaClassNode2.name.replace("/","."));
                             }
                             //store that  changed nothing realdy lambda class
-                            Config.lambdaUnchangedReallyClassNameList.put(lambdaClassNode2.name.replace("/","."),lambdaClassNode1.name.replace("/","."));
+                            Config.lambdaUnchangedReallyClassNameHashMap.put(lambdaClassNode2.name.replace("/","."),lambdaClassNode1.name.replace("/","."));
                             if (null == classChange){
                                 return true;
                             }

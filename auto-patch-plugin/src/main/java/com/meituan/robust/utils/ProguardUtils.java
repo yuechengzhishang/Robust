@@ -19,7 +19,6 @@ import javassist.expr.MethodCall;
 import static com.meituan.robust.Constants.File_SEPARATOR;
 import static com.meituan.robust.autopatch.Config.classPool;
 import static com.meituan.robust.utils.RobustProguardMapping.proguardClassMappings;
-import static robust.gradle.plugin.RobustNewAddCustomClassExpr.getCustomModifiedClasses;
 
 /**
  * Created by hedingxu on 17/8/8.
@@ -342,8 +341,11 @@ public class ProguardUtils {
         try {
             CtMethod callCtMethod = methodCall.getMethod();
             originClassName = callCtMethod.getDeclaringClass().getName();
-            HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
+            HashMap<String,String> customModifiedClasses = CustomModifiedClassUtils.getCustomModifiedClasses();
             patchClassName = customModifiedClasses.get(originClassName);
+            if (null == patchClassName){
+                patchClassName = originClassName;
+            }
         } catch (Exception e){
             RobustLog.log("get ctmethod from method call null",e);
         }
@@ -358,7 +360,6 @@ public class ProguardUtils {
             String proguardMethodSignature = callMethodSignature;
             String proguardOriginClassName = originClassName;
             String proguardPatchClassName = patchClassName;
-
 
             if (null != proguardMethodSignature) {
                 String tempproguardOriginClassName = proguardOriginClassName.replace(".", "/");
@@ -529,6 +530,22 @@ public class ProguardUtils {
             lambdaClassName2 = line2.substring(outerClassIndex2, lambdaIndex2);
         }
         return lambdaClassName2;
+    }
+
+
+    public static boolean isClassNameHas$(String customInnerClassName){
+        if (ProguardUtils.isProguard()) {
+            customInnerClassName = RobustProguardMapping.getUnProguardName(customInnerClassName);
+        }
+        return customInnerClassName.contains("$");
+    }
+
+    public static boolean isSubClass(String subClassName,String outerClassName){
+        if (ProguardUtils.isProguard()) {
+            subClassName = RobustProguardMapping.getUnProguardName(subClassName);
+            outerClassName = RobustProguardMapping.getUnProguardName(outerClassName);
+        }
+        return subClassName.startsWith(outerClassName);
     }
 
 }

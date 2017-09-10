@@ -8,6 +8,7 @@ import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.AnonymousLambdaUtils
 import com.meituan.robust.utils.JavaUtils
+import com.meituan.robust.utils.ProguardUtils
 import com.meituan.robust.utils.RobustProguardMapping
 import javassist.*
 import javassist.bytecode.AccessFlag
@@ -155,36 +156,36 @@ public class CodeTransformUnion {
 //        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
 
         println("fix that unchanged lambda class really: ")
-        //fix start
-        List<String> newModifiedClassNameList = new ArrayList<>();
-        for (String className : Config.modifiedClassNameList) {
-            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)) {
+        //fix start lambdaUnchangedReallyClassNameHashMap
+//        List<String> newModifiedClassNameList = new ArrayList<>();
+//        for (String className : Config.modifiedClassNameList) {
+//            if (Config.lambdaUnchangedReallyClassNameHashMap.containsKey(className)) {
+//
+//            } else {
+//                newModifiedClassNameList.add(className);
+//            }
+//        }
+//        Config.modifiedClassNameList = newModifiedClassNameList;
+//
+//        List<String> newlyAddedClassNameList = new ArrayList<>();
+//        for (String className : Config.newlyAddedClassNameList) {
+//            if (Config.lambdaUnchangedReallyClassNameHashMap.containsKey(className)) {
+//
+//            } else {
+//                newlyAddedClassNameList.add(className);
+//            }
+//        }
+//        Config.newlyAddedClassNameList = newlyAddedClassNameList;
 
-            } else {
-                newModifiedClassNameList.add(className);
-            }
-        }
-        Config.modifiedClassNameList = newModifiedClassNameList;
-
-        List<String> newlyAddedClassNameList = new ArrayList<>();
-        for (String className : Config.newlyAddedClassNameList) {
-            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)) {
-
-            } else {
-                newlyAddedClassNameList.add(className);
-            }
-        }
-        Config.newlyAddedClassNameList = newlyAddedClassNameList;
-
-        List<String> modifiedAnonymousInnerClassNameList = new ArrayList<>();
-        for (String className : Config.modifiedAnonymousInnerClassNameList) {
-            if (Config.lambdaUnchangedReallyClassNameList.containsKey(className)) {
-
-            } else {
-                modifiedAnonymousInnerClassNameList.add(className);
-            }
-        }
-        Config.modifiedAnonymousInnerClassNameList = modifiedAnonymousInnerClassNameList;
+//        List<String> modifiedAnonymousInnerClassNameList = new ArrayList<>();
+//        for (String className : Config.modifiedAnonymousInnerClassNameList) {
+//            if (Config.lambdaUnchangedReallyClassNameHashMap.containsKey(className)) {
+//
+//            } else {
+//                modifiedAnonymousInnerClassNameList.add(className);
+//            }
+//        }
+//        Config.modifiedAnonymousInnerClassNameList = modifiedAnonymousInnerClassNameList;
         //fix end
 
         println("modifiedClassNameList is ：")
@@ -193,32 +194,38 @@ public class CodeTransformUnion {
         println("newlyAddedClassNameList is ：")
         JavaUtils.printList(Config.newlyAddedClassNameList)
 
-        println("modifiedAnonymousInnerClassNameList is :")
-        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
+        println("modifiedAnonymousClassNameList is ：")
+        JavaUtils.printList(Config.modifiedAnonymousClassNameList)
+
+        println("modifiedLambdaClassNameList is ：")
+        JavaUtils.printList(Config.modifiedLambdaClassNameList)
+
+//        println("modifiedAnonymousInnerClassNameList is :")
+//        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
 
 
 
-        println("convert modifiedAnonymousInnerClassNameList to newAddClassNameList:")
-        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
-            if (Config.newlyAddedClassNameList.contains(anonymousClassName)) {
-            } else {
-                Config.newlyAddedClassNameList.add(anonymousClassName)
-            }
-        }
+//        println("convert modifiedAnonymousInnerClassNameList to newAddClassNameList:")
+//        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
+//            if (Config.newlyAddedClassNameList.contains(anonymousClassName)) {
+//            } else {
+//                Config.newlyAddedClassNameList.add(anonymousClassName)
+//            }
+//        }
 
-        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
-        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
-            AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
-            //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
-            if (null != outerMethodInfo){
-                if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
-                    //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
-                    //todo 9-9
-                } else {
-                    Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
-                }
-            }
-        }
+//        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
+//        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
+//            AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
+//            //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
+//            if (null != outerMethodInfo){
+//                if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
+//                    //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
+//                    //todo 9-9
+//                } else {
+//                    Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
+//                }
+//            }
+//        }
 
         for (String modifiedClassName : Config.modifiedClassNameList) {
             CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
@@ -228,6 +235,8 @@ public class CodeTransformUnion {
         }
 
         println("newlyAddedClassNameList is ：")
+        Config.newlyAddedClassNameList.addAll(Config.modifiedLambdaClassNameList)
+        Config.newlyAddedClassNameList.addAll(Config.modifiedAnonymousClassNameList)
         JavaUtils.printList(Config.newlyAddedClassNameList)
 
         generatePatch(patchPath);
@@ -348,7 +357,6 @@ public class CodeTransformUnion {
 
             }
         }
-        JavaUtils.printList(Config.modifiedClassNameList)
         handleSuperMethodInClass(Config.modifiedClassNameList);
 
         //auto generate all class
@@ -405,7 +413,7 @@ public class CodeTransformUnion {
             if (is_$1_or_$$lambda$1) {
 
             } else {
-                if (customInnerClassName.contains("\$")){
+                if (ProguardUtils.isClassNameHas$(customInnerClassName)){
                     String patchCustomInnerClassName = customInnerClassName + "Patch";
                     CtClass patchCustomInnerCtClass = Config.classPool.get(patchCustomInnerClassName);
                     customInnerCtClassList.add(patchCustomInnerCtClass);
@@ -430,71 +438,77 @@ public class CodeTransformUnion {
             List<CtClass> ctClasses = new ArrayList<CtClass>()
 //            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里 todo 9-1
 
-            for (String newAddClassName : Config.newlyAddedClassNameList) { //处理lambda表达式
-                if (newAddClassName.startsWith(originalClassName)) {
-                    boolean is_$1_or_$$lambda$1 = AnonymousLambdaUtils.isAnonymousInnerClass_$1(newAddClassName) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(newAddClassName)
-                    if (is_$1_or_$$lambda$1) {
-                        ctClasses.add(Config.classPool.get(newAddClassName));
-                    }
+            for (String newAddClassName : Config.modifiedAnonymousClassNameList) { //处理Anonymous表达式
+                if (ProguardUtils.isSubClass(newAddClassName,originalClassName)) {
+                    ctClasses.add(Config.classPool.get(newAddClassName));
+                }
+            }
+
+            for (String newAddClassName : Config.modifiedLambdaClassNameList) { //处理lambda表达式
+                if (ProguardUtils.isSubClass(newAddClassName,originalClassName)) {
+                    ctClasses.add(Config.classPool.get(newAddClassName));
                 }
             }
 
             ClassMap classMap = new ClassMap()
-            for (CtClass nestedCtClass : ctClasses) {
-                boolean isAnonymousInnerClass = AnonymousLambdaUtils.isAnonymousInnerClass_$1(nestedCtClass.getName()) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(nestedCtClass.getName())
-//                System.err.println("nestedCtClass :" + nestedCtClass.getName())
-                if (isAnonymousInnerClass) {
-                    nestedCtClass.defrost()
-                    int modifiers1 = AccessFlag.setPublic(nestedCtClass.getModifiers())
-                    modifiers1 = AccessFlag.clear(modifiers1, AccessFlag.SYNTHETIC);
-                    nestedCtClass.setModifiers(modifiers1)
-                    for (CtConstructor ctConstructor : nestedCtClass.getDeclaredConstructors()) {
+            for (CtClass tempLambdaOrAnonymousCtClass : ctClasses) {
+
+                    tempLambdaOrAnonymousCtClass.defrost()
+                    int modifiers1 = AccessFlag.setPublic(tempLambdaOrAnonymousCtClass.getModifiers())
+//                    modifiers1 = AccessFlag.clear(modifiers1, AccessFlag.SYNTHETIC);
+                    tempLambdaOrAnonymousCtClass.setModifiers(modifiers1)
+                    for (CtConstructor ctConstructor : tempLambdaOrAnonymousCtClass.getDeclaredConstructors()) {
                         ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
                     }
-                    String oldName = nestedCtClass.getName()
-                    String newName = nestedCtClass.getName().replace(originalClassName, originalClassName + "Patch")
+                    String oldName = tempLambdaOrAnonymousCtClass.getName()
+
+                    String newName ;
+                    if (oldName.contains(originalClassName)){
+                        newName = oldName.replace(originalClassName, originalClassName + "Patch")
+                    } else {
+                        newName = oldName + "Patch";
+                    }
+
                     //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
-                    nestedCtClass.replaceClassName(oldName, newName)
-                    nestedCtClass.writeFile(Config.robustGenerateDirectory)
+                    tempLambdaOrAnonymousCtClass.replaceClassName(oldName, newName)
+                    tempLambdaOrAnonymousCtClass.writeFile(Config.robustGenerateDirectory)
 
                     Config.classPool.appendClassPath(Config.robustGenerateDirectory)
-                    CtClass anonymousInnerClass = Config.classPool.get(nestedCtClass.getName())
+                    CtClass anonymousInnerClass = Config.classPool.get(tempLambdaOrAnonymousCtClass.getName())
                     anonymousInnerClass.defrost()
-                    //handle access$100 todo 还得考虑普通内部类 比较头疼的内部类里面有内部类 8-23 需要测试
+                    //handle access$100 todo 还得考虑普通内部类 比较头疼的内部类里面有内部类
                     AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass, originalClassName, originalClassName + "Patch")
 //                    nestedCtClass.
                     anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
                     classMap.put(oldName, newName)
 
-//                    System.err.println("isAnonymousInnerClass:" + anonymousInnerClass.getName())
-
-                }
             }
 
 //            System.err.println("replaceClassName :" + originalClassName)
 
             CtClass patchClass = Config.classPool.get(NameManger.getInstance().getPatchNamWithoutRecord(originalClassName))
             patchClass.defrost()
-            //add lambda class
-            HashSet<String> lambdaHashSet = getLambdaClassChangedOrNewList()
-            for (String lambdaClassName : lambdaHashSet){
-                String tempPatchClassName = patchClass.getName();
-                if (tempPatchClassName.endsWith("Patch")){
-                    tempPatchClassName = tempPatchClassName + "ROBUST_FOR_DELETE";
-                    String tempStr = "Patch" + "ROBUST_FOR_DELETE";
-                    String sourceClassName  = tempPatchClassName.replace(tempStr,"");
-                    String sourceClassName_prefix_lambda = sourceClassName + "\$\$Lambda\$";
-                    if (lambdaClassName.startsWith(sourceClassName_prefix_lambda)){
-//                        CtClass lambdaCtClass = Config.classPool.getOrNull(lambdaClassName);
-//                       app/build/outputs/robust/com/meituan/sample/test/TestLambdaActivity$$Lambda$2Patch.class
-                        String lambdaPatchClassName = lambdaClassName + "Patch";
-                        CtClass lambdaPatchCtClass = Config.classPool.getOrNull(lambdaPatchClassName);
-                        if (null != lambdaPatchCtClass){
-                            classMap.put(lambdaClassName,lambdaPatchClassName)
-                        }
-                    }
-                }
-            }
+//            //add lambda class
+//            HashSet<String> lambdaHashSet = getLambdaClassChangedOrNewList()
+//            for (String lambdaClassName : lambdaHashSet){
+//                String tempPatchClassName = patchClass.getName();
+//                if (tempPatchClassName.endsWith("Patch")){
+//                    tempPatchClassName = tempPatchClassName + "ROBUST_FOR_DELETE";
+//                    String tempStr = "Patch" + "ROBUST_FOR_DELETE";
+//                    String sourceClassName  = tempPatchClassName.replace(tempStr,"");
+//                    String sourceClassName_prefix_lambda = sourceClassName + "\$\$Lambda\$";
+//                    if (lambdaClassName.startsWith(sourceClassName_prefix_lambda)){
+////                        CtClass lambdaCtClass = Config.classPool.getOrNull(lambdaClassName);
+////                       app/build/outputs/robust/com/meituan/sample/test/TestLambdaActivity$$Lambda$2Patch.class
+//                        String lambdaPatchClassName = lambdaClassName + "Patch";
+//                        CtClass lambdaPatchCtClass = Config.classPool.getOrNull(lambdaPatchClassName);
+//                        if (null != lambdaPatchCtClass){
+//                            classMap.put(lambdaClassName,lambdaPatchClassName)
+//                        }
+//                    }
+//                }
+//            }
+
             patchClass.replaceClassName(classMap)
             patchClass.setModifiers(AccessFlag.setPublic(patchClass.getModifiers()))
             if (true) {
@@ -521,19 +535,7 @@ public class CodeTransformUnion {
 
     public static HashSet<String> getLambdaClassChangedOrNewList(){
         HashSet<String> lambdaDotClassNameSet = new HashSet<String>();
-        for (String dotClassName : Config.modifiedClassNameList) {
-            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
-                lambdaDotClassNameSet.add(dotClassName);
-            }
-        }
-
-        for (String dotClassName : Config.newlyAddedClassNameList) {
-            if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
-                lambdaDotClassNameSet.add(dotClassName);
-            }
-        }
-
-        for (String dotClassName : Config.modifiedAnonymousInnerClassNameList) {
+        for (String dotClassName : Config.modifiedLambdaClassNameList) {
             if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {
                 lambdaDotClassNameSet.add(dotClassName);
             }
