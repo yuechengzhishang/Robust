@@ -2,7 +2,6 @@ package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
 import com.meituan.robust.utils.ProguardUtils;
-import com.meituan.robust.utils.RobustProguardMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,49 +37,16 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
     }
 
 
-    private boolean is_access$lambda$_method(MethodCall methodCall) {
-        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
-        return isLambdaAccess;
-    }
-
-    private boolean isAccessMethod(MethodCall methodCall) {
-//        static synthetic access$000
+//    private boolean is_access$lambda$_method(MethodCall methodCall) {
 //        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
-        boolean isAccess = methodCall.getMethodName().contains("access$");// access$100 + access$lambda$oncreate3
+//        return isLambdaAccess;
+//    }
 
-        if (isAccess){
-            return true;
-        }
-        if (RobustProguardMapping.isProguard()){
-            String unProguardMethodName = ProguardUtils.getUnProguardMethodName(methodCall);
-            if (unProguardMethodName.contains("access$")){
-                isAccess = true;
-            }
-        }
-        if (isAccess) {
-            return true;
-        }
-
-//        try {
-//            int modifiers = methodCall.getMethod().getModifiers();
-//            if (isStatic(modifiers)) {
-//                if ((modifiers & AccessFlag.SYNTHETIC) != 0) {
-//                    if (methodCall.getMethodName().contains("access$")) {
-//                        return true;
-//                    }
-//                }
-//            }
-//        } catch (NotFoundException e) {
-//            e.printStackTrace();
+//    public static void main(String[] args) {
+//        if ("access$000".matches("access\\$[0-9]{1,5}")) {
+//            System.err.println("it is access method");
 //        }
-        return false;
-    }
-
-    public static void main(String[] args) {
-        if ("access$000".matches("access\\$[0-9]{1,5}")) {
-            System.err.println("it is access method");
-        }
-    }
+//    }
 
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
@@ -90,61 +56,60 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
             return;
         }
         //static synthetic access$000
-        if (isAccessMethod(m)) {
+        if (ProguardUtils.isAccess$Method(m)) {
             System.err.println(m.getMethodName() + " is access method");
-//            StringBuilder stringBuilder = new StringBuilder();
-//            stringBuilder.append("{");
-            //// TODO: 17/8/23  考虑2种情况，调用外部类的静态private方法与非静态private方法
             /*
             String zz = MainActivity.access$300(this.this$0); //非静态private方法  MainActivityPatch.access$300(this.outerPatchClassName);
             MainActivity.access$400(this.this$0, zz); //非静态private方法
             MainActivity.access$500(); //静态private方法
             */
+
             //replace access method
             //replace params
-//            stringBuilder.append("}");
-            if (is_access$lambda$_method(m)) {
-                final List<CtMethod> ctMethods = new ArrayList<>();
-                try {
-                    m.getMethod().instrument(new ExprEditor() {
-                        /**
-                         * Edits a method call (overridable).
-                         *
-                         * The default implementation performs nothing.
-                         */
-                        @Override
-                        public void edit(MethodCall m) throws CannotCompileException {
-                            try {
-                                ctMethods.add(m.getMethod());
-                            } catch (NotFoundException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-                } catch (NotFoundException e) {
-                    e.printStackTrace();
-                }
-                CtMethod ctMethod1 = ctMethods.get(0);
-                if (!isStatic(ctMethod1.getModifiers())) {
-                    String lambda$onCreate$3_methodName = ctMethod1.getName();
-                    List<String> params = new ArrayList<>();
-                    try {
-                        if (m.getMethod().getParameterTypes().length == ctMethod1.getParameterTypes().length +1){
-                            int index = 0;
-                            while (index < ctMethod1.getParameterTypes().length){
-                                index++;
-                                params.add("$"+(index+1));
-                            }
-                        }
-                    } catch (NotFoundException e) {
-                        e.printStackTrace();
-                    }
 
-                    String statement = "this." + "outerPatchClassName" + "." + lambda$onCreate$3_methodName + "(" + String.join(",",params)+");";
-                    m.replace(statement);
-                    return;
-                }
-            }
+            //// TODO: 17/9/10 不处理$$lambda$1中的access方法, testing
+//            if (is_access$lambda$_method(m)) {
+//                final List<CtMethod> ctMethods = new ArrayList<>();
+//                try {
+//                    m.getMethod().instrument(new ExprEditor() {
+//                        /**
+//                         * Edits a method call (overridable).
+//                         *
+//                         * The default implementation performs nothing.
+//                         */
+//                        @Override
+//                        public void edit(MethodCall m) throws CannotCompileException {
+//                            try {
+//                                ctMethods.add(m.getMethod());
+//                            } catch (NotFoundException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    });
+//                } catch (NotFoundException e) {
+//                    e.printStackTrace();
+//                }
+//                CtMethod ctMethod1 = ctMethods.get(0);
+//                if (!isStatic(ctMethod1.getModifiers())) {
+//                    String lambda$onCreate$3_methodName = ctMethod1.getName();
+//                    List<String> params = new ArrayList<>();
+//                    try {
+//                        if (m.getMethod().getParameterTypes().length == ctMethod1.getParameterTypes().length +1){
+//                            int index = 0;
+//                            while (index < ctMethod1.getParameterTypes().length){
+//                                index++;
+//                                params.add("$"+(index+1));
+//                            }
+//                        }
+//                    } catch (NotFoundException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                    String statement = "this." + "outerPatchClassName" + "." + lambda$onCreate$3_methodName + "(" + String.join(",",params)+");";
+//                    m.replace(statement);
+//                    return;
+//                }
+//            }
 
 
             try {

@@ -4,6 +4,9 @@ import com.meituan.robust.autopatch.Config;
 import com.meituan.robust.mapping.ClassMapping;
 import com.meituan.robust.mapping.ClassMethodMapping;
 
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +17,7 @@ import javassist.NotFoundException;
 import javassist.expr.MethodCall;
 
 import static com.meituan.robust.Constants.File_SEPARATOR;
+import static com.meituan.robust.autopatch.Config.classPool;
 import static com.meituan.robust.utils.RobustProguardMapping.proguardClassMappings;
 import static robust.gradle.plugin.RobustNewAddCustomClassExpr.getCustomModifiedClasses;
 
@@ -204,7 +208,7 @@ public class ProguardUtils {
             }
             CtClass lambdaCtClass = null;
             try {
-                lambdaCtClass = Config.classPool.getCtClass(lambdaClassName);
+                lambdaCtClass = classPool.getCtClass(lambdaClassName);
             } catch (NotFoundException e) {
                 e.printStackTrace();
             }
@@ -252,8 +256,83 @@ public class ProguardUtils {
     }
 
 
+    //// TODO: 17/9/10 test
+    private static boolean isAccessMethod2(MethodCall methodCall) {
+//        static synthetic access$000
+//        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
+        boolean isAccess = methodCall.getMethodName().contains("access$");// access$100 + access$lambda$oncreate3
+
+        if (isAccess){
+            return true;
+        }
+        if (RobustProguardMapping.isProguard()){
+            String unProguardMethodName = ProguardUtils.getUnProguardMethodName(methodCall);
+            if (unProguardMethodName.contains("access$")){
+                isAccess = true;
+            }
+        }
+        if (isAccess) {
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isAccess$Method(ClassNode classNode, MethodNode methodNode){
+        if (!ProguardUtils.isProguard()){
+            return methodNode.name.contains("access$");
+        }
+
+        String dotClassName = classNode.name.replace("/",".");
+        String proguardMethodName = methodNode.name;
+        String proguardMethodSignature = methodNode.desc;
+
+        CtClass ctClass = null;
+        try {
+            ctClass = Config.classPool.get(dotClassName);
+            for (CtMethod ctMethod :ctClass.getDeclaredMethods()){
+
+            }
+        } catch (Exception e) {
+            RobustLog.log("Exception in 296",e);
+        }
+
+        CtMethod lambdaCtMethod = null;
+        try {
+            lambdaCtMethod = ctClass.getMethod(proguardMethodName, proguardMethodSignature);
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+        if (null == lambdaCtMethod) {
+            RobustLog.log("null == lambdaCtMethod 226");
+        }
+
+        String methodSignure = null;
+        try {
+            methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
+        } catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+
+        String methodLongName = dotClassName + "." + methodSignure;
+        String unProguardMethodLongName = getUnProguardMethodLongName(methodLongName);
+        JavaUtils.MethodInfo methodInfo = new JavaUtils.MethodInfo(unProguardMethodLongName);
+        if (null != methodInfo) {
+            if (null != methodInfo.methodName) {
+//                        RobustLog.log(" -getUnProguardMethodName-> 1 ：" + methodLongName);
+//                        RobustLog.log(" -getUnProguardMethodName-> 2 ：" + unProguardMethodLongName);
+                return methodInfo.methodName.contains("access$");
+            }
+        }
+
+        return false;
+    }
+
 
     public static boolean isAccess$Method(MethodCall methodCall) {
+        if (isAccessMethod2(methodCall)){
+            return true;
+        }
+
         if (!RobustProguardMapping.isProguard()){
             return methodCall.getMethodName().contains("access$");
         }
@@ -288,7 +367,7 @@ public class ProguardUtils {
             }
             CtClass innerCtClass = null;
             try {
-                innerCtClass = Config.classPool.getCtClass(callClassName);
+                innerCtClass = classPool.getCtClass(callClassName);
             } catch (NotFoundException e) {
                 e.printStackTrace();
             }
