@@ -4,6 +4,7 @@ import com.android.annotations.NonNull;
 import com.meituan.robust.autopatch.Config;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.change.RobustCodeChangeChecker;
+import com.meituan.robust.utils.ProguardUtils;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -56,7 +57,7 @@ public class DiffLineByLine {
 //                    }
 //                }
                 if (line1.contains("LDC") && line2.contains("LDC")){
-                    if (originalClass.name.contains("$$Lambda$") && updatedClass.name.contains("$$Lambda$")){
+                    if (/*originalClass.name.contains("$$Lambda$") &&*/ ProguardUtils.isUpdateClassNameHas$$Lambda$(updatedClass.name)){
                         String md5_1= line1.replace("LDC","").replace("\"","").trim();
                         String md5_2= line2.replace("LDC","").replace("\"","").trim();
                         if (checkMD5Valid(md5_1) && checkMD5Valid(md5_2)){

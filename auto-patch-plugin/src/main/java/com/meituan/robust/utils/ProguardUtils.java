@@ -268,4 +268,15 @@ public class ProguardUtils {
         boolean isInExceptPackage = dotClassName.startsWith(exceptPackage.trim()) || dotClassName.startsWith(exceptPackage.trim().replace(".", File_SEPARATOR));
         return isInExceptPackage;
     }
+
+    public static boolean isUpdateClassNameHas$$Lambda$(String updatedClassName){
+        if (RobustProguardMapping.isProguard()){
+//            updatedClassName com/sample/test/
+            updatedClassName = updatedClassName.replace("/",".");
+            String proguardDotClassName = updatedClassName;
+            String unProguardDotClassName = RobustProguardMapping.getUnProguardName(proguardDotClassName);
+            updatedClassName = unProguardDotClassName;
+        }
+        return updatedClassName.contains("$$Lambda$");
+    }
 }
