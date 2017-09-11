@@ -100,13 +100,13 @@ public class RobustMethodCallEditorUtils2 {
         }
 
         if (sourceClass.getName().equals(methodTargetClass.getName())) {
-//            replaceThisToOriginClassMethodDirectly(m);
+//            replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
         } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
             //// TODO: 17/8/7 判断是否父类方法 或者本类方法
             //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
 //            System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
             //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
-//            replaceThisToOriginClassMethodDirectly(m);
+//            replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
         }
         String $0_str = "$0";
 

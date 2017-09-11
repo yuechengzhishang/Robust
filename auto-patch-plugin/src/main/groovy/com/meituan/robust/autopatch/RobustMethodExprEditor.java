@@ -67,7 +67,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         try {
             CtClass outerCtClass = sourceClass.getDeclaringClass();
             String outerClassName = outerCtClass.getName();
-            if (null == outerClassName || "".equals(outerClassName)){
+            if (null == outerClassName || "".equals(outerClassName)) {
 
             } else {
                 if (outerClassName.equals(f.getField().getType().getName())) {
@@ -77,8 +77,8 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         } catch (NotFoundException e) {
 //            e.printStackTrace();
-            RobustLog.log("NotFoundException e",e);
-        } catch (NullPointerException e){
+            RobustLog.log("NotFoundException e", e);
+        } catch (NullPointerException e) {
 //            RobustLog.log("NullPointerException e",e);
         }
         if (false == isThis$0) {
@@ -105,7 +105,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             RobustLog.log("Field access replace NotFoundException", e);
 //            throw new RuntimeException(e.getMessage());
         } catch (javassist.CannotCompileException e) {
-            if (e.getMessage().contains("no such field:")){
+            if (e.getMessage().contains("no such field:")) {
 
             } else {
                 RobustLog.log("Field access replace NotFoundException", e);
@@ -228,7 +228,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 //        android.view.View$OnClickListener lambdaFactory$(com.meituan.sample.TestPatchActivity) -> a
 
         //m.getMethodName().contains("lambdaFactory$")
-        if (outerMethodIsStatic == false && ProguardUtils.isLambdaFactoryMethod(sourceClass.getName(),patchClass.getName(),m.getClassName(),m.getMethodName(),m.getSignature())) {
+        if (outerMethodIsStatic == false && ProguardUtils.isLambdaFactoryMethod(sourceClass.getName(), patchClass.getName(), m.getClassName(), m.getMethodName(), m.getSignature())) {
 //            lambdaFactory$(..) is not found in com.meituan.sample.SecondActivity$$Lambda$2
             try {
                 RobustMethodCallEditorUtils2.handleLambdaFactory(ctMethod, m, patchClass, sourceClass);
@@ -278,7 +278,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         } catch (NotFoundException e) {
             e.printStackTrace();
         }
-        if (null == callCtMethod){
+        if (null == callCtMethod) {
             RobustLog.log("it is");
         }
         boolean callMethodIsStatic = isStatic(callCtMethod.getModifiers());
@@ -434,8 +434,8 @@ public class RobustMethodExprEditor extends ExprEditor {
                         return;
                     }
                 }
-            } catch (Exception e){
-                RobustLog.log("Exception 480 ",e);
+            } catch (Exception e) {
+                RobustLog.log("Exception 480 ", e);
             }
 
 
@@ -460,23 +460,23 @@ public class RobustMethodExprEditor extends ExprEditor {
                     CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
                     if (sourceClass.getName().equals(methodTargetClass.getName()) || patchClass.getName().equals(methodTargetClass.getName())) {
-                        replaceThisToOriginClassMethodDirectly(m);
+                        replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
                         return;
                     } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
                         //// TODO: 17/8/7 判断是否父类方法 或者本类方法
                         //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
 //                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
                         //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
-                        replaceThisToOriginClassMethodDirectly(m);
+                        replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
                         return;
                     } else {
                         //do noting // TODO: 17/9/6
                         boolean isOuterMethod = false;
                         try {
                             CtClass outerCtClass = sourceClass.getDeclaringClass();
-                            if (null != outerCtClass){
+                            if (null != outerCtClass) {
                                 String outerClassName = outerCtClass.getName();
-                                if (null == outerClassName || "".equals(outerClassName)){
+                                if (null == outerClassName || "".equals(outerClassName)) {
 
                                 } else {
                                     if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
@@ -525,25 +525,50 @@ public class RobustMethodExprEditor extends ExprEditor {
     }
 
 
-    public void replaceThisToOriginClassMethodDirectly(MethodCall m) throws NotFoundException, CannotCompileException {
+    public void replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(MethodCall m) throws NotFoundException, CannotCompileException {
+        if (!RobustChangeInfo.isInvariantMethod(m.getMethod())) {
+            //新方法不用处理，老方法需要走下面的逻辑
+        }
         int accessFlag = m.getMethod().getModifiers();
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
-            return;
-        }
+            MethodCall methodCall = m;
+            String methodParamSignature = getParameterClassString(methodCall.getMethod().getParameterTypes());
+            methodParamSignature = methodParamSignature.replaceAll(patchClass.getName(),sourceClass.getName());
+            StringBuilder stringBuilder = new StringBuilder();
+            String methodTargetClassName = methodCall.getMethod().getDeclaringClass().getName();
+            if (patchClass.getName().equals(methodTargetClassName)) {
+                methodTargetClassName = sourceClass.getName();
+            }
+            stringBuilder.append("{");
+            stringBuilder.append("java.lang.Object " + " instance;");
+            stringBuilder.append("instance = ((" + patchClass.getName() + ")$0)." + Constants.ORIGINCLASS + ";");
+            if (methodParamSignature.toString().length() > 0) {
+                //// TODO: 17/9/7  parameters
+                String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null, methodCall, patchClass, sourceClass);
+                paramsStr = paramsStr.replace("(", "").replace(")", "");
+                stringBuilder.append("java.lang.Object parameters[]= new Object[]{" + paramsStr + "};");
+                stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,parameters,new Class[]{" + methodParamSignature.toString() + "}," + methodTargetClassName + ".class);");
+            } else
+                stringBuilder.append("$_=($r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,$args,null," + methodTargetClassName + ".class);");
 
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("{");
-        stringBuilder.append(getParamsThisReplacedString(m));
-        stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
-        stringBuilder.append("}");
-        m.replace(stringBuilder.toString());
+            stringBuilder.append("}");
+            m.replace(stringBuilder.toString());
+            return;
+        } else {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("{");
+                stringBuilder.append(getParamsThisReplacedString(m));
+                stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
+                stringBuilder.append("}");
+                m.replace(stringBuilder.toString());
+        }
     }
 
     public void replaceThisToOriginClassMethodDirectlyByCallOuterMethod(MethodCall m) throws NotFoundException, CannotCompileException {
         int accessFlag = m.getMethod().getModifiers();
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
             //反射
-           System.err.println("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
+            System.err.println("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
         } else {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("{");
@@ -552,8 +577,8 @@ public class RobustMethodExprEditor extends ExprEditor {
             stringBuilder.append("}");
             try {
                 m.replace(stringBuilder.toString());
-            } catch (Throwable e){
-                RobustLog.log("replace error",e);
+            } catch (Throwable e) {
+                RobustLog.log("replace error", e);
             }
 
         }
@@ -698,7 +723,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         } else {
 
             String methodTargetClassName = methodCall.getMethod().getDeclaringClass().getName();
-            if (patchClass.getName().equals(methodTargetClassName)){
+            if (patchClass.getName().equals(methodTargetClassName)) {
                 methodTargetClassName = sourceClassName;
             }
 
@@ -732,10 +757,10 @@ public class RobustMethodExprEditor extends ExprEditor {
 //               todo 考虑使用这个 RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class();
                 if (signatureBuilder.toString().length() > 0) {
                     //// TODO: 17/9/7  parameters
-                    String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null,methodCall,patchClass,Config.classPool.get(sourceClassName));
-                    paramsStr = paramsStr.replace("(","").replace(")","");
-                    stringBuilder.append("java.lang.Object parameters[]= new Object[]{"+paramsStr+"};");
-                    stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,parameters,new Class[]{" + signatureBuilder.toString() + "},"+methodTargetClassName+".class);");
+                    String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null, methodCall, patchClass, Config.classPool.get(sourceClassName));
+                    paramsStr = paramsStr.replace("(", "").replace(")", "");
+                    stringBuilder.append("java.lang.Object parameters[]= new Object[]{" + paramsStr + "};");
+                    stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,parameters,new Class[]{" + signatureBuilder.toString() + "}," + methodTargetClassName + ".class);");
                 } else
                     stringBuilder.append("$_=($r)" + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,$args,null," + methodTargetClassName + ".class);");
 

@@ -155,7 +155,7 @@ public class CodeTransformUnion {
 //        println("recordOuterMethodModifiedAnonymousClassNameList is :")
 //        JavaUtils.printList(Config.recordOuterMethodModifiedAnonymousClassNameList)
 
-        println("fix that unchanged lambda class really: ")
+//        println("fix that unchanged lambda class really: ")
         //fix start lambdaUnchangedReallyClassNameHashMap
 //        List<String> newModifiedClassNameList = new ArrayList<>();
 //        for (String className : Config.modifiedClassNameList) {

@@ -15,7 +15,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
-#-applymapping /Users/hedingxu/robust-github/Robust/app/robust/mapping.txt
+-applymapping /Users/hedingxu/robust-github/Robust/app/robust/mapping.txt
 -dontwarn
 -keepattributes Signature,SourceFile,LineNumberTable
 -keepattributes *Annotation*

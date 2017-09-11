@@ -179,7 +179,6 @@ public class CheckCodeChanges {
                                     String dotClassNameTemp = className.replace(".class", "").replace("/", ".");
                                     //如果lambda表达式&匿名内部类的变更，当做是新增的
                                     if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(dotClassNameTemp)){
-
                                         ClassNode anonymousClassNode = newClassNode;
                                         OuterClassMethodAnonymousClassUtils.recordOuterClassMethod(anonymousClassNode);
 
@@ -188,8 +187,8 @@ public class CheckCodeChanges {
                                             Config.modifiedAnonymousClassNameList.add(dotClassNameTemp);
                                         }
                                     } else if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassNameTemp)){
-                                        ClassNode lambdaClassNode = newClassNode;
-                                        OuterClassMethodLambdaClassUtils.recordOuterClassMethod(lambdaClassNode);
+//                                        ClassNode lambdaClassNode = newClassNode;
+//                                        OuterClassMethodLambdaClassUtils.recordOuterClassMethod(lambdaClassNode);
 
                                         RobustChangeInfo.changeClasses.add(classChange);
                                         if (!Config.modifiedLambdaClassNameList.contains(dotClassNameTemp)){

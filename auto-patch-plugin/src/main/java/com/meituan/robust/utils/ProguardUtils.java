@@ -532,6 +532,71 @@ public class ProguardUtils {
         return lambdaClassName2;
     }
 
+    public static String getAnonymousClassNameFromLine(String line){
+//        new-instance
+        String tempLine = new String(line);
+        if (tempLine.contains("new-instance ")){
+            if (tempLine.contains(",")){
+                if (tempLine.contains("L")){
+                    if (tempLine.contains(";")){
+                        int start = tempLine.indexOf("L");
+                        int end = tempLine.indexOf(";");
+                        String proguardClassName = tempLine.substring(start+1,end);
+                        return proguardClassName;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public static boolean mayAnonymousClassNameFromLine(String line){
+        //        new-instance
+        String tempLine = new String(line);
+        if (tempLine.contains("new-instance ")){
+            if (tempLine.contains(",")){
+                if (tempLine.contains("L")){
+                    if (tempLine.contains(";")){
+                        int start = tempLine.indexOf("L");
+                        int end = tempLine.indexOf(";");
+//                        String proguardClassName = tempLine.substring(start+1,end);
+                        return end > start+1;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public static boolean anonymousClassNameFromLine2(String line2){
+        if (mayAnonymousClassNameFromLine(line2)){
+            String proguardAnonymousDotClass = getAnonymousClassNameFromLine2(line2);
+            if (ProguardUtils.isProguard()){
+                proguardAnonymousDotClass  = RobustProguardMapping.getUnProguardName(proguardAnonymousDotClass);
+            }
+            return AnonymousLambdaUtils.isAnonymousInnerClass_$1(proguardAnonymousDotClass);
+        }
+        return false;
+    }
+
+    public static String getAnonymousClassNameFromLine2(String line2){
+//        new-instance
+        String tempLine = new String(line2);
+        if (tempLine.contains("new-instance ")){
+            if (tempLine.contains(",")){
+                if (tempLine.contains("L")){
+                    if (tempLine.contains(";")){
+                        int start = tempLine.indexOf("L");
+                        int end = tempLine.indexOf(";");
+                        String proguardDotClassName = tempLine.substring(start+1,end).replace("/",".");
+                        return proguardDotClassName;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 
     public static boolean isClassNameHas$(String customInnerClassName){
         if (ProguardUtils.isProguard()) {

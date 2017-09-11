@@ -7,13 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.meituan.robust.utils.EnhancedRobustUtils;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.L;
-
 /**
  * Created by hedingxu on 17/6/16.
  */
@@ -91,8 +84,8 @@ public class TestPatchActivity extends AppCompatActivity{
         View view = findViewById(R.id.patch_text);
         View.OnClickListener clickListener =
                 v -> {
-                    Log.d("robust", " onclick  in Listener" + hello());
-                    Toast.makeText(getApplicationContext(), "T onclick Listener in lambda ", Toast.LENGTH_SHORT).show();
+                    Log.d("robust", " onclick  in Listener Patch" /*+ hello()*/);
+//                    Toast.makeText(getApplicationContext(), "T onclick Listener in lambda Patch", Toast.LENGTH_SHORT).show();
                 };
 
         view.setOnClickListener(clickListener);
