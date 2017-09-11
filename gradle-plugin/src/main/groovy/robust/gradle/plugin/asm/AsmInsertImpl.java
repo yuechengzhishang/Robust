@@ -142,6 +142,9 @@ public class AsmInsertImpl extends InsertcodeStrategy {
             if (needInsertCode){
                 needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
             }
+            if (name.startsWith("lambda$")){
+                needInsertCode = true;
+            }
             if (needInsertCode) {
                 StringBuilder parameters = new StringBuilder();
                 Type[] types = Type.getArgumentTypes(desc);

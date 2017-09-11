@@ -214,18 +214,18 @@ public class CodeTransformUnion {
 //        }
 
 //        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
-//        for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
-//            OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap.get(anonymousClassName);
-//            //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
-//            if (null != outerMethodInfo){
-//                if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
-//                    //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
-//                    //todo 9-9
-//                } else {
-//                    Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
-//                }
-//            }
-//        }
+        for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
+            OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap.get(anonymousClassName);
+            //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
+            if (null != outerMethodInfo){
+                if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
+                    //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
+                    //todo 9-9
+                } else {
+                    Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
+                }
+            }
+        }
 
         for (String modifiedClassName : Config.modifiedClassNameList) {
             CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
@@ -347,7 +347,6 @@ public class CodeTransformUnion {
             }
             throw new RuntimeException(" patch method is empty ,please check your commit ")
         }
-//            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
 
         HashMap<String, HashSet<OuterClassMethodAnonymousClassUtils.OuterMethodInfo>> changedAnonymousInfoMap =
                 OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap;
