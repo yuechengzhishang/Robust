@@ -36,7 +36,8 @@ public final class Config {
     public static List<String> modifiedLambdaClassNameList = new ArrayList<String>();
     public static List<String> modifiedAnonymousClassNameList = new ArrayList<String>();
 
-    public static List<String> modifiedAnonymousInnerClassNameList = new ArrayList<String>();
+    public static List<String> recordOuterMethodModifiedAnonymousClassNameList = new ArrayList<String>();
+    public static List<String> recordOuterMethodModifiedLambdaClassNameList = new ArrayList<String>();
     public static JarFile oldJar ;
     public static JarFile newJar ;
     public static HashMap<String,String> lambdaUnchangedReallyClassNameHashMap = new HashMap<String, String>();

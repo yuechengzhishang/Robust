@@ -152,8 +152,8 @@ public class CodeTransformUnion {
 //        println("newlyAddedClassNameList is ：")
 //        JavaUtils.printList(Config.newlyAddedClassNameList)
 //
-//        println("modifiedAnonymousInnerClassNameList is :")
-//        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
+//        println("recordOuterMethodModifiedAnonymousClassNameList is :")
+//        JavaUtils.printList(Config.recordOuterMethodModifiedAnonymousClassNameList)
 
         println("fix that unchanged lambda class really: ")
         //fix start lambdaUnchangedReallyClassNameHashMap
@@ -177,15 +177,15 @@ public class CodeTransformUnion {
 //        }
 //        Config.newlyAddedClassNameList = newlyAddedClassNameList;
 
-//        List<String> modifiedAnonymousInnerClassNameList = new ArrayList<>();
-//        for (String className : Config.modifiedAnonymousInnerClassNameList) {
+//        List<String> recordOuterMethodModifiedAnonymousClassNameList = new ArrayList<>();
+//        for (String className : Config.recordOuterMethodModifiedAnonymousClassNameList) {
 //            if (Config.lambdaUnchangedReallyClassNameHashMap.containsKey(className)) {
 //
 //            } else {
-//                modifiedAnonymousInnerClassNameList.add(className);
+//                recordOuterMethodModifiedAnonymousClassNameList.add(className);
 //            }
 //        }
-//        Config.modifiedAnonymousInnerClassNameList = modifiedAnonymousInnerClassNameList;
+//        Config.recordOuterMethodModifiedAnonymousClassNameList = recordOuterMethodModifiedAnonymousClassNameList;
         //fix end
 
         println("modifiedClassNameList is ：")
@@ -200,13 +200,13 @@ public class CodeTransformUnion {
         println("modifiedLambdaClassNameList is ：")
         JavaUtils.printList(Config.modifiedLambdaClassNameList)
 
-//        println("modifiedAnonymousInnerClassNameList is :")
-//        JavaUtils.printList(Config.modifiedAnonymousInnerClassNameList)
+//        println("recordOuterMethodModifiedAnonymousClassNameList is :")
+//        JavaUtils.printList(Config.recordOuterMethodModifiedAnonymousClassNameList)
 
 
 
-//        println("convert modifiedAnonymousInnerClassNameList to newAddClassNameList:")
-//        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
+//        println("convert recordOuterMethodModifiedAnonymousClassNameList to newAddClassNameList:")
+//        for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
 //            if (Config.newlyAddedClassNameList.contains(anonymousClassName)) {
 //            } else {
 //                Config.newlyAddedClassNameList.add(anonymousClassName)
@@ -214,8 +214,8 @@ public class CodeTransformUnion {
 //        }
 
 //        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
-//        for (String anonymousClassName : Config.modifiedAnonymousInnerClassNameList) {
-//            AnonymousClassOuterClassMethodUtils.OuterMethodInfo outerMethodInfo = AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap.get(anonymousClassName);
+//        for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
+//            OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap.get(anonymousClassName);
 //            //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
 //            if (null != outerMethodInfo){
 //                if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
@@ -349,8 +349,8 @@ public class CodeTransformUnion {
         }
 //            Config.methodNeedPatchSet.addAll(Config.patchMethodSignatureSet)
 
-        HashMap<String, HashSet<AnonymousClassOuterClassMethodUtils.OuterMethodInfo>> changedAnonymousInfoMap =
-                AnonymousClassOuterClassMethodUtils.changedAnonymousOuterMethodInfoMap;
+        HashMap<String, HashSet<OuterClassMethodAnonymousClassUtils.OuterMethodInfo>> changedAnonymousInfoMap =
+                OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap;
 
         if (changedAnonymousInfoMap.size() > 0) {
             for (String anonymousClassName : changedAnonymousInfoMap.keySet()) {

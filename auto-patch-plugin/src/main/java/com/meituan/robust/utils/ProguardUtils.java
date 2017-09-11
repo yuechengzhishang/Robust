@@ -548,4 +548,18 @@ public class ProguardUtils {
         return subClassName.startsWith(outerClassName);
     }
 
+    public static String getLambdaClassOuterClassDotName(String lambdaDotClassName){
+        String unProguardLambdaName = lambdaDotClassName;
+        if (ProguardUtils.isProguard()) {
+            unProguardLambdaName = RobustProguardMapping.getUnProguardName(lambdaDotClassName);
+        }
+
+        String unProguardOuterClassDotName = LambdaUtils.getOuterClassName(unProguardLambdaName);
+        String proguardOuterClassDotName = unProguardOuterClassDotName;
+        if (ProguardUtils.isProguard()) {
+            proguardOuterClassDotName = RobustProguardMapping.getProguardName(unProguardOuterClassDotName);
+        }
+        return proguardOuterClassDotName;
+    }
+
 }

@@ -84,7 +84,7 @@ class PatchesFactory {
         //执行替换
         for (CtMethod method : temPatchClass.getDeclaredMethods()) {
             //对于内部类带来的方法修改，需要处理
-            if (AnonymousClassOuterClassMethodUtils.isModifiedByAnonymous(modifiedClass.name,method)){
+            if (OuterClassMethodAnonymousClassUtils.isModifiedByAnonymous(modifiedClass.name,method)){
 
             } else {
                 if (willDeleteCtMethods.contains(method)) {

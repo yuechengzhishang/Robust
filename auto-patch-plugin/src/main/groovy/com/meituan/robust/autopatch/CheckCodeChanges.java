@@ -179,14 +179,18 @@ public class CheckCodeChanges {
                                     String dotClassNameTemp = className.replace(".class", "").replace("/", ".");
                                     //如果lambda表达式&匿名内部类的变更，当做是新增的
                                     if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(dotClassNameTemp)){
-                                        ClassNode newAnonymousInnerClass = newClassNode;
-                                        AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
+
+                                        ClassNode anonymousClassNode = newClassNode;
+                                        OuterClassMethodAnonymousClassUtils.recordOuterClassMethod(anonymousClassNode);
+
                                         RobustChangeInfo.changeClasses.add(classChange);
                                         if (!Config.modifiedAnonymousClassNameList.contains(dotClassNameTemp)){
                                             Config.modifiedAnonymousClassNameList.add(dotClassNameTemp);
                                         }
                                     } else if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassNameTemp)){
-                                        //TODO: 17/9/7 需要记录改了lambda表达式的所包含的方法
+                                        ClassNode lambdaClassNode = newClassNode;
+                                        OuterClassMethodLambdaClassUtils.recordOuterClassMethod(lambdaClassNode);
+
                                         RobustChangeInfo.changeClasses.add(classChange);
                                         if (!Config.modifiedLambdaClassNameList.contains(dotClassNameTemp)){
                                             Config.modifiedLambdaClassNameList.add(dotClassNameTemp);
@@ -222,7 +226,7 @@ public class CheckCodeChanges {
 //                                byte[] newClassBytes = new RobustCodeChangeChecker.ClassBytesJarEntryProvider(newJar, jarEntry).load();
 //                                ClassNode newClassNode = RobustCodeChangeChecker.getClassNode(newClassBytes);
 //                                ClassNode newAnonymousInnerClass = newClassNode;
-//                                AnonymousClassOuterClassMethodUtils.recordOuterClassMethod(newAnonymousInnerClass);
+//                                OuterClassMethodAnonymousClassUtils.recordOuterClassMethod(newAnonymousInnerClass);
 //                            }
                         }
                         //end
@@ -233,7 +237,7 @@ public class CheckCodeChanges {
         }
 
         ChangeLog.print();
-//        RetrolambdaUtils.handleLambda(newEntries,backupEntries,backupJar,newJar);
+//        LambdaUtils.handleLambda(newEntries,backupEntries,backupJar,newJar);
     }
 
     public

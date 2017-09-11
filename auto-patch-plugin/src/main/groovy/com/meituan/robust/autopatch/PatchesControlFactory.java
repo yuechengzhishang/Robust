@@ -171,7 +171,7 @@ public class PatchesControlFactory {
             }
 
             //对于内部类带来的方法修改，需要处理
-            if (AnonymousClassOuterClassMethodUtils.isModifiedByAnonymous(modifiedClassName, ctMethod)) {
+            if (OuterClassMethodAnonymousClassUtils.isModifiedByAnonymous(modifiedClassName, ctMethod)) {
                 if (modifiedCtMethodList.contains(ctMethod)){
                    //ignore
                 } else {
