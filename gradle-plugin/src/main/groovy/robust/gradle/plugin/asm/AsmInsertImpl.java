@@ -51,7 +51,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         ZipOutputStream outStream = new JarOutputStream(new FileOutputStream(jarFile));
         for (CtClass ctClass : box) {
             ctClass.setModifiers(AccessFlag.setPublic(ctClass.getModifiers()));
-            if (isNeedInsertClass(ctClass.getName()) && !(ctClass.isInterface() || ctClass.getDeclaredMethods().length < 1)) {
+            if (isNeedInsertClass(ctClass.getName())){
                 for (CtField ctField:ctClass.getDeclaredFields()){
                     int modifiers = ctField.getModifiers();
                     if (AccessFlag.isPackage(modifiers)){
@@ -59,6 +59,8 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                         ctField.setModifiers(modifiers);
                     }
                 }
+            }
+            if (isNeedInsertClass(ctClass.getName()) && !(ctClass.isInterface() || ctClass.getDeclaredMethods().length < 1)) {
                 zipFile(transformCode(ctClass.toBytecode(), ctClass.getName().replaceAll("\\.", "/")), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
             } else {
                 zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
