@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch
 
 import com.meituan.robust.Constants
+import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.change.comparator.ByteCodeUtils
 import com.meituan.robust.utils.JavaUtils
 import javassist.*
@@ -33,7 +34,7 @@ class PatchesFactory {
         CtClass temPatchClass = cloneClass(modifiedClass, patchName, methodNoNeedPatchList);
 
         //把所有的方法访问属性都改成public
-        changeMethodToPublicAndUnAbstract(temPatchClass)
+        changeMethodUnAbstract(temPatchClass)
 
         List<CtMethod> willDeleteCtMethods = new ArrayList<CtMethod>();
         for (CtMethod ctMethod : temPatchClass.getDeclaredMethods()) {
@@ -250,19 +251,19 @@ class PatchesFactory {
 
     }
 
-    public static void changeMethodToPublicAndUnAbstract(CtClass ctClass) {
-        //方法访问属性转为public;并去掉abstract
+    public static void changeMethodUnAbstract(CtClass ctClass) {
+        //并去掉abstract
         CtMethod[] ctMethods = ctClass.getDeclaredMethods();
         if (null == ctMethods || 0 == ctMethods.length) {
             return;
         }
         for (CtMethod method : ctMethods) {
-            if (com.meituan.robust.change.RobustChangeInfo.isInvariantMethod(method)){
+            if (RobustChangeInfo.isInvariantMethod(method)){
                 return;
             }
             int originModifiers = method.getModifiers();
-            int publicModifiers = AccessFlag.setPublic(originModifiers);
-            int unAbstractModifiers = AccessFlag.clear(publicModifiers, AccessFlag.ABSTRACT);
+//            int publicModifiers = AccessFlag.setPublic(originModifiers);
+            int unAbstractModifiers = AccessFlag.clear(originModifiers, AccessFlag.ABSTRACT);
             method.setModifiers(unAbstractModifiers);
         }
     }

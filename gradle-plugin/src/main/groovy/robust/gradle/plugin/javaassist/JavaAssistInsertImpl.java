@@ -158,7 +158,7 @@ public class JavaAssistInsertImpl extends InsertcodeStrategy {
     private void changeMethodPackage2Public(CtBehavior it){
         if (it.getMethodInfo().isMethod()) {
             if (AccessFlag.isPackage(it.getModifiers())) {
-                System.err.println("change package to public method: " + it.getName());
+//                System.err.println("change package to public method: " + it.getName());
                 it.setModifiers(AccessFlag.setPublic(it.getModifiers()));
             }
         }

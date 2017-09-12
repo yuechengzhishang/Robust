@@ -200,6 +200,14 @@ public class CodeTransformUnion {
         println("modifiedLambdaClassNameList is ：")
         JavaUtils.printList(Config.modifiedLambdaClassNameList)
 
+        //从modifiedClassNameList & newlyAddedClassNameList移除
+        Config.newlyAddedClassNameList.removeAll(Config.modifiedAnonymousClassNameList)
+        Config.newlyAddedClassNameList.removeAll(Config.modifiedLambdaClassNameList)
+
+        Config.modifiedClassNameList.removeAll(Config.modifiedAnonymousClassNameList)
+        Config.modifiedClassNameList.removeAll(Config.modifiedLambdaClassNameList)
+
+
 //        println("recordOuterMethodModifiedAnonymousClassNameList is :")
 //        JavaUtils.printList(Config.recordOuterMethodModifiedAnonymousClassNameList)
 
