@@ -279,7 +279,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             e.printStackTrace();
         }
         if (null == callCtMethod) {
-            RobustLog.log("it is");
+            RobustLog.log("callCtMethod is null ");
         }
         boolean callMethodIsStatic = isStatic(callCtMethod.getModifiers());
         //callMethodIsStatic
