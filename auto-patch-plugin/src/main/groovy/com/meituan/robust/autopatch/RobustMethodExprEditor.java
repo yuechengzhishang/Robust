@@ -404,18 +404,14 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
 
         if (outerMethodIsStatic) {
-            /*
-            protected void onCreate(@Nullable Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
-                setContentView(R.layout.activity_robust_compat);
-                Toast.makeText(this, "Hello onCreate TestPatchActivity", Toast.LENGTH_SHORT).show();
-            }
-            */
 
             try {
                 CtClass methodTargetClass = m.getMethod().getDeclaringClass();
                 if (patchClass.getName().equals(methodTargetClass.getName())) {
-                    if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
+                    if (RobustChangeInfo.isNewAddMethod(callCtMethod)) {
+                        //do nothing
+                        return;
+                    } else {
                         if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
                             //need to reflect static method
                             String statement = "$_=($r)" + sourceClass.getName() + "." + m.getMethod().getName() + "($$);";
@@ -429,9 +425,6 @@ public class RobustMethodExprEditor extends ExprEditor {
                             m.replace(getMethodCallString_this_static_method_call(m, patchClass, outerMethodIsStatic, sourceClass.getName()));
                             return;
                         }
-                    } else {
-                        //do nothing
-                        return;
                     }
                 }
             } catch (Exception e) {
@@ -456,6 +449,13 @@ public class RobustMethodExprEditor extends ExprEditor {
                     e.printStackTrace();
                 }
             } else {
+                /*
+            protected void onCreate(@Nullable Bundle savedInstanceState) {
+                super.onCreate(savedInstanceState);
+                setContentView(R.layout.activity_robust_compat);
+                Toast.makeText(this, "Hello onCreate TestPatchActivity", Toast.LENGTH_SHORT).show();
+            }
+            */
                 try {
                     CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
@@ -534,7 +534,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
             MethodCall methodCall = m;
             String methodParamSignature = getParameterClassString(methodCall.getMethod().getParameterTypes());
-            methodParamSignature = methodParamSignature.replaceAll(patchClass.getName(),sourceClass.getName());
+            methodParamSignature = methodParamSignature.replaceAll(patchClass.getName(), sourceClass.getName());
             StringBuilder stringBuilder = new StringBuilder();
             String methodTargetClassName = methodCall.getMethod().getDeclaringClass().getName();
             if (patchClass.getName().equals(methodTargetClassName)) {
@@ -556,12 +556,12 @@ public class RobustMethodExprEditor extends ExprEditor {
             m.replace(stringBuilder.toString());
             return;
         } else {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("{");
-                stringBuilder.append(getParamsThisReplacedString(m));
-                stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
-                stringBuilder.append("}");
-                m.replace(stringBuilder.toString());
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("{");
+            stringBuilder.append(getParamsThisReplacedString(m));
+            stringBuilder.append("$_=($r)this." + ORIGINCLASS + "." + m.getMethod().getName() + "($$);");
+            stringBuilder.append("}");
+            m.replace(stringBuilder.toString());
         }
     }
 
