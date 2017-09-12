@@ -30,6 +30,7 @@ import java.util.zip.ZipOutputStream;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.bytecode.AccessFlag;
 import robust.gradle.plugin.InsertcodeStrategy;
 
@@ -51,6 +52,13 @@ public class AsmInsertImpl extends InsertcodeStrategy {
         for (CtClass ctClass : box) {
             ctClass.setModifiers(AccessFlag.setPublic(ctClass.getModifiers()));
             if (isNeedInsertClass(ctClass.getName()) && !(ctClass.isInterface() || ctClass.getDeclaredMethods().length < 1)) {
+                for (CtField ctField:ctClass.getDeclaredFields()){
+                    int modifiers = ctField.getModifiers();
+                    if (AccessFlag.isPackage(modifiers)){
+                        modifiers = AccessFlag.setPublic(modifiers);
+                        ctField.setModifiers(modifiers);
+                    }
+                }
                 zipFile(transformCode(ctClass.toBytecode(), ctClass.getName().replaceAll("\\.", "/")), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
             } else {
                 zipFile(ctClass.toBytecode(), outStream, ctClass.getName().replaceAll("\\.", "/") + ".class");
