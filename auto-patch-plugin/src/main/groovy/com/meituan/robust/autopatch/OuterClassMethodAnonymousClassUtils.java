@@ -35,9 +35,7 @@ public class OuterClassMethodAnonymousClassUtils {
         // TODO: 17/9/1 需要记录改了lambda表达式的所包含的方法 完成一半
         if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
             String anonymousInnerClassclassName = anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, ".");
-            if (!Config.recordOuterMethodModifiedAnonymousClassNameList.contains(anonymousInnerClassclassName)){
-                Config.recordOuterMethodModifiedAnonymousClassNameList.add(anonymousInnerClassclassName);
-            }
+
             String outerClass = anonymousClassNode.outerClass;
             String outerMethod = anonymousClassNode.outerMethod;
             String outerMethodDesc = anonymousClassNode.outerMethodDesc;
@@ -62,6 +60,10 @@ public class OuterClassMethodAnonymousClassUtils {
             if (null == outerMethod){//outerMethod sometime is null
                 return;
             }
+            if (!Config.recordOuterMethodModifiedAnonymousClassNameList.contains(anonymousInnerClassclassName)){
+                Config.recordOuterMethodModifiedAnonymousClassNameList.add(anonymousInnerClassclassName);
+            }
+
             if (anonymousLambdaOuterMethodMap.containsKey(anonymousInnerClassclassName)){
                 System.err.println("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
             } else {
