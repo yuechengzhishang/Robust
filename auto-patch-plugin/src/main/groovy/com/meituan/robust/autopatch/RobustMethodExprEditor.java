@@ -528,6 +528,7 @@ public class RobustMethodExprEditor extends ExprEditor {
     public void replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(MethodCall m) throws NotFoundException, CannotCompileException {
         if (!RobustChangeInfo.isInvariantMethod(m.getMethod())) {
             //新方法不用处理，老方法需要走下面的逻辑
+            return;
         }
         int accessFlag = m.getMethod().getModifiers();
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
