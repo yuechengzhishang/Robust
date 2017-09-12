@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ public final class Config {
 
     public static List<String> recordOuterMethodModifiedAnonymousClassNameList = new ArrayList<String>();
     public static List<String> recordOuterMethodModifiedLambdaClassNameList = new ArrayList<String>();
+    public static HashMap<String, OuterClassMethodAnonymousClassUtils.OuterMethodInfo> recordAnonymousLambdaOuterMethodMap = new HashMap<String, OuterClassMethodAnonymousClassUtils.OuterMethodInfo>();
     public static JarFile oldJar ;
     public static JarFile newJar ;
     public static HashMap<String,String> lambdaUnchangedReallyClassNameHashMap = new HashMap<String, String>();

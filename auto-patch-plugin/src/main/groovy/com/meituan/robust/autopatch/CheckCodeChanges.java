@@ -5,6 +5,7 @@ import com.meituan.robust.change.ChangeLog;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.change.RobustCodeChangeChecker;
 import com.meituan.robust.utils.AnonymousLambdaUtils;
+import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils;
 import com.meituan.robust.utils.ProguardUtils;
 
 import org.objectweb.asm.tree.ClassNode;
@@ -180,7 +181,7 @@ public class CheckCodeChanges {
                                     //如果lambda表达式&匿名内部类的变更，当做是新增的
                                     if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(dotClassNameTemp)){
                                         ClassNode anonymousClassNode = newClassNode;
-                                        OuterClassMethodAnonymousClassUtils.recordOuterClassMethod(anonymousClassNode);
+                                        OuterClassMethodAnonymousClassUtils.recordOuterClassMethod(anonymousClassNode,newJar);
 
                                         RobustChangeInfo.changeClasses.add(classChange);
                                         if (!Config.modifiedAnonymousClassNameList.contains(dotClassNameTemp)){

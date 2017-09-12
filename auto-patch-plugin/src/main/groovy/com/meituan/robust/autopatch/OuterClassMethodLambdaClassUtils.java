@@ -8,7 +8,7 @@
 //import javassist.CtMethod;
 //
 //import static com.meituan.robust.Constants.File_SEPARATOR;
-//import static com.meituan.robust.autopatch.OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap;
+//import static com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils.recordAnonymousLambdaOuterMethodMap;
 //
 ///**
 // * lambda不用记录outerClass，只要lambda改了，对应的outerClass肯定改了
@@ -56,18 +56,18 @@
 //            if (null == outerMethod){//outerMethod sometime is null
 //                return;
 //            }
-//            if (anonymousLambdaOuterMethodMap.containsKey(lambdaClassName)){
+//            if (recordAnonymousLambdaOuterMethodMap.containsKey(lambdaClassName)){
 //                System.err.println("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
 //            } else {
 //                String dotOuterClass = outerClass.replace("/", ".");
 //                OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = new OuterClassMethodAnonymousClassUtils.OuterMethodInfo(dotOuterClass, outerMethod, outerMethodDesc);
-//                anonymousLambdaOuterMethodMap.put(lambdaClassName,outerMethodInfo);
+//                recordAnonymousLambdaOuterMethodMap.put(lambdaClassName,outerMethodInfo);
 //            }
 //        }
 //    }
 //
 //    public static boolean isModifiedByAnonymous(String outerClassName, CtMethod ctMethod){
-//        for (OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo : anonymousLambdaOuterMethodMap.values()){
+//        for (OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo : recordAnonymousLambdaOuterMethodMap.values()){
 //            if (outerClassName.equals(outerMethodInfo.outerClass)){
 //                if (ctMethod.getName().equals(outerMethodInfo.outerMethod)){
 //                    if (ctMethod.getSignature().equals(outerMethodInfo.outerMethodDesc)){

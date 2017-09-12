@@ -1,15 +1,21 @@
-package com.meituan.robust.autopatch;
+package com.meituan.robust.utils;
 
-import com.meituan.robust.utils.AnonymousLambdaUtils;
+import com.meituan.robust.autopatch.Config;
+import com.meituan.robust.change.RobustChangeInfo;
+import com.meituan.robust.change.comparator.DiffLineByLine;
 
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.util.List;
+import java.util.jar.JarFile;
 
 import javassist.CtMethod;
 
 import static com.meituan.robust.Constants.File_SEPARATOR;
 import static com.meituan.robust.Constants.INIT_ROBUST_PATCH;
+import static com.meituan.robust.autopatch.Config.recordAnonymousLambdaOuterMethodMap;
 
 /**
  * Created by hedingxu on 17/8/29.
@@ -31,7 +37,7 @@ public class OuterClassMethodAnonymousClassUtils {
 //    outerMethod: null
 //    outerMethodDesc: null
 
-    public static void recordOuterClassMethod(ClassNode anonymousClassNode) {
+    public static void recordOuterClassMethod(ClassNode anonymousClassNode,JarFile newJarFile) {
         // TODO: 17/9/1 需要记录改了lambda表达式的所包含的方法 完成一半
         if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
             String anonymousInnerClassclassName = anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, ".");
@@ -50,7 +56,7 @@ public class OuterClassMethodAnonymousClassUtils {
 //        outerMethod: onCreate
 //        outerMethodDesc: (Landroid/os/Bundle;)V
 
-//todo 解决类似于这种问题 9-9
+//todo 解决类似于这种问题 9-1
 //            private View.OnClickListener listener = new View.OnClickListener() {
 //                @Override
 //                public void onClick(View v) {
@@ -64,21 +70,34 @@ public class OuterClassMethodAnonymousClassUtils {
                 Config.recordOuterMethodModifiedAnonymousClassNameList.add(anonymousInnerClassclassName);
             }
 
-            if (anonymousLambdaOuterMethodMap.containsKey(anonymousInnerClassclassName)){
+            if (recordAnonymousLambdaOuterMethodMap.containsKey(anonymousInnerClassclassName)){
                 System.err.println("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
             } else {
                 String dotOuterClass = outerClass.replace("/", ".");
                 OuterMethodInfo outerMethodInfo = new OuterMethodInfo(dotOuterClass, outerMethod, outerMethodDesc);
-                anonymousLambdaOuterMethodMap.put(anonymousInnerClassclassName,outerMethodInfo);
+
+                try {
+                    ClassNode outerClassNode = DiffLineByLine.getLambdaClassNode(anonymousClassNode.outerClass,newJarFile);
+                    for (MethodNode methodNode: (List<MethodNode>) outerClassNode.methods){
+                        if (methodNode.name.equals(anonymousClassNode.outerMethod) && methodNode.desc.equals(anonymousClassNode.outerMethodDesc)){
+                            RobustChangeInfo.ClassChange outerClassChange = new RobustChangeInfo.ClassChange();
+                            outerClassChange.classNode = outerClassNode;
+                            outerClassChange.methodChange = new RobustChangeInfo.MethodChange();
+                            outerClassChange.methodChange.changeList.add(methodNode);
+                            RobustChangeInfo.changeClassesByAnonymousLambdaClass.add(outerClassChange);
+                            break;
+                        }
+                    }
+                } catch (IOException e) {
+                    RobustLog.log("IOException 81",e);
+                }
+                recordAnonymousLambdaOuterMethodMap.put(anonymousInnerClassclassName,outerMethodInfo);
             }
         }
     }
 
-    public static HashMap<String, OuterMethodInfo> anonymousLambdaOuterMethodMap = new HashMap<String, OuterMethodInfo>();
-
-
     public static boolean isModifiedByAnonymous(String outerClassName, CtMethod ctMethod){
-        for (OuterMethodInfo outerMethodInfo : anonymousLambdaOuterMethodMap.values()){
+        for (OuterMethodInfo outerMethodInfo : recordAnonymousLambdaOuterMethodMap.values()){
             if (outerClassName.equals(outerMethodInfo.outerClass)){
                 if (ctMethod.getName().equals(outerMethodInfo.outerMethod)){
                     if (ctMethod.getSignature().equals(outerMethodInfo.outerMethodDesc)){

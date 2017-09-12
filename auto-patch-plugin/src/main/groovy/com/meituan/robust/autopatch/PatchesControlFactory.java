@@ -3,6 +3,7 @@ package com.meituan.robust.autopatch;
 import com.meituan.robust.Constants;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.JavaUtils;
+import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils;
 import com.meituan.robust.utils.ProguardUtils;
 
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class PatchesControlFactory {
             accessDispatchMethodBody.append("try{");
         }
         if (Constants.isLogging) {
-            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"arrivied in AccessDispatch \"+methodName+\" paramArrayOfObject  \");");
+            accessDispatchMethodBody.append("  android.util.Log.d(\"robust\",\"arrivied in AccessDispatch \"+$1+\" paramArrayOfObject  \");");
         }
         //create patch instance
         accessDispatchMethodBody.append(patchClass.getName() + " patch = new " + patchClass.getName() + "();\n");
@@ -188,7 +189,7 @@ public class PatchesControlFactory {
         StringBuilder isSupportBuilder = new StringBuilder();
         StringBuilder methodsIdBuilder = new StringBuilder();
         if (Constants.isLogging) {
-            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+methodName+\" paramArrayOfObject  \");");
+            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+$1+\" paramArrayOfObject  \");");
         }
         isSupportBuilder.append("String methodNo=$1.split(\":\")[3];\n");
         if (Constants.isLogging) {
@@ -213,7 +214,7 @@ public class PatchesControlFactory {
         }
 
         if (Constants.isLogging) {
-            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+methodName+\" paramArrayOfObject  \" +\" isSupport result is \"+\"" + methodsIdBuilder.toString() + "\".contains(methodNo));");
+            isSupportBuilder.append("  android.util.Log.d(\"robust\",\"arrivied in isSupport \"+$1+\" paramArrayOfObject  \" +\" isSupport result is \"+\"" + methodsIdBuilder.toString() + "\".contains(methodNo));");
         }
         isSupportBuilder.append("return \"" + methodsIdBuilder.toString() + "\".contains(methodNo);");
         return isSupportBuilder.toString();

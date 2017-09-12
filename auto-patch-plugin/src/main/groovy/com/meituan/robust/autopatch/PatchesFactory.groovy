@@ -4,6 +4,7 @@ import com.meituan.robust.Constants
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.change.comparator.ByteCodeUtils
 import com.meituan.robust.utils.JavaUtils
+import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils
 import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.bytecode.ClassFile

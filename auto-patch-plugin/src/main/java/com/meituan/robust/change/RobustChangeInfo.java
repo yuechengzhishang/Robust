@@ -20,6 +20,7 @@ public class RobustChangeInfo {
 
     public static List<String> addClasses = new ArrayList<String>();
     public static List<ClassChange> changeClasses = new ArrayList<ClassChange>();
+    public static List<ClassChange> changeClassesByAnonymousLambdaClass = new ArrayList<ClassChange>();
 
     public static class MethodChange {
         public List<MethodNode> invariantList = new ArrayList<MethodNode>();
@@ -229,7 +230,10 @@ public class RobustChangeInfo {
         }
         String methodName = ctMethod.getName();
         String signature = ctMethod.getSignature();
-        for (ClassChange classChange : changeClasses) {
+        List<ClassChange> allChangedClasses = new ArrayList<ClassChange>();
+        allChangedClasses.addAll(changeClasses);
+        allChangedClasses.addAll(changeClassesByAnonymousLambdaClass);
+        for (ClassChange classChange : allChangedClasses) {
             if (null != classChange) {
                 if (classChange.classNode.name.replace("/",".").equals(dotClass)) {
                     if (null != classChange.methodChange) {
@@ -246,9 +250,6 @@ public class RobustChangeInfo {
                                 }
                             }
                         }
-                        return false;
-                    } else {
-                        return false;
                     }
                 }
             }

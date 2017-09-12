@@ -8,6 +8,7 @@ import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.AnonymousLambdaUtils
 import com.meituan.robust.utils.JavaUtils
+import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils
 import com.meituan.robust.utils.ProguardUtils
 import com.meituan.robust.utils.RobustProguardMapping
 import javassist.*
@@ -208,27 +209,14 @@ public class CodeTransformUnion {
         Config.modifiedClassNameList.removeAll(Config.modifiedLambdaClassNameList)
 
 
-//        println("recordOuterMethodModifiedAnonymousClassNameList is :")
-//        JavaUtils.printList(Config.recordOuterMethodModifiedAnonymousClassNameList)
-
-
-
-//        println("convert recordOuterMethodModifiedAnonymousClassNameList to newAddClassNameList:")
-//        for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
-//            if (Config.newlyAddedClassNameList.contains(anonymousClassName)) {
-//            } else {
-//                Config.newlyAddedClassNameList.add(anonymousClassName)
-//            }
-//        }
-
 //        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
         for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
-            OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap.get(anonymousClassName);
+            OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = Config.recordAnonymousLambdaOuterMethodMap.get(anonymousClassName);
             //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
             if (null != outerMethodInfo){
                 if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
                     //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
-                    //todo 9-9
+                    //todo 9-1
                 } else {
                     Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
                 }
@@ -357,7 +345,7 @@ public class CodeTransformUnion {
         }
 
         HashMap<String, HashSet<OuterClassMethodAnonymousClassUtils.OuterMethodInfo>> changedAnonymousInfoMap =
-                OuterClassMethodAnonymousClassUtils.anonymousLambdaOuterMethodMap;
+                Config.recordAnonymousLambdaOuterMethodMap;
 
         if (changedAnonymousInfoMap.size() > 0) {
             for (String anonymousClassName : changedAnonymousInfoMap.keySet()) {
