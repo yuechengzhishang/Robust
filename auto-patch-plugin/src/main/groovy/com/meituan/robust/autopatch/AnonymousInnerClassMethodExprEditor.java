@@ -132,6 +132,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
                         List<String> paramList = new ArrayList<String>();
                         int index = 0;
                         StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append("{");
                         for (CtClass param : params) {
                             index++;
                             if (param.getName().equals(outerSourceClassName)) {
@@ -142,8 +143,11 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
                                 paramList.add("$" + index);
                             }
                         }
+
                         String statement = "$_=($r) " + outerPatchClassName + "." + m.getMethodName() + "(" + String.join(",",paramList)+ ")" + " ; ";
-                        m.replace(statement);
+                        stringBuilder.append(statement);
+                        stringBuilder.append("}");
+                        m.replace(stringBuilder.toString());
                     } catch (javassist.CannotCompileException e) {
                         RobustLog.log("javassist.CannotCompileException", e);
                     } catch (NotFoundException e) {
