@@ -79,11 +79,19 @@ public class RobustChangeInfo {
 
     public static boolean isNewAddMethod(CtMethod ctMethod){
         String dotClass = ctMethod.getDeclaringClass().getName();
+        String patchClassName = new String(dotClass);
+        if (dotClass.endsWith("Patch")) {
+            dotClass = dotClass + "ROBUST_FOR_DELETE";
+            String tempStr = "Patch" + "ROBUST_FOR_DELETE";
+            dotClass = dotClass.replace(tempStr,"");
+        }
+        String sourceClassName = new String(dotClass);
+
         String methodName = ctMethod.getName();
         String signature = ctMethod.getSignature();
         for (ClassChange classChange : changeClasses) {
             if (null != classChange) {
-                if (classChange.classNode.name.replace("/", ".").equals(dotClass)) {
+                if (classChange.classNode.name.replace("/", ".").equals(sourceClassName)) {
                     if (null != classChange.methodChange) {
                         List<MethodNode> changeMethodList = new ArrayList<MethodNode>();
                         changeMethodList.addAll(classChange.methodChange.addList);
@@ -102,10 +110,14 @@ public class RobustChangeInfo {
                                 if (methodNode.desc.equals(signature)) {
                                     return true;
                                 }
+                                if (!patchClassName.equals(sourceClassName)){
+                                    String signature2 = signature.replace(patchClassName.replace(".","/"),sourceClassName.replace(".","/"));
+                                    if (methodNode.desc.equals(signature2)){
+                                        return true;
+                                    }
+                                }
                             }
                         }
-                    } else {
-                        return false;
                     }
                 }
             }
