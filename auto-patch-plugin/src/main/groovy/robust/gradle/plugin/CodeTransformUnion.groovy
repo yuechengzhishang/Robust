@@ -467,6 +467,10 @@ public class CodeTransformUnion {
                         newName = oldName + "Patch";
                     }
 
+                if (null != Config.classPool.getOrNull(newName)){
+                    //patch is already in patch dir
+                    continue;
+                }
                     //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
                     tempLambdaOrAnonymousCtClass.defrost()
                     tempLambdaOrAnonymousCtClass.replaceClassName(oldName, newName)
