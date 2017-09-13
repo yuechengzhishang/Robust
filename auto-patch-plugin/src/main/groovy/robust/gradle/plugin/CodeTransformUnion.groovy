@@ -468,6 +468,7 @@ public class CodeTransformUnion {
                     }
 
                     //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
+                    tempLambdaOrAnonymousCtClass.defrost()
                     tempLambdaOrAnonymousCtClass.replaceClassName(oldName, newName)
                     tempLambdaOrAnonymousCtClass.writeFile(Config.robustGenerateDirectory)
 
