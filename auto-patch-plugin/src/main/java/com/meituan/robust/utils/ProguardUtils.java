@@ -303,6 +303,7 @@ public class ProguardUtils {
         }
         if (null == lambdaCtMethod) {
             RobustLog.log("null == lambdaCtMethod 226");
+            return false;
         }
 
         String methodSignure = null;
