@@ -1,7 +1,9 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.ProguardUtils;
+import com.meituan.robust.utils.RobustLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,13 +114,70 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
 //            }
 
 
+            CtMethod callCtMethod;
             try {
-                String statement = "$_=($r) " + outerPatchClassName + "." + m.getMethodName() + getParamsStr(m) + " ; ";
-                m.replace(statement);
-            } catch (javassist.CannotCompileException e) {
-                String statement = "$_=($r) " + outerSourceClassName + "." + m.getMethodName() + getParamsStr(m) + " ; ";
-                m.replace(statement);
+                callCtMethod = m.getMethod();
+            } catch (Throwable t) {
+                RobustLog.log("callCtMethod is Throwable ", t);
+                return;
+            }
 
+            if (RobustChangeInfo.isNewAddMethod(callCtMethod)) {
+                if (callCtMethod.getDeclaringClass().getName().equals(outerPatchClassName)) {
+                    //it is right
+                }
+                if (callCtMethod.getDeclaringClass().getName().equals(outerSourceClassName)) {
+                    try {
+                        CtClass[] params = callCtMethod.getParameterTypes();
+                        List<String> paramList = new ArrayList<String>();
+                        int index = 0;
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (CtClass param : params) {
+                            index++;
+                            if (param.getName().equals(outerSourceClassName)) {
+                                stringBuilder.append(outerPatchClassName + " patchInstance" + index + " = new " + outerPatchClassName + "();");
+                                stringBuilder.append(" patchInstance" + index + "." + ORIGINCLASS + " = $" + index + ";");
+                                paramList.add("patchInstance" + index);
+                            } else {
+                                paramList.add("$" + index);
+                            }
+                        }
+                        String statement = "$_=($r) " + outerPatchClassName + "." + m.getMethodName() + "(" + String.join(",",paramList)+ ")" + " ; ";
+                        m.replace(statement);
+                    } catch (javassist.CannotCompileException e) {
+                        RobustLog.log("javassist.CannotCompileException", e);
+                    } catch (NotFoundException e) {
+                        RobustLog.log("NotFoundException", e);
+                    }
+                }
+                return;
+            } else {
+                if (callCtMethod.getDeclaringClass().getName().equals(outerPatchClassName)) {
+                    try {
+                        CtClass[] params = callCtMethod.getParameterTypes();
+                        List<String> paramList = new ArrayList<String>();
+                        int index = 0;
+                        StringBuilder stringBuilder = new StringBuilder();
+                        for (CtClass param : params) {
+                            index++;
+                            if (param.getName().equals(outerPatchClassName)) {
+                                paramList.add("$" + index + "." + ORIGINCLASS);
+                            } else {
+                                paramList.add("$" + index);
+                            }
+                        }
+                        String statement = "$_=($r) " + outerSourceClassName + "." + m.getMethodName() + "(" + String.join(",",paramList)+ ")" + " ; ";
+                        m.replace(statement);
+                    } catch (javassist.CannotCompileException e) {
+                        RobustLog.log("javassist.CannotCompileException", e);
+                    } catch (NotFoundException e) {
+                        RobustLog.log("NotFoundException", e);
+                    }
+                }
+                if (callCtMethod.getDeclaringClass().getName().equals(outerSourceClassName)) {
+                    //it is right
+                }
+                return;
             }
 
 

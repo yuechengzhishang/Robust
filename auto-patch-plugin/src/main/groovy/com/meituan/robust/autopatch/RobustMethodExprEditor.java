@@ -237,6 +237,12 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
             return;
         }
+
+        if (ProguardUtils.isAccess$Method(m)){
+            //在RobustHandleAccessMethodExpr处理了
+            return;
+        }
+
         int accessFlag = 0;
         try {
             accessFlag = m.getMethod().getModifiers();
