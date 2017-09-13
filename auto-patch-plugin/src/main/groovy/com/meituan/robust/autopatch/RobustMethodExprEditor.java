@@ -315,16 +315,6 @@ public class RobustMethodExprEditor extends ExprEditor {
 
         }
 
-//        if (!outerMethodIsStatic && callMethodIsStatic) {
-//                //外部非静态方法 call 静态方法
-//            try {
-//                RobustMethodCallEditorUtils2.nonstaticMethodCallStaticMethod(ctMethod, m, patchClass, sourceClass);
-//            } catch (NotFoundException e) {
-//                e.printStackTrace();
-//            }
-//            return;
-//        }
-
 //        try {
 //            if (outerMethodIsStatic && callMethodIsStatic) {
 //                //外部静态方法 call 静态方法
@@ -348,8 +338,9 @@ public class RobustMethodExprEditor extends ExprEditor {
 //            throw new RuntimeException(e);
 //        }
 
-        try {
-            if (callMethodIsStatic) {
+
+        if (callMethodIsStatic) {
+            try {
                 CtClass methodTargetClass = m.getMethod().getDeclaringClass();
                 if (patchClass.getName().equals(methodTargetClass.getName())) {
                     if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
@@ -371,37 +362,11 @@ public class RobustMethodExprEditor extends ExprEditor {
                         return;
                     }
                 }
-            } else {
-                //call method is not non-static
-//                TestPatchActivity#onCreate({private String hello()}
-//                CtClass methodTargetClass = m.getMethod().getDeclaringClass();
-//                if (patchClass.getName().equals(methodTargetClass.getName())) {
-//                    if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
-//                        if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
-//                            //need to reflect static method
-//                            String statement = "$_=($r)" + sourceClass.getName() + "." + m.getMethod().getName() + "($$);";
-//                            try {
-//                                m.replace(statement);
-//                            } catch (javassist.CannotCompileException e){
-//                                m.replace(getMethodCallString_this_static_method_call(m,patchClass,outerMethodIsStatic,sourceClass.getName()));
-//                            }
-//                            return;
-//                        } else {
-////                            String statement = "$_=($r)" +
-////                             Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectStaticMethod(" +"\"" + callCtMethod.getName() + "\"" + "," + sourceClass.getName() + ".class,$args,null);";
-////                            m.replace(statement);
-//                            m.replace(getMethodCallString_this_static_method_call(m,patchClass,outerMethodIsStatic,sourceClass.getName()));
-//                            return;
-//                        }
-//                    } else {
-//                        //do nothing
-//                        return;
-//                    }
-//                }
+            } catch (NotFoundException e) {
+                e.printStackTrace();
             }
-        } catch (NotFoundException e) {
-            e.printStackTrace();
         }
+
 
         if (outerMethodIsStatic) {
 
@@ -433,7 +398,8 @@ public class RobustMethodExprEditor extends ExprEditor {
 
 
             return;
-        } else {
+        }
+        if (!outerMethodIsStatic){
             //非静态方法才有this，需要替换
             /*
             protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -448,6 +414,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 } catch (NotFoundException e) {
                     e.printStackTrace();
                 }
+                return;
             } else {
                 /*
             protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -463,14 +430,11 @@ public class RobustMethodExprEditor extends ExprEditor {
                         replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
                         return;
                     } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
-                        //// TODO: 17/8/7 判断是否父类方法 或者本类方法
                         //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
 //                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
-                        //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
                         replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
                         return;
                     } else {
-                        //do noting // TODO: 17/9/6
                         boolean isOuterMethod = false;
                         try {
                             CtClass outerCtClass = sourceClass.getDeclaringClass();

@@ -39,7 +39,7 @@ class PatchesFactory {
 
         List<CtMethod> willDeleteCtMethods = new ArrayList<CtMethod>();
         for (CtMethod ctMethod : temPatchClass.getDeclaredMethods()) {
-            if (com.meituan.robust.change.RobustChangeInfo.isInvariantMethod(ctMethod)) {
+            if (RobustChangeInfo.isInvariantMethod(ctMethod) && !RobustChangeInfo.isChangedMethod(ctMethod)) {
 //                temPatchClass.removeMethod(ctMethod)
                 willDeleteCtMethods.add(ctMethod)
             }
