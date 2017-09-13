@@ -159,6 +159,8 @@ public class RobustCodeChangeChecker {
         List<MethodNode> changedMethods = new ArrayList<>();
         List<MethodNode> addMethods = new ArrayList<>();
         List<MethodNode> invariantMethods = new ArrayList<>();
+
+        List<MethodNode> changedParamMethods = new ArrayList<>();
         //noinspection unchecked
         for (MethodNode methodNode : (List<MethodNode>) originalClass.methods) {
 //            if (methodNode.name.equals("initRobustPatch")){
@@ -185,12 +187,18 @@ public class RobustCodeChangeChecker {
                         changedMethods.add(updatedMethod);
                     }
                 } else {
-                    boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod, originalClass,  updatedClass);
-                    if (isEqual) {
-                        invariantMethods.add(updatedMethod);
+                    //// TODO: 17/9/13
+                    MethodNode changedParamMethodNode = getParamChangedMethod(methodNode, updatedMethod, originalClass,  updatedClass);
+                    if (null != changedParamMethodNode){
+                        changedParamMethods.add(changedParamMethodNode);
                     } else {
-                        ChangeLog.log(updatedClass.name, "METHOD_CHANGE : " + methodNode.name + " " + methodNode.desc);
-                        changedMethods.add(updatedMethod);
+                        boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod, originalClass,  updatedClass);
+                        if (isEqual) {
+                            invariantMethods.add(updatedMethod);
+                        } else {
+                            ChangeLog.log(updatedClass.name, "METHOD_CHANGE : " + methodNode.name + " " + methodNode.desc);
+                            changedMethods.add(updatedMethod);
+                        }
                     }
                 }
             }
@@ -199,6 +207,8 @@ public class RobustCodeChangeChecker {
             nonVisitedMethodsOnUpdatedClass.remove(updatedMethod);
 
         }
+
+        addMethods.addAll(changedParamMethods);
 
         if (!nonVisitedMethodsOnUpdatedClass.isEmpty()) {
             addMethods.addAll(nonVisitedMethodsOnUpdatedClass);
@@ -221,6 +231,25 @@ public class RobustCodeChangeChecker {
             methodChange.invariantList.addAll(invariantMethods);
             return methodChange;
         }
+    }
+
+    //methodNode, updatedMethod, originalClass,  updatedClass
+    public static MethodNode getParamChangedMethod(@Nullable MethodNode first, @Nullable MethodNode second, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass){
+        if (first == null && second == null) {
+            return null;
+        }
+        if (first == null || second == null) {
+            return null;
+        }
+        if (!first.name.equals(second.name)) {
+            return null;
+        }
+
+        if (!first.desc.equals(second.desc)){
+            return second;
+        }
+        return null;
+
     }
 
 
