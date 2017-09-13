@@ -628,12 +628,12 @@ public class ProguardUtils {
         return proguardOuterClassDotName;
     }
 
-    public static String getUnProguardLambdaName(String lambdaDotClassName){
-        String unProguardLambdaName = lambdaDotClassName;
+    public static String getUnProguardClassName(String dotClassName){
+        String unProguardName = dotClassName;
         if (ProguardUtils.isProguard()) {
-            unProguardLambdaName = RobustProguardMapping.getUnProguardName(lambdaDotClassName);
+            unProguardName = RobustProguardMapping.getUnProguardName(dotClassName);
         }
-        return unProguardLambdaName;
+        return unProguardName;
     }
 
 }

@@ -462,7 +462,9 @@ public class CodeTransformUnion {
 
                     String newName ;
 
-                    if (oldName.contains(originalClassName)){ //todo 测试proguard 9-13
+                String unProguardOldName = ProguardUtils.getUnProguardClassName(oldName);
+                String unProguardOriginalClassName = ProguardUtils.getUnProguardClassName(originalClassName);
+                    if (oldName.contains(originalClassName) || unProguardOldName.contains(unProguardOriginalClassName)){
                         newName = oldName.replace(originalClassName, originalClassName + "Patch")
                     } else {
                         newName = oldName + "Patch";
