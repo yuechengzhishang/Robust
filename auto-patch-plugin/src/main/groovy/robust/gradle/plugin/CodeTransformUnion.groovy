@@ -378,7 +378,10 @@ public class CodeTransformUnion {
             boolean is_$1_or_$$lambda$1 = AnonymousLambdaUtils.isAnonymousInnerClass_$1(newClassName) || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(newClassName)
 
             if (is_$1_or_$$lambda$1) {
-
+                CtClass $1_or_$$lambda$1_ctClass = Config.classPool.getOrNull(newClassName)
+                if (null != $1_or_$$lambda$1_ctClass){
+                    $1_or_$$lambda$1_ctClass.writeFile(Config.robustGenerateDirectory)
+                }
             } else {
                 customAddClassList.add(newClassName);
             }
