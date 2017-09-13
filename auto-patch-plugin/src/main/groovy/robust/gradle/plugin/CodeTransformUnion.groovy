@@ -461,6 +461,7 @@ public class CodeTransformUnion {
                     String oldName = tempLambdaOrAnonymousCtClass.getName()
 
                     String newName ;
+
                     if (oldName.contains(originalClassName)){ //todo 测试proguard 9-13
                         newName = oldName.replace(originalClassName, originalClassName + "Patch")
                     } else {
@@ -517,7 +518,7 @@ public class CodeTransformUnion {
             if (true) {
                 List<CtMethod> toDeletedCtMethods = new ArrayList<CtMethod>();
                 for (CtMethod ctMethod : patchClass.getDeclaredMethods()) {
-                    if (RobustChangeInfo.isInvariantMethod(ctMethod)) {
+                    if (RobustChangeInfo.isInvariantMethod(ctMethod) && !RobustChangeInfo.isChangedMethod(ctMethod)) {
                         toDeletedCtMethods.add(ctMethod);
                     }
                     int modifiers = ctMethod.getModifiers();
