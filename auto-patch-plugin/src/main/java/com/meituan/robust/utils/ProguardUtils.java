@@ -726,7 +726,13 @@ public class ProguardUtils {
         return false;
     }
 
-    public static boolean anonymousClassNameFromLine2(String line2){
+    public static boolean isHasNewAnonymousClass(String line1,String line2){
+        if (mayAnonymousClassNameFromLine(line1) && hasAnonymousClassNameFromLine2(line2)){
+            return true;
+        }
+        return false;
+    }
+    public static boolean hasAnonymousClassNameFromLine2(String line2){
         if (mayAnonymousClassNameFromLine(line2)){
             String proguardAnonymousDotClass = getAnonymousClassNameFromLine2(line2);
             if (ProguardUtils.isProguard()){
@@ -791,6 +797,31 @@ public class ProguardUtils {
             unProguardName = RobustProguardMapping.getUnProguardName(dotClassName);
         }
         return unProguardName;
+    }
+
+    public static boolean hasAnonymousInit(String line1 ,String line2){
+        return hasAnonymousInitLine(line1)&&hasAnonymousInitLine(line2);
+    }
+
+    public static boolean hasAnonymousInitLine(String line){
+        return  null != getAnonymousClassNameByInitString(line);
+    }
+    //invoke-direct {v1, p0}, Lcom/robust/sample/MainActivity$1;-><init>(
+    public static String getAnonymousClassNameByInitString(String line){
+        String tempLine = new String(line);
+        if (tempLine.contains("invoke-direct ")){
+            if (tempLine.contains(",")){
+                if (tempLine.contains("L")){
+                    if (tempLine.contains(";-><init>(")){
+                        int start = tempLine.indexOf("L");
+                        int end = tempLine.indexOf(";-><init>(");
+                        String proguardDotClassName = tempLine.substring(start+1,end).replace("/",".");
+                        return proguardDotClassName;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
 }

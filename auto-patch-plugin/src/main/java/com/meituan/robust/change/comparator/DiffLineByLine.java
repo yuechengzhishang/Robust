@@ -57,20 +57,20 @@ public class DiffLineByLine {
 //                        return true;
 //                    }
 //                }
-                if (line1.contains("LDC") && line2.contains("LDC")){
-                    if (/*originalClass.name.contains("$$Lambda$") &&*/ ProguardUtils.isUpdateClassNameHas$$Lambda$(updatedClass.name)){
-                        String md5_1= line1.replace("LDC","").replace("\"","").trim();
-                        String md5_2= line2.replace("LDC","").replace("\"","").trim();
-                        if (checkMD5Valid(md5_1) && checkMD5Valid(md5_2)){
+                if (line1.contains("LDC") && line2.contains("LDC")) {
+                    if (/*originalClass.name.contains("$$Lambda$") &&*/ ProguardUtils.isUpdateClassNameHas$$Lambda$(updatedClass.name)) {
+                        String md5_1 = line1.replace("LDC", "").replace("\"", "").trim();
+                        String md5_2 = line2.replace("LDC", "").replace("\"", "").trim();
+                        if (checkMD5Valid(md5_1) && checkMD5Valid(md5_2)) {
                             return true;
                         }
                     }
                 }
 
-                if (ProguardUtils.isHasLambdaFactory$InLine1_Line2(line1,line2)) {
-                    String lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine1(line1,originalClass.name);
-                    String lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine2(line2,updatedClass.name);
-                    if (null == lambdaClassName1 || null == lambdaClassName2 || "".equals(lambdaClassName1) || "".equals(lambdaClassName2)){
+                if (ProguardUtils.isHasLambdaFactory$InLine1_Line2(line1, line2)) {
+                    String lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine1(line1, originalClass.name);
+                    String lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine2(line2, updatedClass.name);
+                    if (null == lambdaClassName1 || null == lambdaClassName2 || "".equals(lambdaClassName1) || "".equals(lambdaClassName2)) {
                         RobustLog.log("null == lambdaClassName1 || null == lambdaClassName2 88");
                         return false;
                     }
@@ -79,14 +79,14 @@ public class DiffLineByLine {
                     ClassNode lambdaClassNode2 = getLambdaClassNodeFromNewJar(lambdaClassName2);
 
                     ClassNode changedLambdaClassNode2 = null;
-                    if (null != lambdaClassNode1 && null != lambdaClassNode2){
+                    if (null != lambdaClassNode1 && null != lambdaClassNode2) {
                         CtClass lambdaCtClass = null;
                         try {
-                            lambdaCtClass = Config.classPool.get(lambdaClassNode2.name.replace("/","."));
-                            if (null != lambdaCtClass){
+                            lambdaCtClass = Config.classPool.get(lambdaClassNode2.name.replace("/", "."));
+                            if (null != lambdaCtClass) {
                                 lambdaCtClass.defrost();
                                 //名字设置成原来的
-                                lambdaCtClass.setName(lambdaClassNode1.name.replace("/","."));
+                                lambdaCtClass.setName(lambdaClassNode1.name.replace("/", "."));
                             }
                             byte[] bytes = lambdaCtClass.toBytecode();
                             changedLambdaClassNode2 = RobustCodeChangeChecker.getClassNode(bytes);
@@ -98,17 +98,17 @@ public class DiffLineByLine {
                                     RobustCodeChangeChecker.diffClass(lambdaClassNode1
                                             , changedLambdaClassNode2);
                             //名字设置回去
-                            if (null != lambdaCtClass){
+                            if (null != lambdaCtClass) {
                                 lambdaCtClass.defrost();
-                                lambdaCtClass.setName(lambdaClassNode2.name.replace("/","."));
+                                lambdaCtClass.setName(lambdaClassNode2.name.replace("/", "."));
                             }
                             //store that  changed nothing realdy lambda class
-                            Config.lambdaUnchangedReallyClassNameHashMap.put(lambdaClassNode2.name.replace("/","."),lambdaClassNode1.name.replace("/","."));
-                            if (null == classChange){
+                            Config.lambdaUnchangedReallyClassNameHashMap.put(lambdaClassNode2.name.replace("/", "."), lambdaClassNode1.name.replace("/", "."));
+                            if (null == classChange) {
                                 return true;
                             }
-                            if (null != classChange){
-                                if (null == classChange.fieldChange && null == classChange.methodChange){
+                            if (null != classChange) {
+                                if (null == classChange.fieldChange && null == classChange.methodChange) {
                                     return true;
                                 }
                             }
@@ -116,7 +116,70 @@ public class DiffLineByLine {
                             e.printStackTrace();
                         }
                     }
+                } else if (ProguardUtils.isHasNewAnonymousClass(line1, line2)) {
+                    String updateAnonymousClassName = ProguardUtils.getAnonymousClassNameFromLine2(line2);
+                    String originAnonymousClassName = ProguardUtils.getAnonymousClassNameFromLine2(line1);
+                    if (null == updateAnonymousClassName || null == originAnonymousClassName) {
+                        //ignore
+                    } else {
+                        if ("".equals(updateAnonymousClassName) || "".equals(originAnonymousClassName)) {
+                            //ignore
+                        } else {
+                            ClassNode lambdaClassNode1 = getLambdaClassNodeFromOldJar(originAnonymousClassName);
+                            ClassNode lambdaClassNode2 = getLambdaClassNodeFromNewJar(updateAnonymousClassName);
+
+                            ClassNode changedLambdaClassNode2 = null;
+                            if (null != lambdaClassNode1 && null != lambdaClassNode2) {
+                                CtClass lambdaCtClass = null;
+                                try {
+                                    lambdaCtClass = Config.classPool.get(lambdaClassNode2.name.replace("/", "."));
+                                    if (null != lambdaCtClass) {
+                                        lambdaCtClass.defrost();
+                                        //名字设置成原来的
+                                        lambdaCtClass.setName(lambdaClassNode1.name.replace("/", "."));
+                                    }
+                                    byte[] bytes = lambdaCtClass.toBytecode();
+                                    changedLambdaClassNode2 = RobustCodeChangeChecker.getClassNode(bytes);
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                try {
+                                    RobustChangeInfo.ClassChange classChange =
+                                            RobustCodeChangeChecker.diffClass(lambdaClassNode1
+                                                    , changedLambdaClassNode2);
+                                    //名字设置回去
+                                    if (null != lambdaCtClass) {
+                                        lambdaCtClass.defrost();
+                                        lambdaCtClass.setName(lambdaClassNode2.name.replace("/", "."));
+                                    }
+                                    //store that  changed nothing realdy lambda class
+                                    Config.lambdaUnchangedReallyClassNameHashMap.put(lambdaClassNode2.name.replace("/", "."), lambdaClassNode1.name.replace("/", "."));
+                                    if (null == classChange) {
+                                        return true;
+                                    }
+                                    if (null != classChange) {
+                                        if (null == classChange.fieldChange && null == classChange.methodChange) {
+                                            return true;
+                                        }
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                } else if (ProguardUtils.hasAnonymousInit(line1, line2)) {
+                    String anonymousClassName1 = ProguardUtils.getAnonymousClassNameByInitString(line1);
+                    String anonymousClassName2 = ProguardUtils.getAnonymousClassNameByInitString(line2);
+                    String anonymousDotClassName1 = anonymousClassName1.replace("/", ".").trim();
+                    String anonymousDotClassName2 = anonymousClassName2.replace("/", ".").trim();
+                    //compare if last equal name1 & name2
+                    if (anonymousDotClassName1.equals(Config.lambdaUnchangedReallyClassNameHashMap.get(anonymousDotClassName2))) {
+                        return true;
+                    }
                 }
+
+
 //                DiffLineByLine:
 //                line1:     INVOKESTATIC com/meituan/sample/SecondActivity$$Lambda$4.lambdaFactory$ (Lcom/meituan/sample/SecondActivity;)Landroid/view/View$OnClickListener;
 //                line2:     INVOKESTATIC com/meituan/sample/SecondActivity$$Lambda$2.lambdaFactory$ (Lcom/meituan/sample/SecondActivity;)Landroid/view/View$OnClickListener;
