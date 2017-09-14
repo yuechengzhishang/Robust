@@ -112,7 +112,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
         try {
             CtField callCtField = fieldAccess.getField();
 
-            if (isAccessModifiedClass(callCtField)){
+            if (isVisitConfigModifiedClasses(callCtField)){
                 if (RobustChangeInfo.isNewAddField(callCtField)){
                     String modifyClassName = callCtField.getDeclaringClass().getName();
                     HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
@@ -147,7 +147,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
         }
     }
 
-    public static boolean isAccessModifiedClass(CtMember ctMember){
+    public static boolean isVisitConfigModifiedClasses(CtMember ctMember){
         CtClass callCtClass = ctMember.getDeclaringClass();
         String className = callCtClass.getName();
         boolean isCallModifiedClass =  getCustomModifiedClasses().keySet().contains(className);
@@ -170,7 +170,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
         try {
             CtMethod callCtMethod = methodCall.getMethod();
 
-            if (isAccessModifiedClass(callCtMethod)){
+            if (isVisitConfigModifiedClasses(callCtMethod)){
                 if (RobustChangeInfo.isNewAddMethod(callCtMethod)){
                     // TODO: 17/9/1
                     String modifyClassName = callCtMethod.getDeclaringClass().getName();

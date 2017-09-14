@@ -464,7 +464,8 @@ public class CodeTransformUnion {
 
                 String unProguardOldName = ProguardUtils.getUnProguardClassName(oldName);
                 String unProguardOriginalClassName = ProguardUtils.getUnProguardClassName(originalClassName);
-                    if (oldName.contains(originalClassName) || unProguardOldName.contains(unProguardOriginalClassName)){
+                //todo 9-12 临时加的注释
+                    if (oldName.contains(originalClassName) /*|| unProguardOldName.contains(unProguardOriginalClassName)*/){
                         newName = oldName.replace(originalClassName, originalClassName + "Patch")
                     } else {
                         newName = oldName + "Patch";

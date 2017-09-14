@@ -17,7 +17,7 @@ import robust.gradle.plugin.RobustNewAddCustomClassExpr;
 
 import static com.meituan.robust.Constants.ORIGINCLASS;
 import static com.meituan.robust.utils.CustomModifiedClassUtils.getCustomModifiedClasses;
-import static robust.gradle.plugin.RobustNewAddCustomClassExpr.isAccessModifiedClass;
+import static robust.gradle.plugin.RobustNewAddCustomClassExpr.isVisitConfigModifiedClasses;
 
 /**
  * Created by hedingxu on 17/9/5.
@@ -36,7 +36,7 @@ public class RobustHandleAccessMethodExpr extends ExprEditor {
         try {
             CtMethod callCtMethod = methodCall.getMethod();
 
-            if (isAccessModifiedClass(callCtMethod)){
+            if (isVisitConfigModifiedClasses(callCtMethod)){
                 if (RobustChangeInfo.isNewAddMethod(callCtMethod)){
                     String modifyClassName = callCtMethod.getDeclaringClass().getName();
                     HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();

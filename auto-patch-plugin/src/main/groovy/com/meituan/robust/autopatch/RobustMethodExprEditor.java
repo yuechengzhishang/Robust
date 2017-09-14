@@ -238,7 +238,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
-        if (ProguardUtils.isAccess$Method(m)){
+        if (ProguardUtils.isAccess$Method(m)) {
             //在RobustHandleAccessMethodExpr处理了
             return;
         }
@@ -291,6 +291,16 @@ public class RobustMethodExprEditor extends ExprEditor {
         //callMethodIsStatic
         //outerMethodIsStatic
 
+
+        if (ProguardUtils.isLambda$Method(m)) {
+            try {
+                if (RobustChangeInfo.isChangedMethod(m.getMethod())) {
+                    return;
+                }
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+        }
 
         if (outerMethodIsStatic && callMethodIsStatic) {
             //外部静态方法 call 静态方法
@@ -405,7 +415,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
             return;
         }
-        if (!outerMethodIsStatic){
+        if (!outerMethodIsStatic) {
             //非静态方法才有this，需要替换
             /*
             protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -432,38 +442,43 @@ public class RobustMethodExprEditor extends ExprEditor {
                 try {
                     CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
-                    if (sourceClass.getName().equals(methodTargetClass.getName()) || patchClass.getName().equals(methodTargetClass.getName())) {
-                        replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
-                        return;
-                    } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
-                        //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
+                        if (sourceClass.getName().equals(methodTargetClass.getName()) || patchClass.getName().equals(methodTargetClass.getName())) {
+                            if (RobustChangeInfo.isInvariantMethod(m.getMethod())) {
+                                replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
+                            }
+                            return;
+                        } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
+                            //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
 //                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
-                        replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
-                        return;
-                    } else {
-                        boolean isOuterMethod = false;
-                        try {
-                            CtClass outerCtClass = sourceClass.getDeclaringClass();
-                            if (null != outerCtClass) {
-                                String outerClassName = outerCtClass.getName();
-                                if (null == outerClassName || "".equals(outerClassName)) {
+                            if (RobustChangeInfo.isInvariantMethod(m.getMethod())) {
+                                replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
+                            }
+                            return;
+                        } else {
+                            boolean isOuterMethod = false;
+                            try {
+                                CtClass outerCtClass = sourceClass.getDeclaringClass();
+                                if (null != outerCtClass) {
+                                    String outerClassName = outerCtClass.getName();
+                                    if (null == outerClassName || "".equals(outerClassName)) {
 
-                                } else {
-                                    if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
-                                        //this$0.publicField
-                                        isOuterMethod = true;
+                                    } else {
+                                        if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
+                                            //this$0.publicField
+                                            isOuterMethod = true;
+                                        }
                                     }
                                 }
+                            } catch (Exception e) {
+                                RobustLog.log("Exception", e);
                             }
-                        } catch (Exception e) {
-                            RobustLog.log("Exception", e);
+
+                            if (isOuterMethod) {
+                                replaceThisToOriginClassMethodDirectlyByCallOuterMethod(m);
+                            }
+                            return;
                         }
 
-                        if (isOuterMethod) {
-                            replaceThisToOriginClassMethodDirectlyByCallOuterMethod(m);
-                        }
-                        return;
-                    }
                 } catch (NotFoundException e) {
                     e.printStackTrace();
                     System.err.println("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
