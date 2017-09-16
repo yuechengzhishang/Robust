@@ -1,7 +1,5 @@
 package com.meituan.robust;
 
-import android.text.TextUtils;
-
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -32,7 +30,7 @@ public class PatchProxy {
             return false;
         }
         String classMethod = getClassMethod(isStatic, methodNumber);
-        if (TextUtils.isEmpty(classMethod)) {
+        if (isEmpty(classMethod)) {
             return false;
         }
         Object[] objects = getObjects(paramsArray, current, isStatic);
@@ -60,7 +58,7 @@ public class PatchProxy {
             return null;
         }
         String classMethod = getClassMethod(isStatic, methodNumber);
-        if (TextUtils.isEmpty(classMethod)) {
+        if (isEmpty(classMethod)) {
             return null;
         }
         notify(Constants.PATCH_EXECUTE);
@@ -84,7 +82,7 @@ public class PatchProxy {
         }
         notify(Constants.PATCH_EXECUTE);
         String classMethod = getClassMethod(isStatic, methodNumber);
-        if (TextUtils.isEmpty(classMethod)) {
+        if (isEmpty(classMethod)) {
             return ;
         }
         Object[] objects = getObjects( paramsArray,  current,  isStatic);
@@ -172,6 +170,18 @@ public class PatchProxy {
        for(RobustExtension robustExtension: registerExtensionList){
            robustExtension.notifyListner(info);
        }
+    }
+
+    /**
+     * Returns true if the string is null or 0-length.
+     * @param str the string to be examined
+     * @return true if str is null or zero length
+     */
+    public static boolean isEmpty(CharSequence str) {
+        if (str == null || str.length() == 0)
+            return true;
+        else
+            return false;
     }
 
 }

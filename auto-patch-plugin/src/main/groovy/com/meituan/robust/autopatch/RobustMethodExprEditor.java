@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.PatchProxy;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.AnonymousLambdaUtils;
 import com.meituan.robust.utils.ProguardUtils;
@@ -194,18 +195,31 @@ public class RobustMethodExprEditor extends ExprEditor {
         */
     private boolean isCallProxyAccessDispatchMethod(MethodCall methodCall) {
         if (methodCall.getMethodName().equals("accessDispatch")) {
-            try {
-                boolean isCallAccessDispatch = methodCall.getMethod().getLongName().startsWith("com.meituan.robust.PatchProxy.accessDispatch(");
-                if (isCallAccessDispatch) {
-                    return true;
+            if (isPatchProxyClass(methodCall)){
+                return true;
+            } else {
+                try {
+                    boolean isCallAccessDispatch = methodCall.getMethod().getLongName().startsWith("com.meituan.robust.PatchProxy.accessDispatch(");
+                    if (isCallAccessDispatch) {
+                        return true;
+                    }
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
                 }
-            } catch (NotFoundException e) {
-                e.printStackTrace();
             }
         }
         return false;
     }
 
+    public static boolean isPatchProxyClass(MethodCall m){
+        String PatchProxyClassName = PatchProxy.class.getCanonicalName();
+        String callMethodOnClassName = m.getClassName();
+        if (PatchProxyClassName.equals(callMethodOnClassName)){
+            return true;
+        } else {
+            return false;
+        }
+    }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
         if (hasRobustProxyCode) {
@@ -216,6 +230,10 @@ public class RobustMethodExprEditor extends ExprEditor {
             if (repalceWithEmpty(m)) {
                 return;
             }
+        }
+
+        if (isPatchProxyClass(m)){
+            return;
         }
 
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
@@ -553,7 +571,7 @@ public class RobustMethodExprEditor extends ExprEditor {
     public void replaceThisToOriginClassMethodDirectlyByCallOuterMethod(MethodCall m) throws NotFoundException, CannotCompileException {
         int accessFlag = m.getMethod().getModifiers();
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
-            //反射
+            //反射 // TODO: 17/9/10
             System.err.println("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
         } else {
             StringBuilder stringBuilder = new StringBuilder();
