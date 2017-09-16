@@ -49,6 +49,10 @@ public class TestPatchActivity extends AppCompatActivity{
 
         Toast.makeText(this, "hello: " + hello(), Toast.LENGTH_SHORT).show();
 
+        if (com.meituan.robust.PatchProxy.isSupport(new Object[0],this,null,false,"xxx",new Class[0],Integer.class)){
+            com.meituan.robust.PatchProxy.accessDispatch(new Object[0],this,null,false,"xxx",new Class[0],Integer.class);
+            return;
+        }
         Toast.makeText(this, "hello: " + helloPrivate(), Toast.LENGTH_SHORT).show();
 
         View view11 = this.findViewById(R.id.patch_text);

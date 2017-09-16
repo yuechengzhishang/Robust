@@ -17,6 +17,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.expr.Expr;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
@@ -52,9 +53,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(FieldAccess f) throws CannotCompileException {
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
-            return;
-        }
+
         boolean isThis$0 = false;
         try {
             CtClass outerCtClass = sourceClass.getDeclaringClass();
@@ -80,7 +79,9 @@ public class RobustMethodExprEditor extends ExprEditor {
                 }
             }
         }
-
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod(f)){
+            return;
+        }
         if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
             return;
         }
@@ -112,7 +113,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod(a)){
             return;
         }
         if (hasRobustProxyCode) {
@@ -130,7 +131,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         }
 
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod(e)){
             return;
         }
 
@@ -251,8 +252,13 @@ public class RobustMethodExprEditor extends ExprEditor {
         recordProxyIsSupportMethod += "accessDispatch";
     }
 
-    private boolean isbetweenIsSupportMethodAndAccessDispatchMethod(){
-        return recordProxyIsSupportMethod.endsWith("isSupport");
+    private boolean isbetweenIsSupportMethodAndAccessDispatchMethod(Expr expr){
+        return false;
+//        boolean isSupport = recordProxyIsSupportMethod.endsWith("isSupport");
+//        if (isSupport){
+//            RobustLog.log("expr lineNumber : "+ expr.getLineNumber() + " is skipt");
+//        }
+//        return isSupport;
     }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
@@ -269,6 +275,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         }
 
+        RobustLog.log(ctMethod.getName() + " : m.getMethodName : " + m.getMethodName());
         if (isCallProxyisSupportMethod(m)){
             m.replace("$_ = false ;");
             appendIsSupportMethod();
@@ -279,7 +286,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod(m)){
             return;
         }
 
