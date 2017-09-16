@@ -51,6 +51,9 @@ public class TestPatchActivity extends AppCompatActivity{
 
         Toast.makeText(this, "hello: " + helloPrivate(), Toast.LENGTH_SHORT).show();
 
+        View view11 = this.findViewById(R.id.patch_text);
+        Log.e("robust",view11.toString());
+
         //write
         publicString = "publicString";
         //read

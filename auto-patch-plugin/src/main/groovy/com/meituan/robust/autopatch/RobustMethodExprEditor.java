@@ -1,5 +1,6 @@
 package com.meituan.robust.autopatch;
 
+import com.meituan.robust.ChangeQuickRedirect;
 import com.meituan.robust.Constants;
 import com.meituan.robust.PatchProxy;
 import com.meituan.robust.change.RobustChangeInfo;
@@ -16,7 +17,6 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
-import javassist.expr.Expr;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
@@ -43,18 +43,6 @@ public class RobustMethodExprEditor extends ExprEditor {
         return false;
     }
 
-    private boolean repalceWithEmpty(Expr expr) {
-        if (isNeedReplaceEmpty()) {
-            try {
-//                expr.replace(";");
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return false;
-    }
-
     public RobustMethodExprEditor(CtClass sourceClass, CtClass patchClass, CtMethod ctMethod) {
         this.sourceClass = sourceClass;
         this.patchClass = patchClass;
@@ -64,6 +52,9 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(FieldAccess f) throws CannotCompileException {
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
+            return;
+        }
         boolean isThis$0 = false;
         try {
             CtClass outerCtClass = sourceClass.getDeclaringClass();
@@ -84,7 +75,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
         if (false == isThis$0) {
             if (hasRobustProxyCode) {
-                if (repalceWithEmpty(f)) {
+                if (isNeedReplaceEmpty()) {
                     return;
                 }
             }
@@ -94,6 +85,11 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
+        if (f.isReader()){
+            if (f.getSignature().contains(ChangeQuickRedirect.class.getCanonicalName().replace(".","/"))){// is quickchangeredirect // TODO: 17/9/16
+                return;
+            }
+        }
         try {
             //根据field的访问类型
             if (f.isReader()) {
@@ -116,8 +112,11 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
+            return;
+        }
         if (hasRobustProxyCode) {
-            if (repalceWithEmpty(a)) {
+            if (isNeedReplaceEmpty()) {
                 return;
             }
         }
@@ -126,9 +125,13 @@ public class RobustMethodExprEditor extends ExprEditor {
     @Override
     public void edit(NewExpr e) throws CannotCompileException {
         if (hasRobustProxyCode) {
-            if (repalceWithEmpty(e)) {
+            if (isNeedReplaceEmpty()) {
                 return;
             }
+        }
+
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
+            return;
         }
 
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
@@ -211,6 +214,24 @@ public class RobustMethodExprEditor extends ExprEditor {
         return false;
     }
 
+    private boolean isCallProxyisSupportMethod(MethodCall methodCall) {
+        if (methodCall.getMethodName().equals("isSupport")) {
+            if (isPatchProxyClass(methodCall)){
+                return true;
+            } else {
+                try {
+                    boolean isCallAccessDispatch = methodCall.getMethod().getLongName().startsWith("com.meituan.robust.PatchProxy.accessDispatch(");
+                    if (isCallAccessDispatch) {
+                        return true;
+                    }
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return false;
+    }
+
     public static boolean isPatchProxyClass(MethodCall m){
         String PatchProxyClassName = PatchProxy.class.getCanonicalName();
         String callMethodOnClassName = m.getClassName();
@@ -220,6 +241,19 @@ public class RobustMethodExprEditor extends ExprEditor {
             return false;
         }
     }
+
+    private String recordProxyIsSupportMethod  = "";
+    private void appendIsSupportMethod(){
+        recordProxyIsSupportMethod += "isSupport";
+    }
+
+    private void appendAccessDispatchMethod(){
+        recordProxyIsSupportMethod += "accessDispatch";
+    }
+
+    private boolean isbetweenIsSupportMethodAndAccessDispatchMethod(){
+        return recordProxyIsSupportMethod.endsWith("isSupport");
+    }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
         if (hasRobustProxyCode) {
@@ -227,12 +261,25 @@ public class RobustMethodExprEditor extends ExprEditor {
                 hasHandledProxyCode = true;
                 return;
             }
-            if (repalceWithEmpty(m)) {
+            if (isNeedReplaceEmpty()) {
+                if (isCallProxyisSupportMethod(m)){
+                    m.replace("$_ = false ;");
+                }
                 return;
             }
         }
 
-        if (isPatchProxyClass(m)){
+        if (isCallProxyisSupportMethod(m)){
+            m.replace("$_ = false ;");
+            appendIsSupportMethod();
+            return;
+        }
+        if (isCallProxyAccessDispatchMethod(m)){
+            appendAccessDispatchMethod();
+            return;
+        }
+
+        if (isbetweenIsSupportMethodAndAccessDispatchMethod()){
             return;
         }
 
@@ -468,9 +515,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                         } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
                             //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
 //                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
-                            if (RobustChangeInfo.isInvariantMethod(m.getMethod())) {
-                                replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
-                            }
+                            replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
                             return;
                         } else {
                             boolean isOuterMethod = false;
