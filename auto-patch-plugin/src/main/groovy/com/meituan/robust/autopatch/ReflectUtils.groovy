@@ -129,7 +129,12 @@ class ReflectUtils {
                 if (field.declaringClass.name.equals(patchClassName)) {
                     stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.name + "\"," + modifiedClassName + ".class,\$1);");
                 } else {
+//                    A.b = this;
+                    stringBuilder.append(" if(\$1 instanceof " + patchClassName + "){");
+                    stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.name + "\"," + field.declaringClass.name + ".class,"+"((" + patchClassName + ")\$1)." + Constants.ORIGINCLASS+");");
+                    stringBuilder.append("} else {");
                     stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.name + "\"," + field.declaringClass.name + ".class,\$1);");
+                    stringBuilder.append("}");
                 }
             }
             if (Constants.isLogging) {
