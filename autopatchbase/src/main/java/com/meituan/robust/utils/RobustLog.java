@@ -16,7 +16,7 @@ public class RobustLog {
     }
 
     public static void log(String info){
-        System.err.println("robust log -> " + info + ".");
+        System.err.println("robust log -> " + info + "");
     }
 
     /**

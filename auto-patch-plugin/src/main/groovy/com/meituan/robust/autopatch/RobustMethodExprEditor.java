@@ -17,7 +17,6 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
-import javassist.expr.Expr;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
@@ -79,9 +78,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 }
             }
         }
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod(f)){
-            return;
-        }
+
         if (Config.newlyAddedClassNameList.contains(f.getClassName())) {
             return;
         }
@@ -91,31 +88,33 @@ public class RobustMethodExprEditor extends ExprEditor {
                 return;
             }
         }
+        String replaceStatment = null;
         try {
             //根据field的访问类型
             if (f.isReader()) {
                 //reader done
-                f.replace(ReflectUtils.getFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
+                replaceStatment = ReflectUtils.getFieldString2(f.getField(), patchClass.getName(), sourceClass.getName());
+                f.replace(replaceStatment);
             } else if (f.isWriter()) {
-                f.replace(ReflectUtils.setFieldString2(f.getField(), patchClass.getName(), sourceClass.getName()));
+                replaceStatment = ReflectUtils.setFieldString2(f.getField(), patchClass.getName(), sourceClass.getName());
+                f.replace(replaceStatment);
             }
         } catch (NotFoundException e) {
-            RobustLog.log("Field access replace NotFoundException", e);
+            RobustLog.log("Field access replace NotFoundException : " + replaceStatment , e);
 //            throw new RuntimeException(e.getMessage());
         } catch (javassist.CannotCompileException e) {
             if (e.getMessage().contains("no such field:")) {
 
             } else {
-                RobustLog.log("Field access replace NotFoundException", e);
+                RobustLog.log("Field access replace NotFoundException : " + replaceStatment, e);
             }
+        } catch (Exception e){
+            RobustLog.log("Exception : " + replaceStatment,e);
         }
     }
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod(a)){
-            return;
-        }
         if (hasRobustProxyCode) {
             if (isNeedReplaceEmpty()) {
                 return;
@@ -129,10 +128,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             if (isNeedReplaceEmpty()) {
                 return;
             }
-        }
-
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod(e)){
-            return;
         }
 
         boolean outerMethodIsStatic = isStatic(ctMethod.getModifiers());
@@ -243,23 +238,6 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
     }
 
-    private String recordProxyIsSupportMethod  = "";
-    private void appendIsSupportMethod(){
-        recordProxyIsSupportMethod += "isSupport";
-    }
-
-    private void appendAccessDispatchMethod(){
-        recordProxyIsSupportMethod += "accessDispatch";
-    }
-
-    private boolean isbetweenIsSupportMethodAndAccessDispatchMethod(Expr expr){
-        return false;
-//        boolean isSupport = recordProxyIsSupportMethod.endsWith("isSupport");
-//        if (isSupport){
-//            RobustLog.log("expr lineNumber : "+ expr.getLineNumber() + " is skipt");
-//        }
-//        return isSupport;
-    }
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
         if (hasRobustProxyCode) {
@@ -275,18 +253,11 @@ public class RobustMethodExprEditor extends ExprEditor {
             }
         }
 
-        RobustLog.log(ctMethod.getName() + " : m.getMethodName : " + m.getMethodName());
         if (isCallProxyisSupportMethod(m)){
             m.replace("$_ = false ;");
-            appendIsSupportMethod();
             return;
         }
         if (isCallProxyAccessDispatchMethod(m)){
-            appendAccessDispatchMethod();
-            return;
-        }
-
-        if (isbetweenIsSupportMethodAndAccessDispatchMethod(m)){
             return;
         }
 

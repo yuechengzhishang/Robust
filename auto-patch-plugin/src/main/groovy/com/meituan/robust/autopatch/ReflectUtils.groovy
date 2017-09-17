@@ -114,6 +114,7 @@ class ReflectUtils {
     }
 
     public static String setFieldString2(CtField field, String patchClassName, String modifiedClassName) {
+        //todo mTopBarFragment.viewCreatedCallback = this;
         boolean isStatic = isStatic(field.modifiers)
         StringBuilder stringBuilder = new StringBuilder("{");
         if (isStatic) {
@@ -136,11 +137,18 @@ class ReflectUtils {
             }
         } else {
             if (AccessFlag.isPublic(field.modifiers)) {
-                stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
-                stringBuilder.append("((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + " = \$1;");
-                stringBuilder.append("} else {");
-                stringBuilder.append("\$_ = \$proceed(\$\$);");
-                stringBuilder.append("}");
+                if (!field.declaringClass.name.equals(patchClassName)) {
+                    stringBuilder.append(" if(\$1 instanceof " + patchClassName + "){");
+                    stringBuilder.append("\$0."+ field.getName() + " = " + "((" + patchClassName + ")\$1)." + Constants.ORIGINCLASS + ";");
+                    stringBuilder.append("} else {");
+                    stringBuilder.append("\$_ = \$proceed(\$\$);");
+                    stringBuilder.append("}");
+                } else {
+                    stringBuilder.append(" if(\$0 instanceof " + patchClassName + "){");
+                    stringBuilder.append("((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + " = \$1;");
+                    stringBuilder.append("} else {"); stringBuilder.append("\$_ = \$proceed(\$\$);");
+                    stringBuilder.append("}");
+                }
             } else {
                 stringBuilder.append("java.lang.Object instance;");
                 stringBuilder.append("java.lang.Class clazz;");
