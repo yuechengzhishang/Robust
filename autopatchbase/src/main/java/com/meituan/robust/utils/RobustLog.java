@@ -1,5 +1,8 @@
 package com.meituan.robust.utils;
 
+import com.meituan.robust.common.TxtFileReaderAndWriter;
+
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.UnknownHostException;
@@ -10,13 +13,41 @@ import java.net.UnknownHostException;
 
 public class RobustLog {
 
-    public static void log(String exceptionName , Throwable throwable){
-        System.err.println("robust log -> " + exceptionName + ":");
-        System.err.println(getStackTraceString(throwable));
+    public static void log(String exceptionName, Throwable throwable) {
+        String line1 = exceptionName + ":";
+        String line2 = getStackTraceString(throwable);
+        System.err.println("robust log -> " + line1);
+        System.err.println(line2);
+        write2FileLineByLine(line1);
+        write2FileLineByLine(line2);
     }
 
-    public static void log(String info){
-        System.err.println("robust log -> " + info + "");
+    public static void log(String info) {
+        String line = info + "";
+        System.err.println("robust log -> " + line);
+        write2FileLineByLine(line);
+    }
+
+    private static String logPath;
+
+    public static void setRobustLogFilePath(String path) {
+        logPath = path;
+    }
+
+    public static void write2FileLineByLine(String line) {
+        if (null == logPath || "".equals(logPath)) {
+            return;
+        }
+        String writeString = line;
+        if (new File(logPath).exists()) {
+            String readString = TxtFileReaderAndWriter.readFileAsString(logPath);
+            if (null == readString || "".equals(readString)) {
+
+            } else {
+                writeString = readString + "\n" + writeString;
+            }
+        }
+        TxtFileReaderAndWriter.writeFile(logPath, writeString);
     }
 
     /**

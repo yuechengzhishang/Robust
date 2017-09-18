@@ -45,11 +45,11 @@ public class OuterClassMethodAnonymousClassUtils {
             String outerClass = anonymousClassNode.outerClass;
             String outerMethod = anonymousClassNode.outerMethod;
             String outerMethodDesc = anonymousClassNode.outerMethodDesc;
-            System.err.println("======RecordOuterClassMethod");
-            System.err.println("anonymousClass: " + anonymousClassNode.name);
-            System.err.println("outerClass: " + outerClass);
-            System.err.println("outerMethod: " + outerMethod);
-            System.err.println("outerMethodDesc: " + outerMethodDesc);
+            com.meituan.robust.utils.RobustLog.log("======RecordOuterClassMethod");
+            com.meituan.robust.utils.RobustLog.log("anonymousClass: " + anonymousClassNode.name);
+            com.meituan.robust.utils.RobustLog.log("outerClass: " + outerClass);
+            com.meituan.robust.utils.RobustLog.log("outerMethod: " + outerMethod);
+            com.meituan.robust.utils.RobustLog.log("outerMethodDesc: " + outerMethodDesc);
 //case
 //        isAnonymousInnerClass: com/meituan/sample/TestPatchActivity$1
 //        outerClass: com/meituan/sample/TestPatchActivity
@@ -71,7 +71,7 @@ public class OuterClassMethodAnonymousClassUtils {
             }
 
             if (recordAnonymousLambdaOuterMethodMap.containsKey(anonymousInnerClassclassName)){
-                System.err.println("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
+                com.meituan.robust.utils.RobustLog.log("recordOuterClassMethod(ClassNode anonymousClassNode) already has invoked once ...");
             } else {
                 String dotOuterClass = outerClass.replace("/", ".");
                 OuterMethodInfo outerMethodInfo = new OuterMethodInfo(dotOuterClass, outerMethod, outerMethodDesc);

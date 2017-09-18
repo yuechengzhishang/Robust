@@ -171,7 +171,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 stringBuilder.append(newExprClassName + " anonymousInnerClass = new " + newExprClassName + params + ";");
                 stringBuilder.append("anonymousInnerClass.outerPatchClassName = this ;");
                 stringBuilder.append("$_ = anonymousInnerClass; ");
-                System.err.println("isAnonymousInnerClass_$1 :" + stringBuilder.toString());
+                com.meituan.robust.utils.RobustLog.log("isAnonymousInnerClass_$1 :" + stringBuilder.toString());
             } else {
                 stringBuilder.append("$_ = new " + newExprClassName + params + ";");
             }
@@ -522,7 +522,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
                 } catch (NotFoundException e) {
                     e.printStackTrace();
-                    System.err.println("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
+                    com.meituan.robust.utils.RobustLog.log("error: " + m.getClassName() + "," + m.getClass().getName() + ", ");
                 }
             }
         }
@@ -595,7 +595,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         int accessFlag = m.getMethod().getModifiers();
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
             //反射 // TODO: 17/9/10
-            System.err.println("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
+            com.meituan.robust.utils.RobustLog.log("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
         } else {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("{");
@@ -655,7 +655,7 @@ public class RobustMethodExprEditor extends ExprEditor {
     public void replaceParamThisToOriginalClassInstance2(NewExpr m) throws NotFoundException, CannotCompileException {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
-        System.err.println("replaceParamThisToOriginalClassInstance2 :" + m.getClassName());
+        com.meituan.robust.utils.RobustLog.log("replaceParamThisToOriginalClassInstance2 :" + m.getClassName());
         stringBuilder.append(getParamsThisReplacedString2(m));
         stringBuilder.append("$_ = $proceed($$);");
         stringBuilder.append("}");
@@ -679,7 +679,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 int indexArg = 0;
                 for (CtClass ctClass : types) {
                     indexArg++;
-                    System.err.println("getParamsThisReplacedString2 : " + ctClass.getName() + ":" + sourceClass.getName());
+                    com.meituan.robust.utils.RobustLog.log("getParamsThisReplacedString2 : " + ctClass.getName() + ":" + sourceClass.getName());
                     if (sourceClass.subclassOf(ctClass)) {
                         stringBuilder.append("$" + indexArg + "=  this." + ORIGINCLASS + ";");
                     }

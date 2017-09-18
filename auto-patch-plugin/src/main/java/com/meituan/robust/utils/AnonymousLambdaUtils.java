@@ -23,10 +23,10 @@ public class AnonymousLambdaUtils {
         cases.add(case4);
         cases.add(case5);
         for (String case11 : cases) {
-            System.err.println();
-            System.err.println(case11 + " like $1 : " + isAnonymousInnerClass_$1(case11));
-            System.err.println(case11 + " like $$Lambda$1 : " + isAnonymousInnerClass_$$Lambda$1(case11));
-            System.err.println(case11 + " like $AjcClosure1 : " + isAnonymousInnerClass_$AjcClosure1(case11));
+            com.meituan.robust.utils.RobustLog.log("");
+            com.meituan.robust.utils.RobustLog.log(case11 + " like $1 : " + isAnonymousInnerClass_$1(case11));
+            com.meituan.robust.utils.RobustLog.log(case11 + " like $$Lambda$1 : " + isAnonymousInnerClass_$$Lambda$1(case11));
+            com.meituan.robust.utils.RobustLog.log(case11 + " like $AjcClosure1 : " + isAnonymousInnerClass_$AjcClosure1(case11));
         }
     }
 

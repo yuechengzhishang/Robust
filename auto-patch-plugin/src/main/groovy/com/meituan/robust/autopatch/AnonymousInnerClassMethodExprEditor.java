@@ -59,7 +59,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
         }
         //static synthetic access$000
         if (ProguardUtils.isAccess$Method(m)) {
-            System.err.println(m.getMethodName() + " is access method");
+            com.meituan.robust.utils.RobustLog.log(m.getMethodName() + " is access method");
             /*
             String zz = MainActivity.access$300(this.this$0); //非静态private方法  MainActivityPatch.access$300(this.outerPatchClassName);
             MainActivity.access$400(this.this$0, zz); //非静态private方法
@@ -232,7 +232,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
         String declaringClassName = field.getDeclaringClass().getName();
         //静态字段
         if (isStatic) {
-            System.err.println("setFieldString static field " + field.getName() + "  declaringClass   " + declaringClassName);
+            com.meituan.robust.utils.RobustLog.log("setFieldString static field " + field.getName() + "  declaringClass   " + declaringClassName);
 
             if (declaringClassName.equals(patchClassName)) {
                 //如果是本patch类的field
@@ -260,7 +260,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
             }
         } else {
             //非静态字段
-            System.err.println("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
+            com.meituan.robust.utils.RobustLog.log("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
 
             if (declaringClassName.equals(patchClassName)) {
                 //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
@@ -347,7 +347,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
     public void replaceParamThisToOriginalClassInstance2(NewExpr m) throws NotFoundException, CannotCompileException {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("{");
-        System.err.println("replaceParamThisToOriginalClassInstance2 :" + m.getClassName());
+        com.meituan.robust.utils.RobustLog.log("replaceParamThisToOriginalClassInstance2 :" + m.getClassName());
         stringBuilder.append(getParamsThisReplacedString2(m));
         stringBuilder.append("$_ = $proceed($$);");
         stringBuilder.append("}");
@@ -371,7 +371,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
                 int indexArg = 0;
                 for (CtClass ctClass : types) {
                     indexArg++;
-                    System.err.println("getParamsThisReplacedString2 : " + ctClass.getName() + ":" + anonymousInnerClass.getName());
+                    com.meituan.robust.utils.RobustLog.log("getParamsThisReplacedString2 : " + ctClass.getName() + ":" + anonymousInnerClass.getName());
                     if (anonymousInnerClass.subclassOf(ctClass)) {
                         stringBuilder.append("$" + indexArg + "=  this." + ORIGINCLASS + ";");
                     }

@@ -33,7 +33,7 @@ public class PatchesControlFactory {
     }
 
     private static CtClass createControlClass(CtClass modifiedClass) throws Exception {
-        System.err.println("createControlClass name: " + modifiedClass.getName());
+        com.meituan.robust.utils.RobustLog.log("createControlClass name: " + modifiedClass.getName());
         CtClass patchClass = classPool.get(NameManger.getInstance().getPatchName(modifiedClass.getName()));
         patchClass.defrost();
         CtClass controlClass = classPool.getAndRename(Constants.PATCH_TEMPLATE_FULL_NAME, NameManger.getInstance().getPatchControlName(modifiedClass.getSimpleName()));

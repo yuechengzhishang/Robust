@@ -23,13 +23,13 @@ public class ChangeLog {
 
     public static void print() {
         if (classChangeLog.size() == 0) {
-            System.err.println("ChangeLog: nothing changed");
+            com.meituan.robust.utils.RobustLog.log("ChangeLog: nothing changed");
         }
-        System.err.println("=====ChangeLog: start print ");
+        com.meituan.robust.utils.RobustLog.log("=====ChangeLog: start print ");
         for (Log log : classChangeLog.values()) {
             log.printLogs();
         }
-        System.err.println("=====ChangeLog: end print ");
+        com.meituan.robust.utils.RobustLog.log("=====ChangeLog: end print ");
     }
 
     static class Log {
@@ -45,13 +45,13 @@ public class ChangeLog {
         }
 
         public void printLogs() {
-            System.err.println(className + ": ");
+            com.meituan.robust.utils.RobustLog.log(className + ": ");
             int index = 0;
             for (String log : logs) {
-                System.err.println(index + " : " + log);
+                com.meituan.robust.utils.RobustLog.log(index + " : " + log);
                 index++;
             }
-            System.err.println();
+            com.meituan.robust.utils.RobustLog.log("");
         }
     }
 

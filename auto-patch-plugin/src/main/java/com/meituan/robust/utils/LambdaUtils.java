@@ -32,8 +32,8 @@ public class LambdaUtils {
 
     public static void main(String[] args) {
         String name = "com.meituan.sample.TestPatchActivity$$Lambda$1";
-        System.err.println(isLambda(name));
-        System.err.println(name.replaceAll(LAMBDA_REGEX,""));
+        com.meituan.robust.utils.RobustLog.log(""+isLambda(name));
+        com.meituan.robust.utils.RobustLog.log(name.replaceAll(LAMBDA_REGEX,""));
     }
 
 

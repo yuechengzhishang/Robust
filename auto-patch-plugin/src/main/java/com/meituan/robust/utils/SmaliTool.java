@@ -57,7 +57,7 @@ public class SmaliTool {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                     if (file.toFile().getName().contains("RobustAssist")){
-                        System.err.println("RobustAssist File : " + file);
+                        com.meituan.robust.utils.RobustLog.log("RobustAssist File : " + file);
                         smaliFileList.add(file.toFile());
                     }
                     return FileVisitResult.CONTINUE;

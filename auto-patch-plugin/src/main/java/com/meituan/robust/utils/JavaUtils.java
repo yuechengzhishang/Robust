@@ -427,9 +427,9 @@ public class JavaUtils {
             return;
         }
         for (String key : memberMappingInfo.keySet()) {
-            System.out.println("key is   " + key + "  value is    " + String.valueOf(memberMappingInfo.get(key)));
+            com.meituan.robust.utils.RobustLog.log("key is   " + key + "  value is    " + String.valueOf(memberMappingInfo.get(key)));
         }
-        System.out.println("");
+        com.meituan.robust.utils.RobustLog.log("");
     }
 
     public static void printList(Collection<String> list) {
@@ -437,8 +437,8 @@ public class JavaUtils {
             return;
         }
         for (String key : list)
-            System.out.println("key is   " + key);
-        System.out.println("");
+            com.meituan.robust.utils.RobustLog.log("key is   " + key);
+        com.meituan.robust.utils.RobustLog.log("");
     }
 
 

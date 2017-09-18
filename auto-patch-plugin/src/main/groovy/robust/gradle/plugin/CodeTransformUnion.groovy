@@ -10,6 +10,7 @@ import com.meituan.robust.utils.AnonymousLambdaUtils
 import com.meituan.robust.utils.JavaUtils
 import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils
 import com.meituan.robust.utils.ProguardUtils
+import com.meituan.robust.utils.RobustLog
 import com.meituan.robust.utils.RobustProguardMapping
 import javassist.*
 import javassist.bytecode.AccessFlag
@@ -44,6 +45,7 @@ public class CodeTransformUnion {
         def smaliFilePath = "${ROBUST_DIR}${Constants.LIB_NAME_ARRAY[1]}"
         def dxFilePath = "${ROBUST_DIR}${Constants.LIB_NAME_ARRAY[2]}"
         Config.robustGenerateDirectory = "${project.buildDir}" + File.separator + "$Constants.ROBUST_GENERATE_DIRECTORY" + File.separator;
+        RobustLog.setRobustLogFilePath(Config.robustGenerateDirectory+Constants.ROBUST_LOG)
         dex2SmaliCommand = "  java -jar ${baksmaliFilePath} -o classout" + File.separator + "  $Constants.CLASSES_DEX_NAME";
         smali2DexCommand = "   java -jar ${smaliFilePath} classout" + File.separator + " -o " + Constants.PATACH_DEX_NAME;
         jar2DexCommand = "   java -jar ${dxFilePath} --dex --output=$Constants.CLASSES_DEX_NAME  " + Constants.ZIP_FILE_NAME;
@@ -62,16 +64,16 @@ public class CodeTransformUnion {
 
     public static void transform(Project project) throws IOException {
         long startTime = System.currentTimeMillis()
-        System.err.println("================autoPatch start================")
+        com.meituan.robust.utils.RobustLog.log("================autoPatch start================")
         copyJarToRobust()
         autoPatch(project)
 //        JavaUtils.removeJarFromLibs()
         if (Config.debug) {
             JavaUtils.printMap2File(Config.methodMap, new File(project.projectDir.path + Constants.METHOD_MAP_PATH + ".txt"))
-            System.err.println("================method signature to method id map unzip to file ================");
+            com.meituan.robust.utils.RobustLog.log("================method signature to method id map unzip to file ================");
         }
         long cost = (System.currentTimeMillis() - startTime) / 1000
-        System.err.println("autoPatch cost " + cost + " second")
+        com.meituan.robust.utils.RobustLog.log("autoPatch cost " + cost + " second")
         throw new RuntimeException("auto patch end successfully")
     }
 
@@ -189,16 +191,16 @@ public class CodeTransformUnion {
 //        Config.recordOuterMethodModifiedAnonymousClassNameList = recordOuterMethodModifiedAnonymousClassNameList;
         //fix end
 
-        println("modifiedClassNameList is ：")
+        com.meituan.robust.utils.RobustLog.log("modifiedClassNameList is ：")
         JavaUtils.printList(Config.modifiedClassNameList)
 
-        println("newlyAddedClassNameList is ：")
+        com.meituan.robust.utils.RobustLog.log("newlyAddedClassNameList is ：")
         JavaUtils.printList(Config.newlyAddedClassNameList)
 
-        println("modifiedAnonymousClassNameList is ：")
+        com.meituan.robust.utils.RobustLog.log("modifiedAnonymousClassNameList is ：")
         JavaUtils.printList(Config.modifiedAnonymousClassNameList)
 
-        println("modifiedLambdaClassNameList is ：")
+        com.meituan.robust.utils.RobustLog.log("modifiedLambdaClassNameList is ：")
         JavaUtils.printList(Config.modifiedLambdaClassNameList)
 
         //从modifiedClassNameList & newlyAddedClassNameList移除
@@ -230,7 +232,7 @@ public class CodeTransformUnion {
 //            Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
         }
 
-        println("newlyAddedClassNameList is ：")
+        com.meituan.robust.utils.RobustLog.log("newlyAddedClassNameList is ：")
         Config.newlyAddedClassNameList.addAll(Config.modifiedLambdaClassNameList)
         Config.newlyAddedClassNameList.addAll(Config.modifiedAnonymousClassNameList)
         JavaUtils.printList(Config.newlyAddedClassNameList)
@@ -250,7 +252,7 @@ public class CodeTransformUnion {
             if (dexPatchFile.exists()) {
                 Config.patchHasDex = true;
             } else {
-                System.err.println("dex patch file does not exists")
+                com.meituan.robust.utils.RobustLog.log("dex patch file does not exists")
                 return
             }
         } else {
@@ -311,7 +313,7 @@ public class CodeTransformUnion {
                 zipFile(file, zipOut, fullClassName);
             }
         } else {
-            System.err.println("文件不存在!");
+            com.meituan.robust.utils.RobustLog.log("文件不存在!");
         }
     }
 
@@ -338,7 +340,7 @@ public class CodeTransformUnion {
     public static generatePatch(String patchPath) {
         if (Config.modifiedClassNameList.size() < 1) {
             if (Config.isResourceFix) {
-                System.err.println(" patch method is empty ,please check your commit ")
+                com.meituan.robust.utils.RobustLog.log(" patch method is empty ,please check your commit ")
                 return;
             }
             throw new RuntimeException(" patch method is empty ,please check your commit ")
@@ -592,7 +594,7 @@ public class CodeTransformUnion {
                     @Override
                     void edit(MethodCall m) throws CannotCompileException {
                         if (m.isSuper()) {
-                            System.err.println("class: " + modifiedCtClass.name + " , method :" + m.method.name)
+                            com.meituan.robust.utils.RobustLog.log("class: " + modifiedCtClass.name + " , method :" + m.method.name)
                             if (!invokeSuperMethodList.contains(m.method)) {
                                 invokeSuperMethodList.add(m.method);
                             }
