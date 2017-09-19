@@ -1,7 +1,6 @@
 package com.meituan.sample.demo;
 
 import com.meituan.robust.ChangeQuickRedirect;
-import com.meituan.robust.runtime.RobustRuntime;
 
 /**
  * Created by hedingxu on 17/7/7.
@@ -29,7 +28,6 @@ public class Test {
         changedOldPatch.setBean(new Bean(123));
         OldPatch2 old1 = changedOldPatch;
 
-        RobustRuntime.copyFields(old,old1);
         old1.method1();
     }
 }

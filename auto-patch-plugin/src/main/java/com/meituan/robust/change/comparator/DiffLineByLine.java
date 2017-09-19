@@ -1,6 +1,5 @@
 package com.meituan.robust.change.comparator;
 
-import com.android.annotations.NonNull;
 import com.meituan.robust.autopatch.Config;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.change.RobustCodeChangeChecker;
@@ -24,7 +23,7 @@ import static com.meituan.robust.change.RobustCodeChangeChecker.getClassNode;
  */
 
 public class DiffLineByLine {
-    public static boolean diff(String first, String second, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass) {
+    public static boolean diff(String first, String second,  ClassNode originalClass,  ClassNode updatedClass) {
         //解决lambda名字变了的问题
         String[] lineArrary1 = first.split("\\n");
         String[] lineArrary2 = second.split("\\n");
@@ -45,7 +44,7 @@ public class DiffLineByLine {
         }
     }
 
-    public static boolean isEqualReal(String line1, String line2, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass) {
+    public static boolean isEqualReal(String line1, String line2,  ClassNode originalClass,  ClassNode updatedClass) {
         if (null != line1 && null != line2) {
             if (line1.equals(line2)) {
                 return true;

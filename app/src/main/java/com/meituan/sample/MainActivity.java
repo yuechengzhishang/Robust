@@ -327,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_SDCARD_READ = 1;
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,  String[] permissions,  int[] grantResults) {
         switch (requestCode) {
             case REQUEST_CODE_SDCARD_READ:
                 handlePermissionResult();

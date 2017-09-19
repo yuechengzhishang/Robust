@@ -1,8 +1,5 @@
 package com.meituan.robust.change;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
@@ -55,7 +52,6 @@ public class RobustCodeChangeChecker {
             return Files.toByteArray(file);
         }
 
-        @VisibleForTesting
         public File getFile() {
             return file;
         }
@@ -87,7 +83,6 @@ public class RobustCodeChangeChecker {
     /**
      * describe the difference between two collections of the same elements.
      */
-    @VisibleForTesting
     enum Diff {
         /**
          * no changeClasses, the collections are equals
@@ -150,9 +145,9 @@ public class RobustCodeChangeChecker {
         return classChange;
     }
 
-    @NonNull
+
     private static RobustChangeInfo.MethodChange diffMethods(
-            @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass) {
+             ClassNode originalClass,  ClassNode updatedClass) {
 
 //        @SuppressWarnings("unchecked") // ASM API.
         List<MethodNode> nonVisitedMethodsOnUpdatedClass = new ArrayList<>(updatedClass.methods);
@@ -233,7 +228,7 @@ public class RobustCodeChangeChecker {
     }
 
     //methodNode, updatedMethod, originalClass,  updatedClass
-    public static MethodNode getParamChangedMethod(@Nullable MethodNode first, @Nullable MethodNode second, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass){
+    public static MethodNode getParamChangedMethod( MethodNode first,  MethodNode second,  ClassNode originalClass,  ClassNode updatedClass){
         if (first == null && second == null) {
             return null;
         }
@@ -252,10 +247,10 @@ public class RobustCodeChangeChecker {
     }
 
 
-    @NonNull
+
     private static RobustChangeInfo.FieldChange diffFields(
-            @NonNull ClassNode originalClass,
-            @NonNull ClassNode updatedClass) {
+             ClassNode originalClass,
+             ClassNode updatedClass) {
 
         List<FieldNode> one =originalClass.fields;
         List<FieldNode> two =updatedClass.fields;
@@ -335,10 +330,10 @@ public class RobustCodeChangeChecker {
         return false;
     }
 
-    @Nullable
-    private static MethodNode findMethod(@NonNull ClassNode classNode,
-                                         @NonNull String name,
-                                         @Nullable String desc) {
+
+    private static MethodNode findMethod( ClassNode classNode,
+                                          String name,
+                                          String desc) {
         //noinspection unchecked
         for (MethodNode methodNode : (List<MethodNode>) classNode.methods) {
             if (methodNode.name.equals(name) &&
@@ -349,12 +344,10 @@ public class RobustCodeChangeChecker {
         return null;
     }
 
-    @VisibleForTesting
-    @NonNull
     static <T> Diff diffList(
-            @Nullable List<T> one,
-            @Nullable List<T> two,
-            @NonNull Comparator<T> comparator) {
+             List<T> one,
+             List<T> two,
+             Comparator<T> comparator) {
 
         if (one == null && two == null) {
             return Diff.NONE;
@@ -390,7 +383,7 @@ public class RobustCodeChangeChecker {
         return copyOfTwo.isEmpty() ? Diff.NONE : Diff.ADDITION;
     }
 
-    @Nullable
+
     public static <T> T getElementOf(List<T> list, T element, Comparator<T> comparator) {
         for (T elementOfList : list) {
             if (comparator.areEqual(elementOfList, element)) {

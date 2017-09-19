@@ -2,6 +2,7 @@ package robust.gradle.plugin
 
 import com.android.SdkConstants
 import com.android.build.api.transform.TransformInput
+import com.meituan.robust.utils.RobustLog
 import javassist.ClassPool
 import javassist.CtClass
 
@@ -24,9 +25,10 @@ class ConvertUtils {
                     if (it.absolutePath.endsWith(SdkConstants.DOT_CLASS)) {
                         def className = it.absolutePath.substring(dirPath.length() + 1, it.absolutePath.length() - SdkConstants.DOT_CLASS.length()).replaceAll(Matcher.quoteReplacement(File.separator), '.')
                         if(classNames.contains(className)){
-                            throw new RuntimeException("You have duplicate classes with the same name : "+className+" please remove duplicate classes ")
+                            RobustLog.log("You have duplicate classes",new RuntimeException("You have duplicate classes with the same name : "+className+" please remove duplicate classes "))
+                        } else {
+                            classNames.add(className)
                         }
-                        classNames.add(className)
                     }
                 }
             }

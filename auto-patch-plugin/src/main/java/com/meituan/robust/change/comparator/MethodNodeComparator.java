@@ -1,8 +1,5 @@
 package com.meituan.robust.change.comparator;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.TraceMethodVisitor;
@@ -15,7 +12,7 @@ import java.io.StringWriter;
  */
 
 public class MethodNodeComparator {
-    public boolean areEqual(@Nullable MethodNode first, @Nullable MethodNode second, @NonNull ClassNode originalClass, @NonNull ClassNode updatedClass) {
+    public boolean areEqual( MethodNode first,  MethodNode second,  ClassNode originalClass,  ClassNode updatedClass) {
         if (first == null && second == null) {
             return true;
         }

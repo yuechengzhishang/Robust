@@ -1,13 +1,10 @@
 package com.meituan.robust.change.comparator;
 
 
-import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
-import java.util.List;
-import java.util.Optional;
+
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
@@ -15,6 +12,9 @@ import org.objectweb.asm.commons.Method;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.Textifier;
 import org.objectweb.asm.util.TraceMethodVisitor;
+
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Bytecode generation utilities to work around some ASM / Dex issues.
@@ -53,7 +53,7 @@ public class ByteCodeUtils {
     /**
      * Converts the given method to a String.
      */
-    public static String textify(@NonNull MethodNode method) {
+    public static String textify(MethodNode method) {
         Textifier textifier = new Textifier();
         TraceMethodVisitor trace = new TraceMethodVisitor(textifier);
         method.accept(trace);
@@ -96,16 +96,15 @@ public class ByteCodeUtils {
      * Converts a class name from the Java language naming convention (foo.bar.baz) to the JVM
      * internal naming convention (foo/bar/baz).
      */
-    @NonNull
-    public static String toInternalName(@NonNull String className) {
+    public static String toInternalName( String className) {
         return className.replace('.', '/');
     }
 
     /**
      * Gets the class name from a class member internal name, like {@code com/foo/Bar.baz:(I)V}.
      */
-    @NonNull
-    public static String getClassName(@NonNull String memberName) {
+
+    public static String getClassName( String memberName) {
         Preconditions.checkArgument(memberName.contains(":"), "Class name passed as argument.");
         return memberName.substring(0, memberName.indexOf('.'));
     }
@@ -116,8 +115,8 @@ public class ByteCodeUtils {
      *
      * <p>Returns {@link Optional#empty()} for classes in the anonymous package.
      */
-    @NonNull
-    public static Optional<String> getPackageName(@NonNull String internalName) {
+
+    public static Optional<String> getPackageName( String internalName) {
         List<String> parts = Splitter.on('/').splitToList(internalName);
         if (parts.size() == 1) {
             return Optional.empty();
