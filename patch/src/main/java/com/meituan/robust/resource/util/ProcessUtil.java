@@ -1,6 +1,7 @@
 package com.meituan.robust.resource.util;
 
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.Context;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -33,6 +34,27 @@ public class ProcessUtil {
             currentProcessName = getCurrentProcessNameReal(context);
         }
         return currentProcessName;
+    }
+
+    public static String getCurrentProcessName(){
+        if (TextUtils.isEmpty(currentProcessName)) {
+            Context context = getApplicationContext();
+            if (null != context){
+                currentProcessName = getCurrentProcessNameReal(context);
+            }
+        }
+        return currentProcessName;
+    }
+
+    private static Context getApplicationContext() {
+        try {
+            Class<?> c = Class.forName("android.app.ActivityThread");
+            Application app = (android.app.Application)c.getDeclaredMethod("currentApplication").invoke(null);
+            return app.getApplicationContext();
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     public static boolean isRobustProcess(Context context) {
