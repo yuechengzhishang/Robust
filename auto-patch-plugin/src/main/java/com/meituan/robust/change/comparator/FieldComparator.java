@@ -21,7 +21,7 @@ public class FieldComparator implements Comparator<FieldNode> {
         }
         int access1 = first.access;
         int access2 = second.access;
-        // TODO: 17/8/24  忽略private package protected public ...
+        // 忽略private package protected public ...
         access1 = AccessFlag.setPublic(access1);
         access2 = AccessFlag.setPublic(access2);
         return first.name.equals(second.name)

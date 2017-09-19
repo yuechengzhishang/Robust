@@ -38,7 +38,6 @@ public class OuterClassMethodAnonymousClassUtils {
 //    outerMethodDesc: null
 
     public static void recordOuterClassMethod(ClassNode anonymousClassNode,JarFile newJarFile) {
-        // TODO: 17/9/1 需要记录改了lambda表达式的所包含的方法 完成一半
         if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, "."))) {
             String anonymousInnerClassclassName = anonymousClassNode.name.replace(".class", "").replace(File_SEPARATOR, ".");
 
@@ -56,7 +55,6 @@ public class OuterClassMethodAnonymousClassUtils {
 //        outerMethod: onCreate
 //        outerMethodDesc: (Landroid/os/Bundle;)V
 
-//todo 解决类似于这种问题 9-1
 //            private View.OnClickListener listener = new View.OnClickListener() {
 //                @Override
 //                public void onClick(View v) {

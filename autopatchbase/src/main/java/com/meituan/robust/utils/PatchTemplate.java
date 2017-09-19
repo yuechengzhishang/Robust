@@ -27,7 +27,7 @@ public class PatchTemplate implements ChangeQuickRedirect {
         return true;
     }
 
-    //解决boolean被优化成byte的问题 // TODO: 17/8/27 需要测试
+    //解决boolean被优化成byte的问题
     private static Object fixObj(Object booleanObj) {
         if (booleanObj instanceof Byte) {
             byte byteValue = (Byte) booleanObj;

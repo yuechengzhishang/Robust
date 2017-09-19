@@ -260,7 +260,7 @@ public class CheckCodeChanges {
 
             if (declaringClassName.equals(patchClassName)) {
                 //如果是本patch类的field
-                //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
+                //如果是新增的字段，需要重新处理一下
                 stringBuilder.append("$_ = $proceed($$);");
                 stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.getName() + "\"," + originalClassName + ".class,$1);");
             } else if (declaringClassName.equals(originalClassName)) {
@@ -287,7 +287,7 @@ public class CheckCodeChanges {
 //            System.err.println("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
 
             if (declaringClassName.equals(patchClassName)) {
-                //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
+                //如果是新增的字段，需要重新处理一下
                 //如果是本patch类的field
                 stringBuilder.append("$_ = $proceed($$);");
 

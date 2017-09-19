@@ -108,7 +108,6 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 final int tempAccess = access;
                 final String tempDesc = desc;
                 final String tempName = name;
-                // TODO: 17/8/7 已经完成构造函数的插桩，需要测试一下
                 mv = new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
                     @Override
                     protected void onMethodEnter() {
@@ -235,19 +234,10 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 }
             }
 
-            //如果proguard了，则需要过滤getter setter isBool等方法 // TODO: 17/8/22
 
-            //如果没有proguard，则无需过滤getter setter isBool等方法
-
-
-            //如果是override方法，插桩 // TODO: 17/8/22  
-//            System.err.println("isMethodNeedInsertCode -> " + " name: " + name + ", desc: " + desc);
-            //如果是空方法? // TODO: 17/8/22
-
-            //// TODO: 17/8/22 diff getter setter isbool ...
+            //如果是override方法，插桩 //如果是空方法?
 
             boolean isMethodInvoke = isNeedInsertCodeMethodMap.getOrDefault(name + desc, true);
-//            System.out.println("isMethodNeedInsertCode instructionType "+isMethodInvoke);
             //遍历指令类型，
             if (isMethodInvoke) {
                 return true;
@@ -283,11 +273,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
             public void visitCode() {
                 RobustAsmUtils.createInsertCode(this, className, paramsTypeClass, returnType, isStatic, methodId);
             }
-
-
         }
-
-
     }
 
     public static boolean isStatic(int access) {
@@ -328,8 +314,6 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, isMethodInvoke);
             }
         }
-//        printlnMap(isNeedInsertCodeMethodMap);
-
 
 
         InsertMethodBodyAdapter insertMethodBodyAdapter = new InsertMethodBodyAdapter(cw, className, isNeedInsertCodeMethodMap);
@@ -340,13 +324,6 @@ public class AsmInsertImpl extends InsertcodeStrategy {
 
     public static void main(String[] args) throws IOException {
 
-//        AsmInsertImpl asmInsert = new AsmInsertImpl(null, null, null, null, false, false);
-//        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Downloads/asm-5.2/asm/com/meituan/robust/PatchProxy.class"));
-//        byte[]bytes= org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Downloads/asm-5.2/com/meituan/robust/Patch.class"));
-//        byte[] bytes = org.apache.commons.io.FileUtils.readFileToByteArray(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People.class"));
-//        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Downloads/asm-5.2/asm/com/meituan/robust/PatchProxy2.class"),asmInsert.transformCode2(bytes,"com.meituan.robust.PatchProxy","1231"));
-//        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Downloads/asm-5.2/com/meituan/robust/Patch2.class"),asmInsert.transformCode2(bytes,"com.meituan.robust.Patch","1231"));
-//        org.apache.commons.io.FileUtils.writeByteArrayToFile(new File("/Users/zhangmeng/Desktop/code/openSource/robust/app/build/intermediates/transforms/aspectJ/release/folders/1/1/main/com/meituan/sample/robusttest/People2.class"), asmInsert.transformCode2(bytes, "com.meituan.sample.robusttest.People"));
     }
 
     private void printlnMap(Map<String, Boolean> map) {

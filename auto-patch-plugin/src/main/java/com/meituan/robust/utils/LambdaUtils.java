@@ -74,7 +74,6 @@ public class LambdaUtils {
 //        System.err.println("===lambda : ");
 //        JavaUtils.printList(Config.lambdaDotClassNameList);
 ////        CheckCodeChangesFix.
-//        // TODO: 17/9/2
 //        System.err.println("===fix lambda start : ");
 //        HashSet<String> lambdaOuterDotClassNameSet = new HashSet<String>();
 //        for (String lambdaOuterDotClassName : Config.lambdaDotClassNameList) {
@@ -191,7 +190,6 @@ public class LambdaUtils {
 //        System.err.println("===lambda : ");
 //        JavaUtils.printList(Config.lambdaDotClassNameList);
 ////        CheckCodeChangesFix.
-//        // TODO: 17/9/2
 //        System.err.println("===fix lambda start : ");
 //        HashSet<String> lambdaOuterDotClassNameSet = new HashSet<String>();
 //        for (String lambdaOuterDotClassName : Config.lambdaDotClassNameList) {

@@ -123,7 +123,7 @@ class PatchesFactory {
             temPatchClass.removeField(ctField)
         }
 
-        //暂时先删除掉classInitMethod todo 解决如果改了静态字段的赋值问题
+        //暂时先删除掉classInitMethod 解决如果改了静态字段的赋值问题
         try {
             for (CtBehavior ctBehavior: temPatchClass.getDeclaredBehaviors()){
                 if (ctBehavior instanceof CtConstructor){

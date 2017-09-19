@@ -26,7 +26,6 @@ public class PatchTypeUtil {
     static int getPatchType(Patch p) {
         boolean hasDex = false;
         boolean hasResource = false;
-        // TODO: 17/6/8
         ZipFile patchZipFile = null;
         try {
             patchZipFile = new ZipFile(p.getTempPath());

@@ -178,7 +178,7 @@ public class RobustCodeChangeChecker {
                 ChangeLog.log(updatedClass.name, "METHOD_DELETED : " + methodNode.name + " " + methodNode.desc);
             } else {
                 if (methodNode.name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
-                    //ignore // TODO: 17/8/24
+                    //ignore
                     boolean isEqual = METHOD_COMPARATOR.areEqual(methodNode, updatedMethod, originalClass,  updatedClass);
                     if (isEqual) {
                         invariantMethods.add(updatedMethod);
@@ -187,7 +187,6 @@ public class RobustCodeChangeChecker {
                         changedMethods.add(updatedMethod);
                     }
                 } else {
-                    //// TODO: 17/9/13
                     MethodNode changedParamMethodNode = getParamChangedMethod(methodNode, updatedMethod, originalClass,  updatedClass);
                     if (null != changedParamMethodNode){
                         changedParamMethods.add(changedParamMethodNode);
@@ -281,7 +280,6 @@ public class RobustCodeChangeChecker {
             List<FieldNode> copyOfTwo = new ArrayList<FieldNode>(two);
 
             List<FieldNode> invariantFields = new ArrayList<FieldNode>();
-            // TODO: 17/8/25 需要区分出来 change field 与 add field
             for (FieldNode elementOfTwo : two) {
                 //遍历2
                 FieldNode commonElement = getElementOf(copyOfOne, elementOfTwo, FIELD_COMPARATOR);

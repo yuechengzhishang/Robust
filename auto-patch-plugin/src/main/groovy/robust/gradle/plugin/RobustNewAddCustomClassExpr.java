@@ -105,7 +105,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
             }
 
         } else {
-            // TODO: 17/9/1 处理非静态field的调用
+            //处理非静态field的调用
 
         }
 
@@ -117,7 +117,6 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
                     String modifyClassName = callCtField.getDeclaringClass().getName();
                     HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
                     String patchClassName = customModifiedClasses.get(modifyClassName);
-                    //// TODO: 17/9/1
                     if (fieldAccess.isStatic()){
                         if (fieldAccess.isReader()){
                             StringBuilder stringBuilder = new StringBuilder();
@@ -172,7 +171,6 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
 
             if (isVisitConfigModifiedClasses(callCtMethod)){
                 if (RobustChangeInfo.isNewAddMethod(callCtMethod)){
-                    // TODO: 17/9/1
                     String modifyClassName = callCtMethod.getDeclaringClass().getName();
                     HashMap<String,String> customModifiedClasses = getCustomModifiedClasses();
                     String patchClassName = customModifiedClasses.get(modifyClassName);

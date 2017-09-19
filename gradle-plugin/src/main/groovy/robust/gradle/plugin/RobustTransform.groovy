@@ -51,7 +51,7 @@ class RobustTransform extends Transform implements Plugin<Project> {
             for (int index = 0; index < taskNames.size(); ++index) {
                 def taskName = taskNames[index]
                 logger.debug "input start parameter task is ${taskName}"
-                //FIXME: assembleRelease下屏蔽Prepare，这里因为还没有执行Task，没法直接通过当前的BuildType来判断，所以直接分析当前的startParameter中的taskname，
+                //assembleRelease下屏蔽Prepare，这里因为还没有执行Task，没法直接通过当前的BuildType来判断，所以直接分析当前的startParameter中的taskname，
                 //另外这里有一个小坑task的名字不能是缩写必须是全称 例如assembleDebug不能是任何形式的缩写输入
                 if (taskName.endsWith("Debug") && taskName.contains("Debug")) {
 //                    logger.warn " Don't register robust transform for debug model !!! task is：${taskName}"
@@ -162,8 +162,6 @@ class RobustTransform extends Transform implements Plugin<Project> {
 
         def box = ConvertUtils.toCtClasses(inputs, classPool)
 
-        //todo 在混淆task后，dex task之前 :aimeituan:transformClassesWithDexForPreloadedRelease
-        //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         File robustOutDirFile = new File(project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY);
         File storeMainJarFile = new File(robustOutDirFile,Constants.ROBUST_MAIN_JAR)
         FileUtil.createFile(storeMainJarFile.absolutePath)
@@ -187,8 +185,6 @@ class RobustTransform extends Transform implements Plugin<Project> {
         writeMap2File(insertcodeStrategy.methodMap, Constants.METHOD_MAP_OUT_PATH)
 
 
-        //todo 在混淆task后，dex task之前 :aimeituan:transformClassesWithDexForPreloadedRelease
-        //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         String robustOutDir = project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY
         File robustMainJar = new File(robustOutDir,Constants.ROBUST_TRANSFORM_MAIN_JAR)
         FileUtil.copyFile(jarFile,robustMainJar)

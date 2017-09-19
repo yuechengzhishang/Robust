@@ -84,7 +84,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
 
         if (f.isReader()){
-            if (f.getSignature().contains(ChangeQuickRedirect.class.getCanonicalName().replace(".","/"))){// is quickchangeredirect // TODO: 17/9/16
+            if (f.getSignature().contains(ChangeQuickRedirect.class.getCanonicalName().replace(".","/"))){// is quickchangeredirect //
                 return;
             }
         }
@@ -528,7 +528,6 @@ public class RobustMethodExprEditor extends ExprEditor {
         }
 
         // 大部分情况下是需要替换this为originalClass的
-        // TODO: 17/8/7 处理builder 除了匿名内部类，都把this换成originalClass
 
         //可能会出现一个class，被修改多次，这时候如何预警？？？
         //有一种问题，就是
@@ -570,7 +569,6 @@ public class RobustMethodExprEditor extends ExprEditor {
             stringBuilder.append("java.lang.Object " + " instance;");
             stringBuilder.append("instance = ((" + patchClass.getName() + ")$0)." + Constants.ORIGINCLASS + ";");
             if (methodParamSignature.toString().length() > 0) {
-                //// TODO: 17/9/7  parameters
                 String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null, methodCall, patchClass, sourceClass);
                 paramsStr = paramsStr.replace("(", "").replace(")", "");
                 stringBuilder.append("java.lang.Object parameters[]= new Object[]{" + paramsStr + "};");
@@ -594,7 +592,7 @@ public class RobustMethodExprEditor extends ExprEditor {
     public void replaceThisToOriginClassMethodDirectlyByCallOuterMethod(MethodCall m) throws NotFoundException, CannotCompileException {
         int accessFlag = m.getMethod().getModifiers();
         if (AccessFlag.isProtected(accessFlag) || AccessFlag.isPrivate(accessFlag) || AccessFlag.isPackage(accessFlag)) {
-            //反射 // TODO: 17/9/10
+            //反射
             com.meituan.robust.utils.RobustLog.log("replaceThisToOriginClassMethodDirectlyByCallOuterMethod :" + m.getMethod().getLongName());
         } else {
             StringBuilder stringBuilder = new StringBuilder();
@@ -776,14 +774,12 @@ public class RobustMethodExprEditor extends ExprEditor {
                 stringBuilder.append("instance = ((" + patchClass.getName() + ")$0)." + Constants.ORIGINCLASS + ";");
                 stringBuilder.append("} ");
                 //在static method中使用非static method
-                //// TODO: 17/9/7 参数传错了
 //                public static void access$100(TestPatchActivityPatch x0, String x1) {
 //                    TestPatchActivityPatch var5 = (TestPatchActivityPatch)x0;
 //                    EnhancedRobustUtils.invokeReflectMethod("setPrivateString", var5, new Object[]{x1}, new Class[]{String.class}, TestPatchActivity.class);
 //                }
-//               todo 考虑使用这个 RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class();
+//              考虑使用这个 RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class();
                 if (signatureBuilder.toString().length() > 0) {
-                    //// TODO: 17/9/7  parameters
                     String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null, methodCall, patchClass, Config.classPool.get(sourceClassName));
                     paramsStr = paramsStr.replace("(", "").replace(")", "");
                     stringBuilder.append("java.lang.Object parameters[]= new Object[]{" + paramsStr + "};");

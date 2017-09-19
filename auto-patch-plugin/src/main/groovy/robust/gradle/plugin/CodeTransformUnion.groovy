@@ -117,20 +117,19 @@ public class CodeTransformUnion {
         File oldMainJarFile = new File(ROBUST_DIR, Constants.ROBUST_TRANSFORM_MAIN_JAR)
         File oldProGuardJarFile = new File(ROBUST_DIR, Constants.ROBUST_PROGUARD_MAIN_JAR)
 
-        //2. get current classes  todo 如果是proguard之后，我们插了代码，需要做兼容
-        //拷贝未插桩的main.jar start todo move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
+        //2. get current classes 如果是proguard之后，我们插了代码，需要做兼容
+        //拷贝未插桩的main.jar start  move to RobustStoreClassAction 后面需要考虑在混淆后拷贝一下，第一版本暂时不考虑混淆
         File newMainJarFile = new File(patchPath, Constants.ROBUST_TRANSFORM_MAIN_JAR)
         File newProGuradJarFile = new File(patchPath, Constants.ROBUST_PROGUARD_MAIN_JAR)
         if (newMainJarFile.exists() || newProGuradJarFile.exists()) {
             //如果proguard打开了，就使用proguard的包
-            //todo test proguard
             if (newProGuradJarFile.exists()) {
                 if (null == oldProGuardJarFile || !oldProGuardJarFile.exists()){
                     throw new RuntimeException("you are use proguard, please copy your last build/outputs/robust/" + Constants.ROBUST_PROGUARD_MAIN_JAR + " to app/robust dir ")
                 }
                 newMainJarFile = newProGuradJarFile
                 oldMainJarFile = oldProGuardJarFile
-                //todo read mapping 使用新的mapping文件
+                //read mapping 使用新的mapping文件
                 RobustProguardMapping.readMapping(Config.newMappingFilePath);
             }
         } else {
@@ -217,8 +216,7 @@ public class CodeTransformUnion {
             //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
             if (null != outerMethodInfo){
                 if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
-                    //修改的class已经包含了匿名内部类改动带来的class改动，还需要记录方法的改动
-                    //todo 9-1
+                    //修改的class已经包含了匿名内部类改动带来的class改动
                 } else {
                     Config.modifiedClassNameList.add(outerMethodInfo.outerClass)
                 }
@@ -228,7 +226,6 @@ public class CodeTransformUnion {
         for (String modifiedClassName : Config.modifiedClassNameList) {
             CtClass modifiedCtClass = Config.classPool.get(modifiedClassName);
             modifiedCtClass.defrost();
-            //todo delete unChanged anonymousInnerClass 8-29
 //            Config.newlyAddedClassNameList.addAll(AnonymousInnerClassUtil.getAnonymousInnerClass(modifiedCtClass));
         }
 
@@ -358,7 +355,7 @@ public class CodeTransformUnion {
 
         //auto generate all class
         for (String fullClassName : Config.modifiedClassNameList) {
-            setAnonymousInnerClassPublic(fullClassName)//todo 在robustTransform已经做了，可以考虑删除这行代码
+            setAnonymousInnerClassPublic(fullClassName)//在robustTransform已经做了，可以考虑删除这行代码
             CtClass ctClass = Config.classPool.get(fullClassName)
             CtClass patchClass = PatchesFactory.createPatch(patchPath, ctClass, false, NameManger.getInstance().getPatchName(ctClass.name), Config.patchMethodSignatureSet)
             patchClass.writeFile(patchPath)
@@ -436,7 +433,7 @@ public class CodeTransformUnion {
 //            CtClass sourceClass = Config.classPool.get(originalClassName)
 //            CtClass[] ctClasses = sourceClass.getNestedClasses();
             List<CtClass> ctClasses = new ArrayList<CtClass>()
-//            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里 todo 9-1
+//            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里
 
             for (String newAddClassName : Config.modifiedAnonymousClassNameList) { //处理Anonymous表达式
                 if (ProguardUtils.isSubClass(newAddClassName,originalClassName)) {
@@ -466,12 +463,11 @@ public class CodeTransformUnion {
 
                 String unProguardOldName = ProguardUtils.getUnProguardClassName(oldName);
                 String unProguardOriginalClassName = ProguardUtils.getUnProguardClassName(originalClassName);
-                //todo 9-12 临时加的注释
-                    if (oldName.contains(originalClassName) /*|| unProguardOldName.contains(unProguardOriginalClassName)*/){
-                        newName = oldName.replace(originalClassName, originalClassName + "Patch")
-                    } else {
-                        newName = oldName + "Patch";
-                    }
+                if (oldName.contains(originalClassName) /*|| unProguardOldName.contains(unProguardOriginalClassName)*/){
+                    newName = oldName.replace(originalClassName, originalClassName + "Patch")
+                } else {
+                    newName = oldName + "Patch";
+                }
 
                 if (null != Config.classPool.getOrNull(newName)){
                     //patch is already in patch dir
@@ -485,7 +481,7 @@ public class CodeTransformUnion {
                     Config.classPool.appendClassPath(Config.robustGenerateDirectory)
                     CtClass anonymousInnerClass = Config.classPool.get(tempLambdaOrAnonymousCtClass.getName())
                     anonymousInnerClass.defrost()
-                    //handle access$100 todo 还得考虑普通内部类 比较头疼的内部类里面有内部类
+                    //handle access$100
                     AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass, originalClassName, originalClassName + "Patch")
 //                    nestedCtClass.
                     anonymousInnerClass.writeFile(Config.robustGenerateDirectory)

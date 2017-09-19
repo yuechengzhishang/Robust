@@ -69,7 +69,6 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
             //replace access method
             //replace params
 
-            //// TODO: 17/9/10 不处理$$lambda$1中的access方法, testing
 //            if (is_access$lambda$_method(m)) {
 //                final List<CtMethod> ctMethods = new ArrayList<>();
 //                try {
@@ -236,7 +235,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
 
             if (declaringClassName.equals(patchClassName)) {
                 //如果是本patch类的field
-                //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
+                //如果是新增的字段，需要重新处理一下
                 stringBuilder.append("$_ = $proceed($$);");
                 stringBuilder.append(Constants.ROBUST_UTILS_FULL_NAME + ".setStaticFieldValue(\"" + field.getName() + "\"," + originalClassName + ".class,$1);");
             } else if (declaringClassName.equals(originalClassName)) {
@@ -263,7 +262,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
             com.meituan.robust.utils.RobustLog.log("setFieldString field " + field.getName() + "  declaringClass   " + declaringClassName);
 
             if (declaringClassName.equals(patchClassName)) {
-                //如果是新增的字段，需要重新处理一下 // TODO: 17/8/2
+                //如果是新增的字段，需要重新处理一下
                 //如果是本patch类的field
                 stringBuilder.append("$_ = $proceed($$);");
 

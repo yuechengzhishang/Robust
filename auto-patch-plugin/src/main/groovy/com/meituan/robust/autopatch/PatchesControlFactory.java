@@ -86,7 +86,6 @@ public class PatchesControlFactory {
             String methodNumber = ProguardUtils.getMethodID(methodLongName);
             if (methodLongName.contains(INIT_ROBUST_PATCH)) {
                 String tempMethodLongName = methodLongName.replace(INIT_ROBUST_PATCH, "<init>");
-                //// TODO: test
                 methodNumber = ProguardUtils.getMethodID(tempMethodLongName);
             }
             //just Forward methods with methodNumber

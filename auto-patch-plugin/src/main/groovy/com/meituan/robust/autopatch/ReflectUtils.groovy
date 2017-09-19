@@ -18,7 +18,7 @@ class ReflectUtils {
 //            $0 is null if the field is static.
     //如果FieldAccess is non-static and outerMethod is non-static =>  FieldAccess has this
 //            if (!isOuterMethodStatic && !isStatic) { //有this存在的环境
-//                //todo need to handle $0 is this 's Q
+//
 //                if (AccessFlag.isPublic(field.modifiers)){
 //                    //没有考虑新增field,如果是新增field，需要区分出来，新增/修改的field需要使用this调用
 //                    stringBuilder.append("if(\$0 == this) { ");
@@ -26,7 +26,7 @@ class ReflectUtils {
 //                    stringBuilder.append("} ")
 //                    stringBuilder.append("else            { "+ "\$_ = \$proceed(\$\$);" + " }" );
 //                } else {
-//                    //todo need reflect
+//
 //                    stringBuilder.append("if(\$0 == this) {");
 //                    stringBuilder.append("\$_=(\$r) " + "((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "."+field.name+";");
 //                    stringBuilder.append("} ")
@@ -39,12 +39,12 @@ class ReflectUtils {
 //            }
     //如果在TestPatchActivity 里面 TestPatchActivity testPatchActivity =  new TestPatchActivity(); 这种情况好像没有考虑
     //如何避免TestPatchActivity testPatchActivity =  new TestPatchActivity();
-    //int xx = testPatchActivity.xx; vs int xx = this.xx; todo 8-30
+    //int xx = testPatchActivity.xx; vs int xx = this.xx;
     //这种情况如何处理？其中方法里还包括这样的代码
-    //int xx = testPatchActivity.getxx(); vs int xx = this.getxx(); todo 8-30
+    //int xx = testPatchActivity.getxx(); vs int xx = this.getxx();
     // 在方法的处理中？？？ 可以判断 testPatchActivity 是否 == this，来区分
 //            if (AccessFlag.isPublic(field.modifiers)) {
-//                if (field.declaringClass.name.equals(patchClassName)) { //如果是子类的protected属性呢？todo
+//                if (field.declaringClass.name.equals(patchClassName)) { //如果是子类的protected属性呢？
 //                    stringBuilder.append("\$_=(\$r) " + "((" + patchClassName + ")\$0)." + Constants.ORIGINCLASS + "." + field.name + ";");
 //                } else {
 //                    stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
@@ -98,7 +98,7 @@ class ReflectUtils {
                 stringBuilder.append("instance=\$0;");
                 stringBuilder.append("}");
                 if (field.declaringClass.name.equals(patchClassName)) {
-                    //如果是子类的protected属性呢？todo
+                    //如果是子类的protected属性呢？
                     stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${modifiedClassName}.class);");
                 } else {
                     stringBuilder.append("\$_=(\$r) " + Constants.ROBUST_UTILS_FULL_NAME + ".getFieldValue(\"" + field.name + "\",instance,${field.declaringClass.name}.class);");
@@ -114,7 +114,7 @@ class ReflectUtils {
     }
 
     public static String setFieldString2(CtField field, String patchClassName, String modifiedClassName) {
-        //todo mTopBarFragment.viewCreatedCallback = this;
+        //mTopBarFragment.viewCreatedCallback = this;
         boolean isStatic = isStatic(field.modifiers)
         StringBuilder stringBuilder = new StringBuilder("{");
         if (isStatic) {
@@ -318,7 +318,6 @@ class ReflectUtils {
         stringBuilder.append("{");
         // public method or methods in patched classes
 //        if (!inline && isPatchClassMethod(methodCall, outerClass)) {
-//            //todo 目前对有所方法进行反射
 ////        if (AccessFlag.isPublic(methodCall.method.modifiers) || isPatchClassMethod(methodCall.method, outerClass)) {
 //            println("in  getMethodCallString  before     isInStaticMethod is   " + isInStaticMethod + "  methodCall.className  " + methodCall.className + " linenumber " + methodCall.lineNumber)
 //            if (isInStaticMethod) {
@@ -423,7 +422,6 @@ class ReflectUtils {
 
                 }
             } else {
-                // todo 新增类是调用的方法含有内联，并且是含有this的情况没有考虑
                 String signatureBuilder = getParameterClassString(method.parameterTypes);
                 stringBuilder.append("java.lang.Object target[]=" + Constants.GET_REAL_PARAMETER + "(new java.lang.Object[]{\$0});");
                 stringBuilder.append(" instance=new " + NameManger.getInstance().getInlinePatchName(method.declaringClass.name) + "(target[0]);")

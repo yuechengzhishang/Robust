@@ -26,7 +26,7 @@ public class RobustMethodCallEditorUtils4 {
             if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
                 if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
                     //need to reflect static method
-                    //如果参数里面有this，需要处理一下 // TODO: 17/8/31  
+                    //如果参数里面有this，需要处理一下 //
 //                    if (){
 //
 //                    }

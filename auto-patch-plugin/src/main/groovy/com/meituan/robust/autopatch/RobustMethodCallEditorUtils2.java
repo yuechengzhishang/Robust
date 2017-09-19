@@ -32,7 +32,7 @@ public class RobustMethodCallEditorUtils2 {
             if (RobustChangeInfo.isInvariantMethod(callCtMethod)) {
                 if (AccessFlag.isPublic(callCtMethod.getModifiers())) {
                     //need to reflect static method
-                    //如果参数里面有this，需要处理一下 // TODO: 17/8/31
+                    //如果参数里面有this，需要处理一下 //
 //                    if (){
 //
 //                    }
@@ -69,7 +69,7 @@ public class RobustMethodCallEditorUtils2 {
             return true;
         }
         if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
-            //// TODO: 17/8/7 判断是否父类方法 或者本类方法
+            ////判断是否父类方法 或者本类方法
             //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
             //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
             return true;
@@ -102,7 +102,7 @@ public class RobustMethodCallEditorUtils2 {
         if (sourceClass.getName().equals(methodTargetClass.getName())) {
 //            replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
         } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
-            //// TODO: 17/8/7 判断是否父类方法 或者本类方法
+            ////  判断是否父类方法 或者本类方法
             //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
 //            System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
             //需要考虑一下protect方法（package方法全部在插桩的时候改掉）
@@ -157,7 +157,7 @@ public class RobustMethodCallEditorUtils2 {
         for (CtClass param : params) {
             index++;
             if (param.getName().equals(patchClass.getName())) {
-                //// TODO: 17/8/31 如果是patch的父类呢？
+                ////  如果是patch的父类呢？
 //                    System.err.println("param.getName(): " +param.getName());
 //                    System.err.println("sourceClassName Patch: " +patchClassName+"Patch");
                 paramList.add("$" + index + "." + Constants.ORIGINCLASS);

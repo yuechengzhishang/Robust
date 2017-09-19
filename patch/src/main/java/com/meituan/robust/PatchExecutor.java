@@ -153,7 +153,6 @@ public class PatchExecutor extends Thread {
 
 //        if (failedPatches.size() > 0) {
 //            //case: class in plugin, and robust run quickly, retry
-//            // TODO: 17/6/20 什么时机重试呢？ 重试几次呢？
 //            for (Patch patch : failedPatches) {
 //                robustCallBack.logNotify("patch apply failed , patch name is : " + patch.getName(), "class:PatchExecutor method:applyDexTypePatches line:159");
 //            }
