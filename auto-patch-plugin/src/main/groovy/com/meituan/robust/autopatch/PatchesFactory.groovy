@@ -5,6 +5,7 @@ import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.change.comparator.ByteCodeUtils
 import com.meituan.robust.utils.JavaUtils
 import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils
+import com.meituan.robust.utils.RobustLog
 import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.bytecode.ClassFile
@@ -185,7 +186,7 @@ class PatchesFactory {
         try {
             sourceClassTemp.writeFile(Config.robustGenerateDirectory);
         } catch (CannotCompileException e) {
-            e.printStackTrace();
+            RobustLog.log("CannotCompileException ",e);
         }
         sourceClassTemp.defrost()
         sourceClassTemp.getClassFile().setMajorVersion(ClassFile.JAVA_7);

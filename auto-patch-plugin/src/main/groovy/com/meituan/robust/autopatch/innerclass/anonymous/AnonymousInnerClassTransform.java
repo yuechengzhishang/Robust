@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch.innerclass.anonymous;
 
 import com.meituan.robust.autopatch.AnonymousInnerClassMethodExprEditor;
+import com.meituan.robust.utils.RobustLog;
 
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -18,7 +19,7 @@ public class AnonymousInnerClassTransform {
                         new AnonymousInnerClassMethodExprEditor(anonymousInnerClass, outerSourceClassName,outerPatchClassName, method)
                 );
             } catch (CannotCompileException e) {
-                e.printStackTrace();
+                RobustLog.log("Exception ",e);
             }
         }
     }

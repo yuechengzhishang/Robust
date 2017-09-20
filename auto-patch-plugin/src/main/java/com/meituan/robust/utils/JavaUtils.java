@@ -45,7 +45,7 @@ public class JavaUtils {
 //    }
 
     public static void main(String[] args) {
-        String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap (8).robust";
+        String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap (10).robust";
 
         parseRobustMethodsMap2File(path0, new File(path0 + ".txt"));
         if (true) {
@@ -111,7 +111,7 @@ public class JavaUtils {
                 throw new RuntimeException("getMapFromZippedFile error,file doesn't exist ,path is " + path);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
             throw new RuntimeException("getMapFromZippedFile from " + path + "  error ");
         }
         return result;
@@ -247,7 +247,7 @@ public class JavaUtils {
             }
             inputStream.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
             return "";
         }
 
@@ -347,7 +347,7 @@ public class JavaUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
         boolean hh = (methodSignure.toString() instanceof String);
         return methodSignure.toString();
@@ -396,7 +396,7 @@ public class JavaUtils {
 //            CtConstructor constructor = CtNewConstructor.make(patchClassConstruct.toString(), patchClass);
 //            patchClass.addConstructor(constructor);
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
 
             throw new RuntimeException();
         }

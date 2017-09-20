@@ -2,6 +2,7 @@ package robust.gradle.plugin;
 
 import com.meituan.robust.autopatch.HasRobustProxyUtils;
 import com.meituan.robust.change.RobustChangeInfo;
+import com.meituan.robust.utils.RobustLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
 //                expr.replace(";");
                 return true;
             } catch (Exception e) {
-                e.printStackTrace();
+                RobustLog.log("Exception ",e);
             }
         }
         return false;
@@ -70,7 +71,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
                     return true;
                 }
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
         }
         return false;
@@ -101,7 +102,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
                     return;
                 }
             } catch (NotFoundException e) {
-                e.printStackTrace();
+              RobustLog.log("NotFoundException ",e);
             }
 
         } else {
@@ -142,7 +143,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
                 }
             }
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
     }
 
@@ -239,7 +240,7 @@ public class RobustNewAddCustomClassExpr extends ExprEditor {
                 }
             }
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
     }
     public static boolean isStatic(int modifiers) {

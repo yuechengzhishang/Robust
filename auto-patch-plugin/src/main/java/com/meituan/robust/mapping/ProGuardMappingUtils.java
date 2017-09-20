@@ -1,5 +1,7 @@
 package com.meituan.robust.mapping;
 
+import com.meituan.robust.utils.RobustLog;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -28,7 +30,7 @@ public class ProGuardMappingUtils {
         try {
             reader.pump(keeper);
         } catch (IOException e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
 //        for (String className : classMappings.keySet()) {
 //            if (className.contains("com.meituan.sample.test.BadClass")){

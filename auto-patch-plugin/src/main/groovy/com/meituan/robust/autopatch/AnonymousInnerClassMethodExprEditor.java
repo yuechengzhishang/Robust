@@ -196,7 +196,7 @@ public class AnonymousInnerClassMethodExprEditor extends ExprEditor {
         try {
             params = methodCall.getMethod().getParameterTypes();
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException",e);
         }
         if (null != params && params.length > 0) {
             List<String> paramList = new ArrayList<String>();

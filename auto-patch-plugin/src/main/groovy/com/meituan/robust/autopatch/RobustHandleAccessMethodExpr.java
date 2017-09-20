@@ -2,6 +2,7 @@ package com.meituan.robust.autopatch;
 
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.ProguardUtils;
+import com.meituan.robust.utils.RobustLog;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -106,7 +107,7 @@ public class RobustHandleAccessMethodExpr extends ExprEditor {
                 }
             }
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
     }
 }

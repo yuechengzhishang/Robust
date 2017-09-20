@@ -152,6 +152,11 @@ public class TestPatchActivity extends AppCompatActivity{
 //        });
         AddCustomClass.visit();
         new TestPatchAddSubNonStaticClass();
+        testInt(200);
+    }
+
+    private void testInt(int value){
+        Log.e("robust","private void testInt : "+value);
     }
 
     private void setPrivateString(String privateString){

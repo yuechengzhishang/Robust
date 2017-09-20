@@ -65,7 +65,7 @@ public class SmaliTool {
 
             });
         } catch (IOException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
         for (File file : smaliFileList) {
             BufferedWriter writer = null;
@@ -85,20 +85,20 @@ public class SmaliTool {
                 writer.write(fileContent.toString());
                 writer.flush();
             } catch (IOException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             } finally {
                 if (reader != null) {
                     try {
                         reader.close();
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        RobustLog.log("NotFoundException ",e1);
                     }
                 }
                 if (writer != null) {
                     try {
                         writer.close();
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        RobustLog.log("NotFoundException ",e1);
                     }
                 }
             }

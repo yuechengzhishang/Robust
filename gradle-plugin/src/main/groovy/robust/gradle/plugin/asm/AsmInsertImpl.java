@@ -160,17 +160,17 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 //ignore getSystemService_aroundBody17$advice
                 needInsertCode = false;
             }
-            if (needInsertCode && isStatic(originAccess)) {
-                //静态方法必须插桩 , access$000 access$lambda$0 是静态方法，需要排除
-                if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
-                    needInsertCode = false;
+            if (needInsertCode) {
+                if (isStatic(originAccess)){
+                    //静态方法必须插桩 , access$000 access$lambda$0 是静态方法，需要排除
+                    if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
+                        needInsertCode = false;
+                    } else {
+                        needInsertCode = true;
+                    }
                 } else {
-                    needInsertCode = true;
+                    needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
                 }
-            }
-
-            if (needInsertCode){
-                needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
             }
 
             if (name.startsWith("lambda$")){
@@ -327,7 +327,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
             } else if (FieldGetterChecker.isGetterMethod(classNode, m)) {
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, false);
-            } else if (m.maxStack > 90 || inList.size() > 200) {//普通getter setter 方法大概在12-15行
+            } else if (m.maxStack > 2 || inList.size() > 20) {//普通getter setter 方法大概在12-15行
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
             } else {
                 boolean isMethodInvoke = false;

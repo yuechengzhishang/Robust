@@ -85,7 +85,7 @@ public class CodeTransformUnion {
         for (String libName : Constants.LIB_NAME_ARRAY) {
             InputStream inputStream = JavaUtils.class.getResourceAsStream("/libs/" + libName);
             if (inputStream == null) {
-                System.out.println("Warning!!!  Did not find " + libName + " ，you must addClasses it to your project's libs ");
+                RobustLog.log("Warning!!!  Did not find " + libName + " ，you must addClasses it to your project's libs ");
                 continue;
             }
             File inputFile = new File(ROBUST_DIR + libName);
@@ -93,8 +93,8 @@ public class CodeTransformUnion {
                 OutputStream inputFileOut = new FileOutputStream(inputFile);
                 JavaUtils.copy(inputStream, inputFileOut);
             } catch (Exception e) {
-                e.printStackTrace();
-                System.out.println("Warning!!! " + libName + " copy error " + e.getMessage());
+                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("Warning!!! " + libName + " copy error " + e.getMessage());
 
             }
         }
@@ -330,7 +330,7 @@ public class CodeTransformUnion {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
     }
 

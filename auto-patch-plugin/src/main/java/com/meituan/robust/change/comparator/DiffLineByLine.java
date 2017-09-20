@@ -90,7 +90,7 @@ public class DiffLineByLine {
                             byte[] bytes = lambdaCtClass.toBytecode();
                             changedLambdaClassNode2 = RobustCodeChangeChecker.getClassNode(bytes);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            RobustLog.log("Exception ",e);
                         }
                         try {
                             RobustChangeInfo.ClassChange classChange =
@@ -112,7 +112,7 @@ public class DiffLineByLine {
                                 }
                             }
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            RobustLog.log("Exception ",e);
                         }
                     }
                 } else if (ProguardUtils.isHasNewAnonymousClass(line1, line2)) {
@@ -140,7 +140,7 @@ public class DiffLineByLine {
                                     byte[] bytes = lambdaCtClass.toBytecode();
                                     changedLambdaClassNode2 = RobustCodeChangeChecker.getClassNode(bytes);
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    RobustLog.log("Exception ",e);
                                 }
                                 try {
                                     RobustChangeInfo.ClassChange classChange =
@@ -162,7 +162,7 @@ public class DiffLineByLine {
                                         }
                                     }
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    RobustLog.log("Exception ",e);
                                 }
                             }
                         }
@@ -201,7 +201,7 @@ public class DiffLineByLine {
         try {
             return getLambdaClassNode(newLambdaClassName, Config.newJar);
         } catch (IOException e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
         return null;
     }
@@ -210,7 +210,7 @@ public class DiffLineByLine {
         try {
             return getLambdaClassNode(oldLambdaClassName, Config.oldJar);
         } catch (IOException e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
         return null;
     }

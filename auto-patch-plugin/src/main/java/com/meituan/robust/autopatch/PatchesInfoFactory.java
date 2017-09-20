@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
+import com.meituan.robust.utils.RobustLog;
 
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -45,7 +46,7 @@ public class PatchesInfoFactory {
             ctPatchesInfoImpl.addMethod(m);
             return ctPatchesInfoImpl;
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
             throw new RuntimeException(e);
         }
     }

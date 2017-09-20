@@ -1,5 +1,6 @@
 package robust.gradle.plugin
 
+import com.meituan.robust.utils.RobustLog
 import javassist.CannotCompileException
 import javassist.CtClass
 import javassist.NotFoundException
@@ -30,7 +31,7 @@ class ResourceTaskUtils {
             zos.closeEntry();
             zos.flush();
         }catch (Exception e){
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
     }
 }

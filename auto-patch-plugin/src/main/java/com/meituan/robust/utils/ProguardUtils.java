@@ -35,7 +35,7 @@ public class ProguardUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            RobustLog.log("Exception ",e);
         }
         return methodSignure.toString();
     }
@@ -150,7 +150,7 @@ public class ProguardUtils {
             try {
                 ctMethod = methodCall.getMethod();
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
             if (null == ctMethod) {
                 RobustLog.log("ctMethod is null", new RuntimeException("ctMethod is null ,info :" + methodCall.getClassName() + " " + methodCall.getMethodName() + " " + methodCall.getSignature()));
@@ -159,7 +159,7 @@ public class ProguardUtils {
                 try {
                     methodSignure = JavaUtils.getJavaMethodSignure(ctMethod);
                 } catch (NotFoundException e) {
-                    e.printStackTrace();
+                    RobustLog.log("NotFoundException ",e);
                 }
                 String modifiedClassName = methodCall.getClassName();
                 String patchClassName = new String(modifiedClassName);
@@ -209,7 +209,7 @@ public class ProguardUtils {
             try {
                 lambdaCtClass = classPool.getCtClass(lambdaClassName);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
 
             if (null == lambdaCtClass) {
@@ -220,7 +220,7 @@ public class ProguardUtils {
             try {
                 lambdaCtMethod = lambdaCtClass.getMethod(proguardMethodName, proguardMethodSignature);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
             if (null == lambdaCtMethod) {
                 RobustLog.log("null == lambdaCtMethod 226");
@@ -230,7 +230,7 @@ public class ProguardUtils {
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
 
 
@@ -318,7 +318,7 @@ public class ProguardUtils {
         try {
             lambdaCtMethod = ctClass.getMethod(proguardMethodName, proguardMethodSignature);
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
         if (null == lambdaCtMethod) {
             RobustLog.log("null == lambdaCtMethod 226");
@@ -329,7 +329,7 @@ public class ProguardUtils {
         try {
             methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
 
         String methodLongName = dotClassName + "." + methodSignure;
@@ -369,7 +369,7 @@ public class ProguardUtils {
         try {
             lambdaCtMethod = ctClass.getMethod(proguardMethodName, proguardMethodSignature);
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
         if (null == lambdaCtMethod) {
             RobustLog.log("null == lambdaCtMethod 226");
@@ -380,7 +380,7 @@ public class ProguardUtils {
         try {
             methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
         } catch (NotFoundException e) {
-            e.printStackTrace();
+            RobustLog.log("NotFoundException ",e);
         }
 
         String methodLongName = dotClassName + "." + methodSignure;
@@ -441,7 +441,7 @@ public class ProguardUtils {
             try {
                 innerCtClass = classPool.getCtClass(callClassName);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
 
             if (null == innerCtClass) {
@@ -452,7 +452,7 @@ public class ProguardUtils {
             try {
                 accessCtMethod = innerCtClass.getMethod(proguardMethodName, proguardMethodSignature);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
             if (null == accessCtMethod) {
                 RobustLog.log("null == lambdaCtMethod 226");
@@ -462,7 +462,7 @@ public class ProguardUtils {
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(accessCtMethod);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
 
 
@@ -528,7 +528,7 @@ public class ProguardUtils {
             try {
                 innerCtClass = classPool.getCtClass(callClassName);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
 
             if (null == innerCtClass) {
@@ -539,7 +539,7 @@ public class ProguardUtils {
             try {
                 accessCtMethod = innerCtClass.getMethod(proguardMethodName, proguardMethodSignature);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
             if (null == accessCtMethod) {
                 RobustLog.log("null == lambdaCtMethod 226");
@@ -549,7 +549,7 @@ public class ProguardUtils {
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(accessCtMethod);
             } catch (NotFoundException e) {
-                e.printStackTrace();
+                RobustLog.log("NotFoundException ",e);
             }
 
 
