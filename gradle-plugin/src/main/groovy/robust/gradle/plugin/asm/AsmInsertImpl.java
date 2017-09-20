@@ -4,7 +4,6 @@ import com.android.utils.AsmUtils;
 import com.meituan.robust.ChangeQuickRedirect;
 import com.meituan.robust.Constants;
 import com.meituan.robust.RobustMethodId;
-
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -32,6 +31,7 @@ import javassist.CannotCompileException;
 import javassist.CtClass;
 import javassist.CtField;
 import javassist.bytecode.AccessFlag;
+import robust.gradle.plugin.AnonymousUtils;
 import robust.gradle.plugin.InsertcodeStrategy;
 
 
@@ -108,37 +108,58 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 final int tempAccess = access;
                 final String tempDesc = desc;
                 final String tempName = name;
-                mv = new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
-                    @Override
-                    protected void onMethodEnter() {
-                        super.onMethodEnter();
-                        StringBuilder parameters = new StringBuilder();
-                        Type[] types = Type.getArgumentTypes(tempDesc);
-                        for (Type type : types) {
-                            parameters.append(type.getClassName()).append(",");
-                        }
-                        if (parameters.length() > 0 && parameters.charAt(parameters.length() - 1) == ',') {
-                            parameters.deleteCharAt(parameters.length() - 1);
-                        }
+                boolean isAnonymousOrLambda = AnonymousUtils.isAnonymousInnerClass(className);
+                if (isAnonymousOrLambda) {
+                    //ignore
+                    //empty <init> ignore // TODO: 17/9/1
+                } else {
+                    mv = new AdviceAdapter(Opcodes.ASM5, mv, access, name, desc) {
+                        @Override
+                        protected void onMethodEnter() {
+                            super.onMethodEnter();
+                            StringBuilder parameters = new StringBuilder();
+                            Type[] types = Type.getArgumentTypes(tempDesc);
+                            for (Type type : types) {
+                                parameters.append(type.getClassName()).append(",");
+                            }
+                            if (parameters.length() > 0 && parameters.charAt(parameters.length() - 1) == ',') {
+                                parameters.deleteCharAt(parameters.length() - 1);
+                            }
 
-                        String key = className.replace('/', '.') + "." + tempName + "(" + parameters.toString() + ")";
-                        String methodId = RobustMethodId.getMethodId(key);
-                        methodMap.put(key, methodId);
+                            String key = className.replace('/', '.') + "." + tempName + "(" + parameters.toString() + ")";
+                            String methodId = RobustMethodId.getMethodId(key);
+                            methodMap.put(key, methodId);
 
-                        List<Type> paramsTypeClass = new ArrayList<>();
-                        Type returnType = Type.getReturnType(tempDesc);
-                        Type[] argsType = Type.getArgumentTypes(tempDesc);
-                        for (Type type : argsType) {
-                            paramsTypeClass.add(type);
+                            List<Type> paramsTypeClass = new ArrayList<>();
+                            Type returnType = Type.getReturnType(tempDesc);
+                            Type[] argsType = Type.getArgumentTypes(tempDesc);
+                            for (Type type : argsType) {
+                                paramsTypeClass.add(type);
+                            }
+
+                            new MethodBodyInsertor(mv, className, tempDesc, isStatic(tempAccess), methodId, tempName, tempAccess).visitCode();
                         }
+                    };
+                }
 
-                        new MethodBodyInsertor(mv, className, tempDesc, isStatic(tempAccess), methodId, tempName, tempAccess).visitCode();
-                    }
-                };
                 return mv;
             }
 
             boolean needInsertCode = true;
+
+            boolean ajcClosure1 = AnonymousUtils.isAnonymousInnerClass_$AjcClosure1(className);
+            if (ajcClosure1) {
+                //ignore ajcClosure
+                needInsertCode = false;
+            }
+            if (name.startsWith("ajc$")){
+                //ignore ajc$preClinit()
+                needInsertCode = false;
+            }
+            if (name.contains("_")) {
+                //ignore getSystemService_aroundBody17$advice
+                needInsertCode = false;
+            }
             if (needInsertCode && isStatic(originAccess)) {
                 //静态方法必须插桩 , access$000 access$lambda$0 是静态方法，需要排除
                 if (((access & Opcodes.ACC_SYNTHETIC) != 0) && ((access & Opcodes.ACC_PRIVATE) == 0)) {
@@ -151,8 +172,12 @@ public class AsmInsertImpl extends InsertcodeStrategy {
             if (needInsertCode){
                 needInsertCode = isMethodNeedInsertCode(originAccess, name, desc, isNeedInsertCodeMethodMap);
             }
+
             if (name.startsWith("lambda$")){
                 needInsertCode = true;
+            }
+            if (name.startsWith("access$")){
+                needInsertCode = false;
             }
             if (needInsertCode) {
                 StringBuilder parameters = new StringBuilder();
@@ -302,7 +327,7 @@ public class AsmInsertImpl extends InsertcodeStrategy {
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
             } else if (FieldGetterChecker.isGetterMethod(classNode, m)) {
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, false);
-            } else if (m.maxStack > 2 || inList.size() > 20) {//普通getter setter 方法大概在12-15行
+            } else if (m.maxStack > 90 || inList.size() > 200) {//普通getter setter 方法大概在12-15行
                 isNeedInsertCodeMethodMap.put(m.name + m.desc, true);
             } else {
                 boolean isMethodInvoke = false;

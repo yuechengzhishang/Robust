@@ -45,16 +45,7 @@ public class JavaUtils {
 //    }
 
     public static void main(String[] args) {
-        String path_waimai = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap_waimai.robust";
-//        parseRobustMethodsMap2File(path_waimai, new File(path_waimai + ".bak"));
-
-        String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap.robust";
-        path0 = "/Users/hedingxu/robust-github/Robust/app/build/outputs/robust/methodsMap.robust";
-//        String path1 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap-11.robust";
-//        String path2 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap-12.robust";
-//        HashMap<String, String> hashMap1 = getMapFromZippedFile(path1);
-//        HashMap<String, String> hashMap2 = getMapFromZippedFile(path2);
-//        System.err.println(hashMap1.equals(hashMap2));
+        String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap (8).robust";
 
         parseRobustMethodsMap2File(path0, new File(path0 + ".txt"));
         if (true) {

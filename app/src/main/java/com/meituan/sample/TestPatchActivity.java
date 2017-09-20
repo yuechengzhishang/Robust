@@ -143,6 +143,13 @@ public class TestPatchActivity extends AppCompatActivity{
                 return true;
             }
         });
+//        findViewById(R.id.patch_text).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Toast.makeText(getApplicationContext(),"T onclick  in Listener in x:" + getLocalClassName(),Toast.LENGTH_SHORT).show();
+//
+//            }
+//        });
         AddCustomClass.visit();
         new TestPatchAddSubNonStaticClass();
     }

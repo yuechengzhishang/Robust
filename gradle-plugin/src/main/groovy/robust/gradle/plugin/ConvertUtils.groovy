@@ -43,9 +43,10 @@ class ConvertUtils {
                     if (className.endsWith(SdkConstants.DOT_CLASS)) {
                         className = className.substring(0, className.length() - SdkConstants.DOT_CLASS.length()).replaceAll('/', '.')
                         if(classNames.contains(className)){
-                            throw new RuntimeException("You have duplicate classes with the same name : "+className+" please remove duplicate classes ")
+                            RobustLog.log("You have duplicate classes",new RuntimeException("You have duplicate classes with the same name : "+className+" please remove duplicate classes "))
+                        } else {
+                            classNames.add(className)
                         }
-                        classNames.add(className)
                     }
                 }
             }
