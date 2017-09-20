@@ -14,7 +14,7 @@ public class OverrideMethodChecker {
     //由于class name会被混淆，这里不判断class name了
     private final static List<String> SHOULD_INSERT_CODE_METHODS = Arrays.asList(
             //View.OnClickListener
-            "onClick"
+            "onClick","onLongClick"
 
             //Activity
             ,"onCreate","onStart","onRestart","onStop","onResume","onPause","onDestroy"
