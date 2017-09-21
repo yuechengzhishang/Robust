@@ -88,7 +88,7 @@ public class RobustPatchMerger {
             diretcory.listFiles(new FilenameFilter() {
                 @Override
                 boolean accept(File file, String s) {
-                    return !(Constants.PATACH_APK_NAME.equals(s))
+                    return !(Constants.PATACH_APK_NAME.equals(s) || Constants.ROBUST_LOG.equals(s))
                 }
             }).each {
                 if (it.isDirectory()) {

@@ -1,7 +1,5 @@
 package com.meituan.robust.change.comparator;
 
-import com.android.annotations.Nullable;
-
 import org.objectweb.asm.tree.FieldNode;
 
 import javassist.bytecode.AccessFlag;
@@ -12,7 +10,7 @@ import javassist.bytecode.AccessFlag;
 
 public class FieldComparator implements Comparator<FieldNode> {
     @Override
-    public boolean areEqual(@Nullable FieldNode first, @Nullable FieldNode second) {
+    public boolean areEqual(FieldNode first,  FieldNode second) {
         if ((first == null) && (second == null)) {
             return true;
         }
@@ -30,7 +28,7 @@ public class FieldComparator implements Comparator<FieldNode> {
                 && equal(first.value, second.value);
     }
 
-    public static boolean equal(@Nullable Object a, @Nullable Object b) {
+    public static boolean equal( Object a, Object b) {
         return a == b || a != null && a.equals(b);
     }
 }
