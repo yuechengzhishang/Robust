@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by hedingxu on 17/9/6.
@@ -16,15 +18,15 @@ public class RobustLog {
     public static void log(String exceptionName, Throwable throwable) {
         String line1 = exceptionName + ":";
         String line2 = getStackTraceString(throwable);
-        System.err.println("robust log -> " + line1);
-        System.err.println(line2);
+//        System.err.println("robust log -> " + line1);
+//        System.err.println(line2);
         write2FileLineByLine(line1);
         write2FileLineByLine(line2);
     }
 
     public static void log(String info) {
         String line = info + "";
-        System.err.println("robust log -> " + line);
+//        System.err.println("robust log -> " + line);
         write2FileLineByLine(line);
     }
 
@@ -34,9 +36,26 @@ public class RobustLog {
         logPath = path;
     }
 
-    public static void write2FileLineByLine(String line) {
+    private static List<String> logCacheList = new ArrayList<>();
+    public static synchronized void write2FileLineByLine(String line) {
         if (null == logPath || "".equals(logPath)) {
+            logCacheList.add(line);
             return;
+        }
+        if (logCacheList.size() > 0) {
+            for (String cacheLine : logCacheList) {
+                String writeString = cacheLine;
+                if (new File(logPath).exists()) {
+                    String readString = TxtFileReaderAndWriter.readFileAsString(logPath);
+                    if (null == readString || "".equals(readString)) {
+
+                    } else {
+                        writeString = readString + "\n" + writeString;
+                    }
+                }
+                TxtFileReaderAndWriter.writeFile(logPath, writeString);
+            }
+            logCacheList.clear();
         }
         String writeString = line;
         if (new File(logPath).exists()) {

@@ -1,9 +1,7 @@
 package robust.gradle.plugin
 
-import com.meituan.robust.tools.aapt.AaptResourceCollector
-import com.meituan.robust.tools.aapt.AaptUtil
-import com.meituan.robust.tools.aapt.PatchUtil
-import com.meituan.robust.tools.aapt.RDotTxtEntry
+import com.meituan.robust.tools.aapt.*
+
 /**
  * Created by hedex on 17/2/21.
  *
@@ -30,6 +28,9 @@ class KeepResourceId {
                 return
             }
         }
+
+        BundleResourcesSpliter.splitAllBundleResources(new File(resDir))
+
         String idsXml = resDir + File.separator + "values" + File.separator + "ids.xml"
         String publicXml = resDir + File.separator + "values" + File.separator + "public.xml"
         File oldIdsXmlFile = new File(idsXml)

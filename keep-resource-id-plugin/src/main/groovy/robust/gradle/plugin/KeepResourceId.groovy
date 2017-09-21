@@ -31,6 +31,9 @@ class KeepResourceId {
                 return
             }
         }
+
+        BundleResourcesSpliter.splitAllBundleResources(new File(resDir))
+
         String idsXml = resDir + File.separator + "values" + File.separator + "ids.xml"
         String publicXml = resDir + File.separator + "values" + File.separator + "public.xml"
         File oldIdsXmlFile = new File(idsXml)
@@ -45,8 +48,6 @@ class KeepResourceId {
 
         List<String> resourceDirectoryList = new ArrayList<String>()
         resourceDirectoryList.add(resDir)
-
-        BundleResourcesSpliter.splitAllBundleResources(resDir)
 
         Map<RDotTxtEntry.RType, Set<RDotTxtEntry>> rTypeResourceMap = PatchUtil.readRTxt(RDotTxtPath)
 

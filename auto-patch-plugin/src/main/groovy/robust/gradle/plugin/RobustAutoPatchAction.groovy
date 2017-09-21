@@ -26,7 +26,7 @@ public class RobustAutoPatchAction implements Action<Project> {
         }
     }
 
-    boolean isProguardOpen(def variant) {
-        return variant.getBuildType().buildType.minifyEnabled;
-    }
+//    boolean isProguardOpen(def variant) {
+//        return variant.getBuildType().buildType.minifyEnabled;
+//    }
 }

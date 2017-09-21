@@ -22,7 +22,7 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class DefaultFileCopyProcessor implements com.meituan.robust.tools.aapt.FileUtil.FileCopyProcessor {
+public class DefaultFileCopyProcessor implements FileUtil.FileCopyProcessor {
 
     /**
      * copyFileToFileProcess
@@ -40,7 +40,7 @@ public class DefaultFileCopyProcessor implements com.meituan.robust.tools.aapt.F
                 if (fromFile.equals(toFile)) {
                     toFile = toFile + "_copy";
                 }
-                com.meituan.robust.tools.aapt.FileUtil.createFile(toFile);
+                FileUtil.createFile(toFile);
                 InputStream inputStream = new FileInputStream(fromFile);
                 OutputStream outputStream = new FileOutputStream(toFile);
                 try {
@@ -59,7 +59,7 @@ public class DefaultFileCopyProcessor implements com.meituan.robust.tools.aapt.F
                     }
                 }
             } else {
-                com.meituan.robust.tools.aapt.FileUtil.createDirectory(to);
+                FileUtil.createDirectory(to);
             }
         } catch (Exception e) {
             throw new FileCopyException(e);

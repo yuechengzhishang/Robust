@@ -121,7 +121,7 @@ public class AaptResourceCollector {
     }
 
     /**
-     * addClasses resource
+     * add resource
      *
      * @param rType
      * @param idType
@@ -180,9 +180,9 @@ public class AaptResourceCollector {
 //}else{
 //existResourceDirectory=resourceDirectory;
 //resourceDirectoryMap.put(resourceDirectory, resourceDirectory);
-//resourceDirectoryList.addClasses(existResourceDirectory);
+//resourceDirectoryList.add(existResourceDirectory);
 //}
-//existResourceDirectory.resourceEntrySet.addClasses(new ResourceEntry(name,null));
+//existResourceDirectory.resourceEntrySet.add(new ResourceEntry(name,null));
 //}
 //}
 
@@ -206,7 +206,7 @@ public class AaptResourceCollector {
     }
 
     /**
-     * addClasses r type resource name
+     * add r type resource name
      *
      * @param rType
      * @param resourceName
@@ -233,7 +233,7 @@ public class AaptResourceCollector {
             resourceDirectorySet.add(newResourceDirectory);
         }
         for (ResourceDirectory oldResourceDirectory : resourceDirectorySet) {
-            if (oldResourceDirectory.resourceEntrySet.contains(new com.meituan.robust.tools.aapt.ResourceEntry(resourceName, resourceValue))) {
+            if (oldResourceDirectory.resourceEntrySet.contains(new ResourceEntry(resourceName, resourceValue))) {
                 find = true;
                 String resourceKey = rType + "/" + resourceDirectory.directoryName + "/" + resourceName;
                 Set<String> fullFilenameSet = null;
@@ -250,8 +250,8 @@ public class AaptResourceCollector {
         if (!find) {
             for (ResourceDirectory oldResourceDirectory : resourceDirectorySet) {
                 if (oldResourceDirectory.equals(newResourceDirectory)) {
-                    if (!oldResourceDirectory.resourceEntrySet.contains(new com.meituan.robust.tools.aapt.ResourceEntry(resourceName, resourceValue))) {
-                        oldResourceDirectory.resourceEntrySet.add(new com.meituan.robust.tools.aapt.ResourceEntry(resourceName, resourceValue));
+                    if (!oldResourceDirectory.resourceEntrySet.contains(new ResourceEntry(resourceName, resourceValue))) {
+                        oldResourceDirectory.resourceEntrySet.add(new ResourceEntry(resourceName, resourceValue));
                     }
                 }
             }

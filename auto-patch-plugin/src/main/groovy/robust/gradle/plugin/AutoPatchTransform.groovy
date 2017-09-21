@@ -16,6 +16,7 @@ class AutoPatchTransform extends Transform implements Plugin<Project> {
     void apply(Project target) {
         this.project = target
         target.afterEvaluate(new RobustAutoPatchAction())
+        target.afterEvaluate(new RobustKeepResourceIdAction())
     }
 
     @Override
