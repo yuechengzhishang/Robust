@@ -74,7 +74,7 @@ public class CodeTransformUnion {
         }
         long cost = (System.currentTimeMillis() - startTime) / 1000
         com.meituan.robust.utils.RobustLog.log("autoPatch cost " + cost + " second")
-        throw new RuntimeException("auto patch end successfully")
+        throw new RuntimeException("*** auto patch end successfully! ***, patch path is :" + new File(Config.robustGenerateDirectory, Constants.PATACH_APK_NAME).toPath())
     }
 
     static def copyJarToRobust() {
