@@ -2,6 +2,8 @@ package com.meituan.robust.autopatch;
 
 import com.meituan.robust.Constants;
 import com.meituan.robust.change.RobustChangeInfo;
+import com.meituan.robust.utils.ReflectParameterUtils;
+import com.meituan.robust.utils.RobustLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -143,15 +145,16 @@ public class RobustMethodCallEditorUtils2 {
     }
 
     //PatchClass get(this) -> get(this.OriginClass)
+    //todo 调用这个方法之后，后面都是使用反射
     public static String replace_$args_to_this_origin_class(CtMethod ctMethod, MethodCall m, CtClass patchClass, CtClass sourceClass) throws NotFoundException {
-        String paramsStr = "($$)";
+        String paramsStr = "$$";
         CtClass[] params = m.getMethod().getParameterTypes();
         if (null == params || params.length == 0) {
             return paramsStr;
         }
 
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("(");
+//        stringBuilder.append("(");
         int index = 0;
         List<String> paramList = new ArrayList<String>();
         for (CtClass param : params) {
@@ -162,11 +165,12 @@ public class RobustMethodCallEditorUtils2 {
 //                    System.err.println("sourceClassName Patch: " +patchClassName+"Patch");
                 paramList.add("$" + index + "." + Constants.ORIGINCLASS);
             } else {
-                paramList.add("$" + index);
+
+                paramList.add(ReflectParameterUtils.getBoxedParameter("$" + index,params[index-1].getName()));
             }
         }
         stringBuilder.append(String.join(",", paramList));
-        stringBuilder.append(")");
+//        stringBuilder.append(")");
         paramsStr = stringBuilder.toString();
         return paramsStr;
     }

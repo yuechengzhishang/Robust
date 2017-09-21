@@ -570,7 +570,7 @@ public class RobustMethodExprEditor extends ExprEditor {
             stringBuilder.append("instance = ((" + patchClass.getName() + ")$0)." + Constants.ORIGINCLASS + ";");
             if (methodParamSignature.toString().length() > 0) {
                 String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null, methodCall, patchClass, sourceClass);
-                paramsStr = paramsStr.replace("(", "").replace(")", "");
+//                paramsStr = paramsStr.replace("(", "").replace(")", "");
                 stringBuilder.append("java.lang.Object parameters[]= new Object[]{" + paramsStr + "};");
                 stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,parameters,new Class[]{" + methodParamSignature.toString() + "}," + methodTargetClassName + ".class);");
             } else
@@ -781,7 +781,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 //              考虑使用这个 RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class();
                 if (signatureBuilder.toString().length() > 0) {
                     String paramsStr = RobustMethodCallEditorUtils2.replace_$args_to_this_origin_class(null, methodCall, patchClass, Config.classPool.get(sourceClassName));
-                    paramsStr = paramsStr.replace("(", "").replace(")", "");
+//                    paramsStr = paramsStr.replace("(", "").replace(")", "");
                     stringBuilder.append("java.lang.Object parameters[]= new Object[]{" + paramsStr + "};");
                     stringBuilder.append("$_=($r) " + Constants.ROBUST_UTILS_FULL_NAME + ".invokeReflectMethod(\"" + methodCall.getMethodName() + "\",instance,parameters,new Class[]{" + signatureBuilder.toString() + "}," + methodTargetClassName + ".class);");
                 } else
