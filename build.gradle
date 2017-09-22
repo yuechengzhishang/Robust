@@ -4,6 +4,9 @@ buildscript {
     repositories {
         mavenLocal()
         jcenter()
+        maven {
+            url "http://depot.sankuai.com/nexus/content/groups/public/"
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.0'
@@ -17,6 +20,8 @@ buildscript {
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
         classpath 'me.tatarka.retrolambda.projectlombok:lombok.ast:0.2.3.a2'
+
+        classpath 'com.meituan.gradle:roboaspectj:0.9.2'
     }
     configurations.classpath.exclude group: 'com.android.tools.external.lombok'
 }
