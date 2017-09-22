@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javassist.CtClass;
+import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.expr.MethodCall;
@@ -461,8 +462,9 @@ public class ProguardUtils {
             String methodSignure = null;
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(accessCtMethod);
-            } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+            } catch (Exception e) {
+                RobustLog.log("Exception " + methodCall.getClassName() + " " + methodCall.getMethodName() + " " + methodCall.getLineNumber(),e);
+                return false;
             }
 
 
@@ -822,6 +824,20 @@ public class ProguardUtils {
             }
         }
         return null;
+    }
+
+    public static boolean isAspectJField(CtField ctField){
+        try {
+            String preFix = "org.aspectj.lang.JoinPoint";
+            String proguardName = ctField.getType().getName();
+            String unProguardName = ProguardUtils.getUnProguardClassName(proguardName);
+            if (unProguardName.startsWith(preFix)){
+                return true;
+            }
+        } catch (NotFoundException e) {
+            RobustLog.log("NotFoundException",e);
+        }
+        return false;
     }
 
 }

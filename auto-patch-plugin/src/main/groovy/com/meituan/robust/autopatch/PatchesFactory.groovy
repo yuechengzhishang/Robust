@@ -5,6 +5,7 @@ import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.change.comparator.ByteCodeUtils
 import com.meituan.robust.utils.JavaUtils
 import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils
+import com.meituan.robust.utils.ProguardUtils
 import com.meituan.robust.utils.RobustLog
 import javassist.*
 import javassist.bytecode.AccessFlag
@@ -60,7 +61,10 @@ class PatchesFactory {
                 if (isChangeQuickRedirectFieldForPatchClass(ctField)){
                     //保留这个patch class的ChangeQuickRedirectField
                     //java.lang.NoSuchFieldError: com.meituan.sample.TestPatchActivityPatch.changeQuickRedirect
-                } else {
+                }else if (ProguardUtils.isAspectJField(ctField)){
+                    //保留
+                }
+                else {
                     willDeleteCtFields.add(ctField)
                 }
             }

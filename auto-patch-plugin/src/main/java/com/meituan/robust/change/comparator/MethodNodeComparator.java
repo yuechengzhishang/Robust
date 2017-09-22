@@ -1,5 +1,7 @@
 package com.meituan.robust.change.comparator;
 
+import com.meituan.robust.utils.RobustLog;
+
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.TraceMethodVisitor;
@@ -32,7 +34,8 @@ public class MethodNodeComparator {
         firstMethodTextifier.print(new PrintWriter(firstText));
         secondMethodTextifier.print(new PrintWriter(secondText));
 
-        if (!firstText.toString().equals(secondText.toString())){
+        boolean isEqualSuperficial = firstText.toString().equals(secondText.toString());
+        if (!isEqualSuperficial){
 //            System.err.println();
 //            System.err.println("first:");
 //            System.err.println(firstText.toString());
@@ -44,8 +47,19 @@ public class MethodNodeComparator {
             boolean isRealSame =  DiffLineByLine.diff(firstText.toString(),secondText.toString(),originalClass,  updatedClass);
 //            System.err.println("isRealSame if lambda1 == lambda2 :" + isRealSame);
 //            System.err.println();
+            if (false == isRealSame) {
+                RobustLog.log("");
+                RobustLog.log("==== method diff info ====");
+                RobustLog.log("class name : " + originalClass.name);
+                RobustLog.log("method name : " + first.name);
+                RobustLog.log("method old text : " );
+                RobustLog.log(firstText.toString());
+                RobustLog.log(secondText.toString());
+                RobustLog.log("==== method diff info ====");
+                RobustLog.log("");
+            }
             return isRealSame;
         }
-        return firstText.toString().equals(secondText.toString());
+        return isEqualSuperficial;
     }
 }
