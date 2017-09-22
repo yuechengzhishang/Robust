@@ -57,12 +57,15 @@ public class DiffLineByLine {
 //                    }
 //                }
                 if (line1.contains("LDC") && line2.contains("LDC")) {
+                    String md5_1 = line1.replace("LDC", "").replace("\"", "").trim();
+                    String md5_2 = line2.replace("LDC", "").replace("\"", "").trim();
                     if (/*originalClass.name.contains("$$Lambda$") &&*/ ProguardUtils.isUpdateClassNameHas$$Lambda$(updatedClass.name)) {
-                        String md5_1 = line1.replace("LDC", "").replace("\"", "").trim();
-                        String md5_2 = line2.replace("LDC", "").replace("\"", "").trim();
                         if (checkMD5Valid(md5_1) && checkMD5Valid(md5_2)) {
                             return true;
                         }
+                    }
+                    if (checkNumberValid(md5_1) && checkNumberValid(md5_2)){
+                        return true;
                     }
                 }
 
@@ -229,6 +232,14 @@ public class DiffLineByLine {
         String patternString = "[a-z0-9]{32}";
         Pattern pattern = Pattern.compile(patternString);
         Matcher matcher = pattern.matcher(md5);
+        boolean matches = matcher.matches();
+        return matches;
+    }
+
+    private static boolean checkNumberValid(String number) {
+        String patternString = "[0-9]{3,20}";
+        Pattern pattern = Pattern.compile(patternString);
+        Matcher matcher = pattern.matcher(number);
         boolean matches = matcher.matches();
         return matches;
     }

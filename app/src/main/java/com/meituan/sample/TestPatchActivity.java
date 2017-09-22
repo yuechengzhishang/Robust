@@ -154,6 +154,7 @@ public class TestPatchActivity extends AppCompatActivity{
         new TestPatchAddSubNonStaticClass();
         testInt(200);
         Toast.makeText(this, "TestPatchAddSubNonStaticClass", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "TestPatchAddSubNonStaticClass2222", Toast.LENGTH_SHORT).show();
     }
 
     private void testInt(int value){

@@ -16,6 +16,7 @@ import java.util.List;
 public class RobustLog {
 
     public static void log(String exceptionName, Throwable throwable) {
+        System.err.println("robust log -> " + "generating patch ...");
         String line1 = exceptionName + ":";
         String line2 = getStackTraceString(throwable);
 //        System.err.println("robust log -> " + line1);
@@ -25,6 +26,7 @@ public class RobustLog {
     }
 
     public static void log(String info) {
+        System.err.println("robust log -> " + "generating patch ...");
         String line = info + "";
 //        System.err.println("robust log -> " + line);
         write2FileLineByLine(line);
