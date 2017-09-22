@@ -55,7 +55,7 @@ public class CodeTransformUnion {
         String type = variant.buildType.name;
         if (null == flavor || "".equals(flavor)){
         } else {
-            variantPath = variantPath + File.separator
+            variantPath = variantPath + flavor + File.separator
         }
         variantPath = variantPath + type + File.separator
         Config.newMappingFilePath = "${project.buildDir}" + File.separator + Constants.PROGUARD_MAPPING_TXT + File.separator + variantPath + "mapping.txt";
