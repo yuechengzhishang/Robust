@@ -50,10 +50,11 @@ public class MethodNodeComparator {
             if (false == isRealSame) {
                 RobustLog.log("");
                 RobustLog.log("==== method diff info ====");
-                RobustLog.log("class name : " + originalClass.name);
-                RobustLog.log("method name : " + first.name);
-                RobustLog.log("method old text : " );
+                RobustLog.log("===class name : " + originalClass.name);
+                RobustLog.log("===method name : " + first.name);
+                RobustLog.log("===method old text : " );
                 RobustLog.log(firstText.toString());
+                RobustLog.log("===method new text : " );
                 RobustLog.log(secondText.toString());
                 RobustLog.log("==== method diff info ====");
                 RobustLog.log("");
