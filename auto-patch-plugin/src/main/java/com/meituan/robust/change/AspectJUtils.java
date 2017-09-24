@@ -30,7 +30,7 @@ public class AspectJUtils {
             } else {
                 ajcClosureSet.add(ctClass);
             }
-            index++;
+            index += 2;
         }
 
         if (ajcClosureSet.isEmpty()) {

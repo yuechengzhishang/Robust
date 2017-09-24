@@ -42,12 +42,12 @@ class PatchesFactory {
 
         List<CtMethod> willDeleteCtMethods = new ArrayList<CtMethod>();
         for (CtMethod ctMethod : temPatchClass.getDeclaredMethods()) {
-            if (RobustChangeInfo.isInvariantMethod(ctMethod) && !RobustChangeInfo.isChangedMethod(ctMethod)) {
+            if (AspectJUtils.isAjc$preClinitMethod(ctMethod.getName())
+                    || AspectJUtils.isAroundBodyMethod(ctMethod.getName())){
+                //ignore
+            } else {
+                if (RobustChangeInfo.isInvariantMethod(ctMethod) && !RobustChangeInfo.isChangedMethod(ctMethod)) {
 //                temPatchClass.removeMethod(ctMethod)
-                if (AspectJUtils.isAjc$preClinitMethod(method.getName())
-                        || AspectJUtils.isAroundBodyMethod(method.getName())){
-                    //ignore
-                } else {
                     willDeleteCtMethods.add(ctMethod)
                 }
             }
