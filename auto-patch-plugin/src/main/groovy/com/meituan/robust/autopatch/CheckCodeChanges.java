@@ -7,6 +7,7 @@ import com.meituan.robust.change.RobustCodeChangeChecker;
 import com.meituan.robust.utils.AnonymousLambdaUtils;
 import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils;
 import com.meituan.robust.utils.ProguardUtils;
+import com.meituan.robust.utils.RobustLog;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -23,14 +24,12 @@ import javassist.CtClass;
 import javassist.CtField;
 import javassist.bytecode.AccessFlag;
 
-import static com.meituan.robust.Constants.File_SEPARATOR;
-
 /**
  * Created by hedingxu on 17/7/28.
  */
 
 public class CheckCodeChanges {
-    public static HashSet<String> getTargetClassesFromJar(JarFile newJar){
+    public static HashSet<String> get_ShouldAddInitRobustPatchMethod_ClassesFromJar(JarFile newJar){
         //只考虑newClass 与 changedClass即可，删除的class不用管（不需要处理)
         // go through the jar file, entry by entry.
         List<String> hotfixPackageList = Config.hotfixPackageList;
@@ -62,7 +61,7 @@ public class CheckCodeChanges {
                 continue;
             }
 
-            String dotClassName = className.replace(".class", "").replace(File_SEPARATOR, ".");
+            String dotClassName = className.replace(".class", "").replace("/", ".");
 
             // is in except package list
             if (null != exceptPackageList) {
@@ -84,7 +83,15 @@ public class CheckCodeChanges {
                 for (String packageName : hotfixPackageList) {
                     if (ProguardUtils.isInHotfixPackage(dotClassName,packageName.trim())) {
                         //yes it is , class in hotfix package list
-                        classNames.add(dotClassName);
+                        if (AnonymousLambdaUtils.isAnonymousInnerClass_$1(dotClassName)
+                                || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)
+                                || AnonymousLambdaUtils.isAnonymousInnerClass_$AjcClosure1(dotClassName))
+                        {
+                            // TODO: 17/9/24  delete
+                            RobustLog.log("dot need add robustPatchInit method : " + dotClassName);
+                        } else {
+                            classNames.add(dotClassName);
+                        }
                     }
                 }
             }

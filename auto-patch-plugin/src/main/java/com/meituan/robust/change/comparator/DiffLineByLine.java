@@ -64,9 +64,9 @@ public class DiffLineByLine {
                             return true;
                         }
                     }
-                    if (checkNumberValid(md5_1) && checkNumberValid(md5_2)){
-                        return true;
-                    }
+//                    if (checkNumberValid(md5_1) && checkNumberValid(md5_2)){
+//                        return true;
+//                    }
                 }
 
                 if (ProguardUtils.isHasLambdaFactory$InLine1_Line2(line1, line2)) {

@@ -1,6 +1,7 @@
 package com.meituan.robust.autopatch
 
 import com.meituan.robust.Constants
+import com.meituan.robust.change.AspectJUtils
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.change.comparator.ByteCodeUtils
 import com.meituan.robust.utils.JavaUtils
@@ -43,7 +44,12 @@ class PatchesFactory {
         for (CtMethod ctMethod : temPatchClass.getDeclaredMethods()) {
             if (RobustChangeInfo.isInvariantMethod(ctMethod) && !RobustChangeInfo.isChangedMethod(ctMethod)) {
 //                temPatchClass.removeMethod(ctMethod)
-                willDeleteCtMethods.add(ctMethod)
+                if (AspectJUtils.isAjc$preClinitMethod(method.getName())
+                        || AspectJUtils.isAroundBodyMethod(method.getName())){
+                    //ignore
+                } else {
+                    willDeleteCtMethods.add(ctMethod)
+                }
             }
         }
 
@@ -102,9 +108,14 @@ class PatchesFactory {
                 }
             }
             if (!Config.addedSuperMethodList.contains(method) && !reaLParameterMethod.equals(method) && !method.getName().startsWith(Constants.ROBUST_PUBLIC_SUFFIX)) {
-                method.instrument(
-                        new RobustMethodExprEditor(modifiedClass, temPatchClass, method)
-                );
+                if (AspectJUtils.isAjc$preClinitMethod(method.getName())
+                || AspectJUtils.isAroundBodyMethod(method.getName())){
+                    //ignore
+                } else {
+                    method.instrument(
+                            new RobustMethodExprEditor(modifiedClass, temPatchClass, method)
+                    );
+                }
             }
         }
 
@@ -148,6 +159,24 @@ class PatchesFactory {
 
         temPatchClass.setSuperclass(Config.classPool.get("java.lang.Object"));
         temPatchClass.setInterfaces(null);
+        for (CtMethod ctMethod:temPatchClass.getDeclaredMethods()){
+            if (AspectJUtils.isAjc$preClinitMethod(ctMethod.name)){
+                //need add <clinit> or call ajc$pre before init
+                CtField isCall_AJCPRE_CLINITField = new CtField(Config.classPool.get("java.lang.Boolean"), "isCall_AJCPRE_CLINIT", temPatchClass);
+                isCall_AJCPRE_CLINITField.setModifiers(Modifier.STATIC);
+                temPatchClass.addField(isCall_AJCPRE_CLINITField);
+
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("{");
+                    stringBuilder.append("if(null == isCall_AJCPRE_CLINIT || false == isCall_AJCPRE_CLINIT.booleanValue()){");
+                    stringBuilder.append(AspectJUtils.AJC$PRE_CLINIT + "();");
+                    stringBuilder.append("isCall_AJCPRE_CLINIT = new java.lang.Boolean(true);");
+                    stringBuilder.append("}");
+                stringBuilder.append("}");
+                ctConstructor.insertBeforeBody(stringBuilder.toString())
+                break;
+            }
+        }
         CtClass patchClass = temPatchClass;
         return patchClass;
     }

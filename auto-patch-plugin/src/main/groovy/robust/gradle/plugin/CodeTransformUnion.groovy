@@ -4,6 +4,7 @@ import com.android.build.gradle.api.BaseVariant
 import com.meituan.robust.Constants
 import com.meituan.robust.autopatch.*
 import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTransform
+import com.meituan.robust.change.AspectJUtils
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
 import com.meituan.robust.utils.AnonymousLambdaUtils
@@ -45,7 +46,7 @@ public class CodeTransformUnion {
         def smaliFilePath = "${ROBUST_DIR}${Constants.LIB_NAME_ARRAY[1]}"
         def dxFilePath = "${ROBUST_DIR}${Constants.LIB_NAME_ARRAY[2]}"
         Config.robustGenerateDirectory = "${project.buildDir}" + File.separator + "$Constants.ROBUST_GENERATE_DIRECTORY" + File.separator;
-        RobustLog.setRobustLogFilePath(Config.robustGenerateDirectory+Constants.ROBUST_LOG)
+        RobustLog.setRobustLogFilePath(Config.robustGenerateDirectory + Constants.ROBUST_LOG)
         dex2SmaliCommand = "  java -jar ${baksmaliFilePath} -o classout" + File.separator + "  $Constants.CLASSES_DEX_NAME";
         smali2DexCommand = "   java -jar ${smaliFilePath} classout" + File.separator + " -o " + Constants.PATACH_DEX_NAME;
         jar2DexCommand = "   java -jar ${dxFilePath} --dex --output=$Constants.CLASSES_DEX_NAME  " + Constants.ZIP_FILE_NAME;
@@ -53,7 +54,7 @@ public class CodeTransformUnion {
         String variantPath = "";
         String flavor = variant.flavorName;
         String type = variant.buildType.name;
-        if (null == flavor || "".equals(flavor)){
+        if (null == flavor || "".equals(flavor)) {
         } else {
             variantPath = variantPath + File.separator
         }
@@ -93,7 +94,7 @@ public class CodeTransformUnion {
                 OutputStream inputFileOut = new FileOutputStream(inputFile);
                 JavaUtils.copy(inputStream, inputFileOut);
             } catch (Exception e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
                 RobustLog.log("Warning!!! " + libName + " copy error " + e.getMessage());
 
             }
@@ -124,7 +125,7 @@ public class CodeTransformUnion {
         if (newMainJarFile.exists() || newProGuradJarFile.exists()) {
             //如果proguard打开了，就使用proguard的包
             if (newProGuradJarFile.exists()) {
-                if (null == oldProGuardJarFile || !oldProGuardJarFile.exists()){
+                if (null == oldProGuardJarFile || !oldProGuardJarFile.exists()) {
                     throw new RuntimeException("you are use proguard, please copy your last build/outputs/robust/" + Constants.ROBUST_PROGUARD_MAIN_JAR + " to app/robust dir ")
                 }
                 newMainJarFile = newProGuradJarFile
@@ -209,12 +210,11 @@ public class CodeTransformUnion {
         Config.modifiedClassNameList.removeAll(Config.modifiedAnonymousClassNameList)
         Config.modifiedClassNameList.removeAll(Config.modifiedLambdaClassNameList)
 
-
 //        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
         for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
             OuterClassMethodAnonymousClassUtils.OuterMethodInfo outerMethodInfo = Config.recordAnonymousLambdaOuterMethodMap.get(anonymousClassName);
             //如果改的是field = new View.onclickListener ，这里的outerMethodInfo == null
-            if (null != outerMethodInfo){
+            if (null != outerMethodInfo) {
                 if (Config.modifiedClassNameList.contains(outerMethodInfo.outerClass)) {
                     //修改的class已经包含了匿名内部类改动带来的class改动
                 } else {
@@ -269,9 +269,16 @@ public class CodeTransformUnion {
         FileUtil.createDirectory(jarOutDirectoryPath)
         FileUtil.unzip(fullPath, jarOutDirectoryPath)
 
-        HashSet<String> classesNameHashSet = CheckCodeChanges.getTargetClassesFromJar(new JarFile(fullPath))
+        HashSet<String> classesNameHashSet = CheckCodeChanges.get_ShouldAddInitRobustPatchMethod_ClassesFromJar(new JarFile(fullPath))
         for (String className : classesNameHashSet) {
             CtClass ctClass = classPool.get(className)
+            try {
+                if (null != ctClass.getAnnotation(Class.forName("org.aspectj.lang.annotation.Aspect"))){
+                    AspectJUtils.recordAspectAnnotationCtClass(ctClass)
+                }
+            } catch (Exception e){
+
+            }
             copyConstructor2Method(ctClass)
             ctClass.writeFile(jarOutDirectoryPath)
         }
@@ -330,7 +337,7 @@ public class CodeTransformUnion {
                 }
             }
         } catch (Exception e) {
-            RobustLog.log("Exception ",e);
+            RobustLog.log("Exception ", e);
         }
     }
 
@@ -378,7 +385,7 @@ public class CodeTransformUnion {
 
             if (is_$1_or_$$lambda$1) {
                 CtClass $1_or_$$lambda$1_ctClass = Config.classPool.getOrNull(newClassName)
-                if (null != $1_or_$$lambda$1_ctClass){
+                if (null != $1_or_$$lambda$1_ctClass) {
                     $1_or_$$lambda$1_ctClass.writeFile(Config.robustGenerateDirectory)
                 }
             } else {
@@ -410,7 +417,7 @@ public class CodeTransformUnion {
             if (is_$1_or_$$lambda$1) {
 
             } else {
-                if (ProguardUtils.isClassNameHas$(customInnerClassName)){
+                if (ProguardUtils.isClassNameHas$(customInnerClassName)) {
                     String patchCustomInnerClassName = customInnerClassName + "Patch";
                     CtClass patchCustomInnerCtClass = Config.classPool.get(patchCustomInnerClassName);
                     customInnerCtClassList.add(patchCustomInnerCtClass);
@@ -436,56 +443,63 @@ public class CodeTransformUnion {
 //            ctClasses.addAll(sourceClass.getNestedClasses());//这里lambda表达式不在这里
 
             for (String newAddClassName : Config.modifiedAnonymousClassNameList) { //处理Anonymous表达式
-                if (ProguardUtils.isSubClass(newAddClassName,originalClassName)) {
+                if (ProguardUtils.isSubClass(newAddClassName, originalClassName)) {
                     ctClasses.add(Config.classPool.get(newAddClassName));
                 }
             }
 
             for (String newAddClassName : Config.modifiedLambdaClassNameList) { //处理lambda表达式
-                if (ProguardUtils.isSubClass(newAddClassName,originalClassName)) {
+                if (ProguardUtils.isSubClass(newAddClassName, originalClassName)) {
                     ctClasses.add(Config.classPool.get(newAddClassName));
                 }
+            }
+
+            HashSet<String> AjcClosureSet = AspectJUtils.getAjcClosureSet(originalClassName, Config.classPool)
+            if (null == AjcClosureSet) {
+
+            } else {
+                ctClasses.addAll(AjcClosureSet)
             }
 
             ClassMap classMap = new ClassMap()
             for (CtClass tempLambdaOrAnonymousCtClass : ctClasses) {
 
-                    tempLambdaOrAnonymousCtClass.defrost()
-                    int modifiers1 = AccessFlag.setPublic(tempLambdaOrAnonymousCtClass.getModifiers())
+                tempLambdaOrAnonymousCtClass.defrost()
+                int modifiers1 = AccessFlag.setPublic(tempLambdaOrAnonymousCtClass.getModifiers())
 //                    modifiers1 = AccessFlag.clear(modifiers1, AccessFlag.SYNTHETIC);
-                    tempLambdaOrAnonymousCtClass.setModifiers(modifiers1)
-                    for (CtConstructor ctConstructor : tempLambdaOrAnonymousCtClass.getDeclaredConstructors()) {
-                        ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
-                    }
-                    String oldName = tempLambdaOrAnonymousCtClass.getName()
+                tempLambdaOrAnonymousCtClass.setModifiers(modifiers1)
+                for (CtConstructor ctConstructor : tempLambdaOrAnonymousCtClass.getDeclaredConstructors()) {
+                    ctConstructor.setModifiers(AccessFlag.setPublic(ctConstructor.getModifiers()))
+                }
+                String oldName = tempLambdaOrAnonymousCtClass.getName()
 
-                    String newName ;
+                String newName;
 
                 String unProguardOldName = ProguardUtils.getUnProguardClassName(oldName);
                 String unProguardOriginalClassName = ProguardUtils.getUnProguardClassName(originalClassName);
-                if (oldName.contains(originalClassName) /*|| unProguardOldName.contains(unProguardOriginalClassName)*/){
+                if (oldName.contains(originalClassName) /*|| unProguardOldName.contains(unProguardOriginalClassName)*/) {
                     newName = oldName.replace(originalClassName, originalClassName + "Patch")
                 } else {
                     newName = oldName + "Patch";
                 }
 
-                if (null != Config.classPool.getOrNull(newName)){
+                if (null != Config.classPool.getOrNull(newName)) {
                     //patch is already in patch dir
                     continue;
                 }
-                    //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
-                    tempLambdaOrAnonymousCtClass.defrost()
-                    tempLambdaOrAnonymousCtClass.replaceClassName(oldName, newName)
-                    tempLambdaOrAnonymousCtClass.writeFile(Config.robustGenerateDirectory)
+                //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
+                tempLambdaOrAnonymousCtClass.defrost()
+                tempLambdaOrAnonymousCtClass.replaceClassName(oldName, newName)
+                tempLambdaOrAnonymousCtClass.writeFile(Config.robustGenerateDirectory)
 
-                    Config.classPool.appendClassPath(Config.robustGenerateDirectory)
-                    CtClass anonymousInnerClass = Config.classPool.get(tempLambdaOrAnonymousCtClass.getName())
-                    anonymousInnerClass.defrost()
-                    //handle access$100
-                    AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass, originalClassName, originalClassName + "Patch")
+                Config.classPool.appendClassPath(Config.robustGenerateDirectory)
+                CtClass anonymousInnerClass = Config.classPool.get(tempLambdaOrAnonymousCtClass.getName())
+                anonymousInnerClass.defrost()
+                //handle access$100
+                AnonymousInnerClassTransform.handleAccessMethodCall(anonymousInnerClass, originalClassName, originalClassName + "Patch")
 //                    nestedCtClass.
-                    anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
-                    classMap.put(oldName, newName)
+                anonymousInnerClass.writeFile(Config.robustGenerateDirectory)
+                classMap.put(oldName, newName)
 
             }
 
@@ -538,7 +552,7 @@ public class CodeTransformUnion {
         }
     }
 
-    public static HashSet<String> getLambdaClassChangedOrNewList(){
+    public static HashSet<String> getLambdaClassChangedOrNewList() {
         HashSet<String> lambdaDotClassNameSet = new HashSet<String>();
         for (String dotClassName : Config.modifiedLambdaClassNameList) {
             if (AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)) {

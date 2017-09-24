@@ -23,13 +23,4 @@
 -ignorewarnings
 -dontwarn android.support.v4.**,**CompatHoneycomb,com.tenpay.android.**
 -optimizations !class/unboxing/enum,!code/simplification/arithmetic
--keepclassmembers class * {
-#    private static final org.aspectj.lang.JoinPoint.StaticPart *;
-#    private static final org.aspectj.lang.JoinPoint$StaticPart *;
-    private static final org.aspectj.lang.JoinPoint** *;
-    *** *_aroundBody*(...);
-    *** ajc$preClinit();
-}
--keep class org.aspectj.lang.JoinPoint** {*;}
--keep class org.aspectj.lang.JoinPoint** {*;}
--keep class * extends org.aspectj.runtime.internal.AroundClosure{*;}
+

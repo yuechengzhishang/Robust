@@ -3,6 +3,7 @@ package com.meituan.robust.autopatch;
 import com.meituan.robust.ChangeQuickRedirect;
 import com.meituan.robust.Constants;
 import com.meituan.robust.PatchProxy;
+import com.meituan.robust.change.AspectJUtils;
 import com.meituan.robust.change.RobustChangeInfo;
 import com.meituan.robust.utils.AnonymousLambdaUtils;
 import com.meituan.robust.utils.ProguardUtils;
@@ -53,6 +54,9 @@ public class RobustMethodExprEditor extends ExprEditor {
     @Override
     public void edit(FieldAccess f) throws CannotCompileException {
 
+        if (AspectJUtils.isAspectJField(f.getClassName(),f.getFieldName())){
+            return;
+        }
         boolean isThis$0 = false;
         try {
             CtClass outerCtClass = sourceClass.getDeclaringClass();
@@ -240,6 +244,15 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
+        if (AspectJUtils.isAroundBodyMethod(m.getMethodName())) {
+            return;
+        }
+        if (AspectJUtils.isAjc$preClinitMethod(m.getMethodName())) {
+            return;
+        }
+        if (AspectJUtils.isAspectJPackageOrAnnotationOrAjcClosure(m.getClassName())) {
+            return;
+        }
         if (hasRobustProxyCode) {
             if (isCallProxyAccessDispatchMethod(m)) {
                 hasHandledProxyCode = true;
