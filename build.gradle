@@ -14,7 +14,7 @@ buildscript {
         // in the individual module build.gradle files
 
         classpath 'com.meituan.robust:gradle-plugin:' + VERSION_NAME
-        classpath 'com.meituan.robust:auto-patch-plugin:0.7.32.14'
+        classpath 'com.meituan.robust:auto-patch-plugin:0.7.32.15'
 
         classpath 'me.tatarka:gradle-retrolambda:3.2.0'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'

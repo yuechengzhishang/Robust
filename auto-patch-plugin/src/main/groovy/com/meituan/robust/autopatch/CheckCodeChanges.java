@@ -7,7 +7,6 @@ import com.meituan.robust.change.RobustCodeChangeChecker;
 import com.meituan.robust.utils.AnonymousLambdaUtils;
 import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils;
 import com.meituan.robust.utils.ProguardUtils;
-import com.meituan.robust.utils.RobustLog;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -87,8 +86,7 @@ public class CheckCodeChanges {
                                 || AnonymousLambdaUtils.isAnonymousInnerClass_$$Lambda$1(dotClassName)
                                 || AnonymousLambdaUtils.isAnonymousInnerClass_$AjcClosure1(dotClassName))
                         {
-                            // TODO: 17/9/24  delete
-                            RobustLog.log("dot need add robustPatchInit method : " + dotClassName);
+//                            RobustLog.log("dot need add robustPatchInit method : " + dotClassName);
                         } else {
                             classNames.add(dotClassName);
                         }

@@ -154,15 +154,15 @@ public class TestPatchActivity extends AppCompatActivity{
         new TestPatchAddSubNonStaticClass();
         testInt(300);
         Toast.makeText(this, "TestPatchAddSubNonStaticClass", Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "TestPatchAddSubNonStaticClass2222", Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "TestPatchAddSubNonStaticClass3333", Toast.LENGTH_SHORT).show();
     }
 
     private void testInt(int value){
         Log.e("robust","private void testInt : "+value);
+        Toast.makeText(this, "TestPatchAddSubNonStaticClass3333", Toast.LENGTH_SHORT).show();
     }
 
     private void setPrivateString(String privateString){
+        Toast.makeText(this, "TestPatchAddSubNonStaticClass2222", Toast.LENGTH_SHORT).show();
         this.privateString = privateString;
     }
 
