@@ -63,3 +63,15 @@ bintray {
         publish = true
     }
 }
+
+//def nexusRepositoryUrl(){
+//    return getPropertyFromLocalProperties("NEXUS_RELEASE_REPOSITORY_URL")
+//}
+//
+//uploadArchives {
+//    repositories.mavenDeployer {
+//        repository(url: nexusRepositoryUrl()) {
+//            authentication(userName: getPropertyFromLocalProperties("USER"), password: getPropertyFromLocalProperties("PASSWORD"))
+//        }
+//    }
+//}
