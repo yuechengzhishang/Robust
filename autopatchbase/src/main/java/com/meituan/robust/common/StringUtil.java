@@ -348,7 +348,11 @@ public final class StringUtil {
             bytes = new byte[source.length() / 2];
             int i = 0;
             while (i < bytes.length) {
-                bytes[i] = (byte) (Integer.parseInt(source.substring(i * 2, (i + 1) * 2), 16));
+                try {
+                    bytes[i] = (byte) (Integer.parseInt(source.substring(i * 2, (i + 1) * 2), 16));
+                } catch (NumberFormatException e){
+
+                }
                 i++;
             }
         }
