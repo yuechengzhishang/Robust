@@ -1,5 +1,7 @@
 package com.meituan.robust.change;
 
+import com.meituan.robust.utils.ProguardUtils;
+
 import java.util.HashSet;
 
 import javassist.ClassPool;
@@ -10,7 +12,7 @@ import javassist.CtClass;
  */
 
 public class AspectJUtils {
-    private static final String AJC_CLOSURE_KEY = "$AjcClosure";
+    public static final String AJC_CLOSURE_KEY = "$AjcClosure";
     public static final String AJC$PRE_CLINIT = "ajc$preClinit";
     //dot.class
     private static HashSet<String> subAjcClosureSet = new HashSet<String>();
@@ -19,6 +21,10 @@ public class AspectJUtils {
     public static HashSet<CtClass> getAjcClosureSet(String sourceClassName, ClassPool classPool) {
         if (null == sourceClassName || null == classPool) {
             return null;
+        }
+
+        if (null == classPool.getOrNull(sourceClassName)){
+            sourceClassName = ProguardUtils.getUnProguardClassName(sourceClassName);//拿到混淆前的outerClass，因为ajc没有混淆
         }
 
         HashSet<CtClass> ajcClosureSet = new HashSet<CtClass>();

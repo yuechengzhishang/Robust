@@ -7,12 +7,7 @@ import com.meituan.robust.autopatch.innerclass.anonymous.AnonymousInnerClassTran
 import com.meituan.robust.change.AspectJUtils
 import com.meituan.robust.change.RobustChangeInfo
 import com.meituan.robust.common.FileUtil
-import com.meituan.robust.utils.AnonymousLambdaUtils
-import com.meituan.robust.utils.JavaUtils
-import com.meituan.robust.utils.OuterClassMethodAnonymousClassUtils
-import com.meituan.robust.utils.ProguardUtils
-import com.meituan.robust.utils.RobustLog
-import com.meituan.robust.utils.RobustProguardMapping
+import com.meituan.robust.utils.*
 import javassist.*
 import javassist.bytecode.AccessFlag
 import javassist.expr.ExprEditor
@@ -23,7 +18,6 @@ import java.util.jar.JarFile
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-
 /**
  * Created by mivanzhang on 16/7/21.
  *
@@ -209,6 +203,15 @@ public class CodeTransformUnion {
 
         Config.modifiedClassNameList.removeAll(Config.modifiedAnonymousClassNameList)
         Config.modifiedClassNameList.removeAll(Config.modifiedLambdaClassNameList)
+
+        List<String> ajcClosureClassList = new ArrayList<String>()
+        for (String tempClassString :Config.newlyAddedClassNameList){
+            if (AnonymousLambdaUtils.isAnonymousInnerClass_$AjcClosure1(tempClassString)){
+                ajcClosureClassList.add(tempClassString)
+            }
+        }
+
+        Config.newlyAddedClassNameList.removeAll(ajcClosureClassList)
 
 //        println("merge anonymousInnerClass 's outer class and method to modifiedClassNameList :")
         for (String anonymousClassName : Config.recordOuterMethodModifiedAnonymousClassNameList) {
@@ -454,13 +457,6 @@ public class CodeTransformUnion {
                 }
             }
 
-            HashSet<String> AjcClosureSet = AspectJUtils.getAjcClosureSet(originalClassName, Config.classPool)
-            if (null == AjcClosureSet) {
-
-            } else {
-                ctClasses.addAll(AjcClosureSet)
-            }
-
             ClassMap classMap = new ClassMap()
             for (CtClass tempLambdaOrAnonymousCtClass : ctClasses) {
 
@@ -503,6 +499,45 @@ public class CodeTransformUnion {
 
             }
 
+
+            //handle AjcClosure classes
+            HashSet<CtClass> AjcClosureSet = AspectJUtils.getAjcClosureSet(originalClassName, Config.classPool)
+            if (null == AjcClosureSet) {
+
+            } else {
+                for(CtClass ajcClosureSetCtClass : AjcClosureSet){
+                    ajcClosureSetCtClass.defrost()
+                    String oldName = ajcClosureSetCtClass.getName()
+                    int index = oldName.indexOf(AspectJUtils.AJC_CLOSURE_KEY)
+                    String outerClassName = oldName.subSequence(0,index)
+                    String newName = oldName.replace(outerClassName,outerClassName + "Patch")
+//                    String unProguardOldName = ProguardUtils.getUnProguardClassName(oldName);
+//                    String unProguardOriginalClassName = ProguardUtils.getUnProguardClassName(originalClassName);
+//                    if (oldName.contains(originalClassName) /*|| unProguardOldName.contains(unProguardOriginalClassName)*/) {
+//                        newName = oldName.replace(originalClassName, originalClassName + "Patch")
+//                    } else {
+//                        newName = oldName + "Patch";
+//                    }
+
+                    if (null != Config.classPool.getOrNull(newName)) {
+                        //patch is already in patch dir
+                        continue;
+                    }
+
+//                    String proguardOuterClassName =  ProguardUtils.getUnProguardClassName(outerClassName);
+
+                    //给nestedClass改名字 MainActivity$1 -> MainActivityPatch$1
+                    ajcClosureSetCtClass.defrost()
+                    ajcClosureSetCtClass.replaceClassName(oldName, newName)
+                    ajcClosureSetCtClass.replaceClassName(originalClassName,originalClassName + "Patch")
+                    ajcClosureSetCtClass.writeFile(Config.robustGenerateDirectory)
+
+                    Config.classPool.appendClassPath(Config.robustGenerateDirectory)
+                    classMap.put(oldName, newName)
+                }
+            }
+
+
 //            System.err.println("replaceClassName :" + originalClassName)
 
             CtClass patchClass = Config.classPool.get(NameManger.getInstance().getPatchNamWithoutRecord(originalClassName))
@@ -533,6 +568,10 @@ public class CodeTransformUnion {
             if (true) {
                 List<CtMethod> toDeletedCtMethods = new ArrayList<CtMethod>();
                 for (CtMethod ctMethod : patchClass.getDeclaredMethods()) {
+                    if (AspectJUtils.isAjc$preClinitMethod(ctMethod.name)
+                    || AspectJUtils.isAroundBodyMethod(ctMethod.name)){
+                        continue;
+                    }
                     if (RobustChangeInfo.isInvariantMethod(ctMethod) && !RobustChangeInfo.isChangedMethod(ctMethod)) {
                         toDeletedCtMethods.add(ctMethod);
                     }
