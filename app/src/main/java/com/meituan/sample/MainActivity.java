@@ -3,7 +3,6 @@ package com.meituan.sample;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -385,6 +384,8 @@ public class MainActivity extends AppCompatActivity {
     private static void staticMethod(){
         String xx = "xx";
         System.err.println(xx);
+        Object[] objects = new Object[]{3};//IDE
+        Object[] objects2 = new Object[]{Integer.valueOf(3)};//class
     }
 
     @Override

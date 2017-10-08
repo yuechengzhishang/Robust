@@ -13,13 +13,13 @@ public class RobustResourcesSwitch {
     private static boolean resourcesSwitch = true;
 
     public static boolean getResourcesSwitch(Context context) {
-        SharedPreferences sp = context.getSharedPreferences(ROBUST_SP, Context.MODE_MULTI_PROCESS);
+        SharedPreferences sp = context.getSharedPreferences(ROBUST_SP, Context.MODE_PRIVATE);
         resourcesSwitch = sp.getBoolean(ROBUST_RESOURCES_SWITCH, resourcesSwitch);
         return resourcesSwitch;
     }
 
     public static void setResourcesSwitch(Context context, boolean onOff) {
-        SharedPreferences sp = context.getSharedPreferences(ROBUST_SP, Context.MODE_MULTI_PROCESS);
+        SharedPreferences sp = context.getSharedPreferences(ROBUST_SP, Context.MODE_PRIVATE);
         sp.edit().putBoolean(ROBUST_RESOURCES_SWITCH, onOff).apply();
         resourcesSwitch = onOff;
     }

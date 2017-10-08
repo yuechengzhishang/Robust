@@ -4,6 +4,7 @@ package com.meituan.robust.utils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 /**
  * Created by mivanzhang on 16/8/15.
@@ -305,6 +306,7 @@ public class EnhancedRobustUtils {
             if (!field.isAccessible()) {
                 field.setAccessible(true);
             }
+            clearFinalModifiers(field);
             return field;
         } catch (NoSuchFieldException e) {
             // ignore and search next
@@ -322,5 +324,24 @@ public class EnhancedRobustUtils {
             }
         }
         throw new NoSuchFieldException("Field " + name + " not found in " + cls + " recursive");
+    }
+
+    private static void clearFinalModifiers(Field field) {
+        if (null == field) {
+            return;
+        }
+        int modifiers = field.getModifiers();
+        if (Modifier.isFinal(modifiers)) {
+            field.setAccessible(true);
+            try {
+                Field modifiersField = Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
