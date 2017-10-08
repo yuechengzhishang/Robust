@@ -45,6 +45,7 @@ public class Constants {
     public static final String METHOD_MAP_PATH = "/robust/methodsMap.robust".replace("/",File_SEPARATOR);
     public static final String DEFAULT_MAPPING_FILE = "/robust/mapping.txt".replace("/",File_SEPARATOR);
     public static final String DEFAULT_R_DOT_TXT_FILE = "/robust/R.txt".replace("/",File_SEPARATOR);
+    public static final String DEFAULT_OLD_R_DOT_TXT_FILE = "/robust/old/R.txt".replace("/",File_SEPARATOR);
     public static final String DEFAULT_OLD_APK_PATH = "/robust/old.apk".replace("/",File_SEPARATOR);
     public static final String DEFAULT_NEW_APK_PATH = "/robust/new.apk".replace("/",File_SEPARATOR);
 

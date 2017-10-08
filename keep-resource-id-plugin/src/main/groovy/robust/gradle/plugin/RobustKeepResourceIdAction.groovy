@@ -28,6 +28,16 @@ public class RobustKeepResourceIdAction implements Action<Project> {
                 RDotTxtPath = "${path}${Constants.DEFAULT_R_DOT_TXT_FILE}"
             }
 
+            if (!new File(RDotTxtPath).exists()){
+                RDotTxtPath = "${path}${Constants.DEFAULT_OLD_R_DOT_TXT_FILE}"
+            }
+
+            if (!new File(RDotTxtPath).exists()){
+                project.logger.quiet("robust: keep resource id failed!")
+                return ;
+            }
+
+
             //keep resource id
             //def processResourcesTask = project.tasks.findByName("process${variantName}Resources")
             def resDir = variantOutput.processResources.resDir

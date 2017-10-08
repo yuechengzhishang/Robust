@@ -20,7 +20,7 @@ public class RobustAutoPatchAction implements Action<Project> {
 
             if (isOldAndNewDirExists(project)){
                 RobustPatch.initConfig(project,variant);
-                setRobustMainJarFromRobustOldAndNew(project)
+                setRobustMainJarFromRobustOldAndNew(project);
                 RobustPatch.patch(project)
             } else {
 //            if (isProguardOpen(variant)) {

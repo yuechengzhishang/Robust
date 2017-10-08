@@ -15,7 +15,7 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
--applymapping robust/mapping.txt
+-applymapping robust/old/mapping.txt
 -dontwarn
 -keepattributes Signature,SourceFile,LineNumberTable
 -keepattributes *Annotation*

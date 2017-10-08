@@ -100,7 +100,14 @@ public class RobustPatch {
 
     static File oldMainJarFile,newMainJarFile;
     public static void setRobustMainJar(Project project){
-        Config.methodMap = JavaUtils.getMapFromZippedFile(project.projectDir.path + Constants.METHOD_MAP_PATH)
+        String oldRobustMap = project.projectDir.path + Constants.METHOD_MAP_PATH;
+        if (!new File(oldRobustMap).exists()){
+            oldRobustMap = oldRobustMap.replace(File.separator+"robust"+File.separator,File.separator+"robust"+File.separator+"old"+File.separator)
+        }
+        if (!new File(oldRobustMap).exists()){
+            throw RuntimeException("robust method map should be in dir : project/robust or project/robust/old")
+        }
+        Config.methodMap = JavaUtils.getMapFromZippedFile(oldRobustMap)
 
         File buildDir = project.getBuildDir();
         String patchPath = buildDir.getAbsolutePath() + File.separator + Constants.ROBUST_GENERATE_DIRECTORY + File.separator;
@@ -108,7 +115,14 @@ public class RobustPatch {
 
         //1. get last class.jar
         oldMainJarFile = new File(ROBUST_DIR, Constants.ROBUST_TRANSFORM_MAIN_JAR)
+        if (!oldMainJarFile.exists()){
+            oldMainJarFile = new File(ROBUST_DIR + "old"+File.separator,Constants.ROBUST_TRANSFORM_MAIN_JAR)
+        }
+
         File oldProGuardJarFile = new File(ROBUST_DIR, Constants.ROBUST_PROGUARD_MAIN_JAR)
+        if (!oldProGuardJarFile.exists()){
+            oldProGuardJarFile = new File(ROBUST_DIR + "old"+File.separator,Constants.ROBUST_PROGUARD_MAIN_JAR)
+        }
 
         //2. get current classes 如果是proguard之后，我们插了代码，需要做兼容
         newMainJarFile = new File(patchPath, Constants.ROBUST_TRANSFORM_MAIN_JAR)
