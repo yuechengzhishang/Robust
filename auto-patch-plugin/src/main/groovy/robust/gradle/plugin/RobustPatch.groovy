@@ -495,6 +495,7 @@ public class RobustPatch {
                     newName = oldName + "Patch";
                 }
 
+                classMap.put(oldName, newName)
                 if (null != Config.classPool.getOrNull(newName)) {
                     //patch is already in patch dir
                     continue;
@@ -535,6 +536,7 @@ public class RobustPatch {
 //                        newName = oldName + "Patch";
 //                    }
 
+                    classMap.put(oldName, newName)
                     if (null != Config.classPool.getOrNull(newName)) {
                         //patch is already in patch dir
                         continue;

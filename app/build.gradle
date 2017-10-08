@@ -1,6 +1,5 @@
 apply plugin: 'com.android.application'
 apply plugin: 'me.tatarka.retrolambda'
-apply plugin: 'auto-patch-plugin'
 //apply plugin: 'keep-resource-id'
 apply plugin: 'com.meituan.roboaspectj'
 apply plugin: 'robust'

@@ -1,0 +1,55 @@
+apply plugin: 'com.android.application'
+//apply plugin: 'auto-patch-plugin'
+
+android {
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
+    defaultConfig {
+        applicationId "com.meituan.robust.patch"
+        minSdkVersion 9
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    signingConfigs {
+        meituan {
+            storeFile file("keystore.jks")
+            storePassword "robust"
+            keyAlias "robust"
+            keyPassword "robust"
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+            signingConfig signingConfigs.meituan
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+            signingConfig signingConfigs.meituan
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+
+    }
+    packagingOptions {
+        exclude 'META-INF/maven/com.google.guava/guava/pom.properties'
+        exclude 'META-INF/maven/com.google.guava/guava/pom.xml'
+        exclude 'META-INF/maven/commons-cli/commons-cli/pom.properties'
+        exclude 'META-INF/maven/commons-cli/commons-cli/pom.xml'
+    }
+    useLibrary 'org.apache.http.legacy'
+}
+configurations {
+    all*.exclude group: 'com.google.guava', module: 'guava'
+}
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+dependencies {
+}
