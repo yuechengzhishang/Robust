@@ -257,7 +257,7 @@ public class RobustPatch {
         zipPatchClassesFile()
         executeCommand(jar2DexCommand)
         executeCommand(dex2SmaliCommand)
-        com.meituan.robust.utils.SmaliTool.getInstance().dealObscureInSmali();
+        SmaliTool.dealObscureInSmali();
         executeCommand(smali2DexCommand)
         //package patch.dex to patch.apk
         packagePatchDex2Apk()
