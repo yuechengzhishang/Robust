@@ -45,9 +45,9 @@ public class TestPatchActivity extends AppCompatActivity{
         Log.e("robust","333");
         Log.e("robust","444");
         String xx = SecondActivity.ACCESSIBILITY_SERVICE;
-        Log.e("robust",xx);
+        Log.e("robust","hello robust patch: " + xx);
 
-        Toast.makeText(this, "hello: " + hello(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "hello robust patch: " + hello(), Toast.LENGTH_SHORT).show();
 
         if (com.meituan.robust.PatchProxy.isSupport(new Object[0],this,null,false,"xxx",new Class[0],Integer.class)){
             com.meituan.robust.PatchProxy.accessDispatch(new Object[0],this,null,false,"xxx",new Class[0],Integer.class);

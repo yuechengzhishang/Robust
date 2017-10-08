@@ -9,7 +9,7 @@ public class WhiteReflectMethods {
     // All these methods are java.lang.reflect classes and associated : since the new version of the
     // class is loaded in a different class loader, the classes are in a different package and
     // package private methods would need a setAccessble(true) to work correctly. Eventually, we
-    // could transform all reflection calls to automatically insert these setAccessible calls but
+    // could patch all reflection calls to automatically insert these setAccessible calls but
     // at this point, we just don't enable InstantRun on those.
 //    private static final ImmutableMultimap<Type, Method> blackListedMethods =
 //            ImmutableMultimap.<Type, Method>builder()

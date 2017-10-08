@@ -323,16 +323,20 @@ public class RobustMethodExprEditor extends ExprEditor {
             e.printStackTrace();
         }
 
-        if (m.isSuper()) {
-            /*
-            protected void onCreate(@Nullable Bundle savedInstanceState) {
-                super.onCreate(savedInstanceState);
+        try {
+            if (m.isSuper() && m.getClassName().equals(sourceClass.getSuperclass().getName())) {
+                /*
+                protected void onCreate(@Nullable Bundle savedInstanceState) {
+                    super.onCreate(savedInstanceState);
+                }
+                */
+                //放在assist类处理了 case : MainActivity#super.oncreate()
+    //            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
+                m.replace(ReflectUtils.invokeSuperString(m));
+                return;
             }
-            */
-            //放在assist类处理了 case : MainActivity#super.oncreate()
-//            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
-            m.replace(ReflectUtils.invokeSuperString(m));
-            return;
+        } catch (NotFoundException e) {
+            e.printStackTrace();
         }
         CtMethod callCtMethod = null;
         try {

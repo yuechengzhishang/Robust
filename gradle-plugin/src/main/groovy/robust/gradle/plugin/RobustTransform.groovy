@@ -10,7 +10,6 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 import robust.gradle.plugin.asm.AsmInsertImpl
-import robust.gradle.plugin.javaassist.JavaAssistInsertImpl
 
 import java.util.jar.JarOutputStream
 import java.util.zip.GZIPOutputStream
@@ -22,7 +21,7 @@ import java.util.zip.ZipOutputStream
  *
  */
 
-class RobustTransform extends Transform implements Plugin<Project> {
+public class RobustTransform extends Transform implements Plugin<Project> {
     Project project
     static Logger logger
     private static List<String> hotfixPackageList = new ArrayList<>();
@@ -33,8 +32,6 @@ class RobustTransform extends Transform implements Plugin<Project> {
     private static boolean isExceptMethodLevel = false;
 //    private static boolean isForceInsert = true;
     private static boolean isForceInsert = false;
-//    private static boolean useASM = false;
-    private static boolean useASM = true;
     def robust
     InsertcodeStrategy insertcodeStrategy;
 
@@ -100,15 +97,6 @@ class RobustTransform extends Transform implements Plugin<Project> {
             isHotfixMethodLevel = true;
         }
 
-//        if (null != robust.switch.useAsm && "false".equals(String.valueOf(robust.switch.useAsm.text()))) {
-//            useASM = false;
-//        }else {
-//            //默认使用asm
-//            useASM = true;
-//        }
-        //默认使用asm
-        useASM = true;
-
         if (null != robust.switch.filterMethod && "true".equals(String.valueOf(robust.switch.turnOnExceptMethod.text()))) {
             isExceptMethodLevel = true;
         }
@@ -157,6 +145,8 @@ class RobustTransform extends Transform implements Plugin<Project> {
 
         ClassPool classPool = new ClassPool()
         project.android.bootClasspath.each {
+            //bootClasspath : ~/android-sdk-mac_x86/platforms/android-25/android.jar
+            //store android.jar : ignore
             classPool.appendClassPath((String) it.absolutePath)
         }
 
@@ -171,19 +161,18 @@ class RobustTransform extends Transform implements Plugin<Project> {
             ctClass.defrost()
         }
         outStream.close();
-//        FileUtil.copyFile(jarFile,storeMainJarFile)
-        //拷贝未插桩的main.jar完成 end
+        //拷贝未插桩的main.jar
+        //FileUtil.copyFile(jarFile,storeMainJarFile)
 
         def cost = (System.currentTimeMillis() - startTime) / 1000
 //        logger.quiet "check all class cost $cost second, class count: ${box.size()}"
-        if(useASM){
-            insertcodeStrategy=new AsmInsertImpl(hotfixPackageList,hotfixMethodList,exceptPackageList,exceptMethodList,isHotfixMethodLevel,isExceptMethodLevel);
-        }else {
-            insertcodeStrategy=new JavaAssistInsertImpl(hotfixPackageList,hotfixMethodList,exceptPackageList,exceptMethodList,isHotfixMethodLevel,isExceptMethodLevel);
-        }
+//        if(useASM){
+        insertcodeStrategy = new AsmInsertImpl(hotfixPackageList,hotfixMethodList,exceptPackageList,exceptMethodList,isHotfixMethodLevel,isExceptMethodLevel);
+//        }else {
+//            insertcodeStrategy=new JavaAssistInsertImpl(hotfixPackageList,hotfixMethodList,exceptPackageList,exceptMethodList,isHotfixMethodLevel,isExceptMethodLevel);
+//        }
         insertcodeStrategy.insertCode(box, jarFile);
         writeMap2File(insertcodeStrategy.methodMap, Constants.METHOD_MAP_OUT_PATH)
-
 
         String robustOutDir = project.buildDir.path + File.separator + Constants.ROBUST_GENERATE_DIRECTORY
         File robustMainJar = new File(robustOutDir,Constants.ROBUST_TRANSFORM_MAIN_JAR)
