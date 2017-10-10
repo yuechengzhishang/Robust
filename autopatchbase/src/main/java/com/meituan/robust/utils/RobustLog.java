@@ -40,6 +40,9 @@ public class RobustLog {
 
     private static List<String> logCacheList = new ArrayList<>();
     public static synchronized void write2FileLineByLine(String line) {
+        if (true){
+            return;
+        }
         if (null == logPath || "".equals(logPath)) {
             logCacheList.add(line);
             return;
@@ -100,7 +103,7 @@ public class RobustLog {
 
     private static int count = 0;
     public static void logPatching(){
-        if (count > 2 ){
+        if (count < 2 ){
             System.err.println("robust log -> " + "generating patch ...");
             count ++;
         }

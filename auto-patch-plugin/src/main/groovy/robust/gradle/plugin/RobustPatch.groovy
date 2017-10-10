@@ -38,6 +38,8 @@ public class RobustPatch {
         def smaliFilePath = "${ROBUST_DIR}${Constants.LIB_NAME_ARRAY[1]}"
         def dxFilePath = "${ROBUST_DIR}${Constants.LIB_NAME_ARRAY[2]}"
         Config.robustGenerateDirectory = "${project.buildDir}" + File.separator + "$Constants.ROBUST_GENERATE_DIRECTORY" + File.separator;
+        project.logger.error("clean dir :" + Config.robustGenerateDirectory)
+        FileUtil.deleteAllFile(Config.robustGenerateDirectory)
         RobustLog.setRobustLogFilePath(Config.robustGenerateDirectory + Constants.ROBUST_LOG)
         dex2SmaliCommand = "  java -jar ${baksmaliFilePath} -o classout" + File.separator + "  $Constants.CLASSES_DEX_NAME";
         smali2DexCommand = "   java -jar ${smaliFilePath} classout" + File.separator + " -o " + Constants.PATACH_DEX_NAME;
@@ -64,14 +66,16 @@ public class RobustPatch {
             Config.oldClassPool.appendClassPath((String) it.absolutePath)
         }
     }
-
+    static long startTime;
     public static void patch(Project project) throws IOException {
-        long startTime = System.currentTimeMillis()
+        startTime = System.currentTimeMillis()
+        project.logger.error("================autoPatch start================")
         com.meituan.robust.utils.RobustLog.log("================autoPatch start================")
         autoPatch(project)
 //        JavaUtils.removeJarFromLibs()
         long cost = (System.currentTimeMillis() - startTime) / 1000
         com.meituan.robust.utils.RobustLog.log("autoPatch cost " + cost + " second")
+        project.logger.error("autoPatch cost " + cost + " second")
         throw new RuntimeException("*** auto patch end successfully! ***, patch path is : " + new File(Config.robustGenerateDirectory, Constants.PATACH_APK_NAME).toPath())
     }
 
@@ -145,16 +149,20 @@ public class RobustPatch {
 
     public static autoPatch(Project project) {
         //3. is changed
-        JarFile originalJarFile/* = new JarFile(oldMainJarFile)*/;
-        JarFile currentJarFile /*= new JarFile(newMainJarFile)*/;
+        JarFile originalJarFile = new JarFile(oldMainJarFile);
+        JarFile currentJarFile = new JarFile(newMainJarFile);
 
-        //将构造函数转成initRobustPatch函数
-        originalJarFile = copyConstructor2InitRobustPatchMethod(project, oldMainJarFile.absolutePath, "old_" + oldMainJarFile.name)
-        currentJarFile = copyConstructor2InitRobustPatchMethod(project, newMainJarFile.absolutePath, "new_" + newMainJarFile.name)
+        //将构造函数转成initRobustPatch函数 临时关闭 todo 使用其他方式解决,等change出来后，再针对插入
+//        originalJarFile = copyConstructor2InitRobustPatchMethod(project, oldMainJarFile.absolutePath, "old_" + oldMainJarFile.name)
+//        currentJarFile = copyConstructor2InitRobustPatchMethod(project, newMainJarFile.absolutePath, "new_" + newMainJarFile.name)
+        long cost = (System.currentTimeMillis() - startTime) / 1000
+        project.logger.error("autoPatch copyConstructor2InitRobustPatchMethod cost " + cost + " second")
 
         Config.classPool.appendClassPath(currentJarFile.name)
 
         CheckCodeChanges.processChangedJar(originalJarFile, currentJarFile, Config.hotfixPackageList, Config.exceptPackageList)
+        cost = (System.currentTimeMillis() - startTime) / 1000
+        project.logger.error("autoPatch processChangedJar cost " + cost + " second")
 
 //        println("modifiedClassNameList is ：")
 //        JavaUtils.printList(Config.modifiedClassNameList)
@@ -253,6 +261,9 @@ public class RobustPatch {
         File buildDir = project.getBuildDir();
         String patchPath = buildDir.getAbsolutePath() + File.separator + Constants.ROBUST_GENERATE_DIRECTORY + File.separator;
         generatePatch(patchPath);
+
+        cost = (System.currentTimeMillis() - startTime) / 1000
+        project.logger.error("autoPatch generatePatch cost " + cost + " second")
 
         zipPatchClassesFile()
         executeCommand(jar2DexCommand)
@@ -661,7 +672,7 @@ public class RobustPatch {
                     @Override
                     void edit(MethodCall m) throws CannotCompileException {
                         if (m.isSuper() && m.getClassName().equals(modifiedCtClass.getSuperclass().getName())) {
-                            com.meituan.robust.utils.RobustLog.log("class: " + modifiedCtClass.name + " , method :" + m.method.name)
+//                            com.meituan.robust.utils.RobustLog.log("class: " + modifiedCtClass.name + " , method :" + m.method.name)
                             if (!invokeSuperMethodList.contains(m.method)) {
                                 invokeSuperMethodList.add(m.method);
                             }

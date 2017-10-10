@@ -40,7 +40,7 @@ public class SmaliTool {
         if (!diretory.isDirectory() || diretory == null) {
             throw new RuntimeException(Config.robustGenerateDirectory + Config.patchPackageName.replaceAll(".", Matcher.quoteReplacement(File.separator)) + " contains no smali file error!! ");
         }
-        List<File> smaliFileList = new ArrayList<File>();
+        final List<File> smaliFileList = new ArrayList<File>();
 
         try {
             Files.walkFileTree(diretory.toPath(), new SimpleFileVisitor<Path>() {

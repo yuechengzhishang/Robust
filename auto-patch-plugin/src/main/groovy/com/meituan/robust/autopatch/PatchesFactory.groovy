@@ -112,6 +112,7 @@ class PatchesFactory {
                 || AspectJUtils.isAroundBodyMethod(method.getName())){
                     //ignore
                 } else {
+                    RobustLog.log("start handle class: " + modifiedClass.getName() + " method:" + method.name + " methodSignature :" + method.getSignature() + " unProguardMethodLongName: " + ProguardUtils.getUnProguardMethodLongName(JavaUtils.getJavaMethodSignure(method)));
                     method.instrument(
                             new RobustMethodExprEditor(modifiedClass, temPatchClass, method)
                     );

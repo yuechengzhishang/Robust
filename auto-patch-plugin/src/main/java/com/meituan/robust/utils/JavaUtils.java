@@ -45,7 +45,7 @@ public class JavaUtils {
 //    }
 
     public static void main(String[] args) {
-        String path0 = "/Users/hedingxu/robust-github/Robust/app/robust/methodsMap (10).robust";
+        String path0 = "/Users/hedingxu/workspace-meituan/robustpatch/app-patch/robust/old/methodsMap.robust";
 
         parseRobustMethodsMap2File(path0, new File(path0 + ".txt"));
         if (true) {

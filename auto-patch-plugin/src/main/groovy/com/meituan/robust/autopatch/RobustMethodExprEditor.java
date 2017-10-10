@@ -18,6 +18,7 @@ import javassist.CtField;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.expr.Expr;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
@@ -53,8 +54,13 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(FieldAccess f) throws CannotCompileException {
-
-        if (AspectJUtils.isAspectJField(f.getClassName(),f.getFieldName())){
+        logLineNumber(f);
+        if (AspectJUtils.isAspectJField(f.getClassName(), f.getFieldName())) {
+            return;
+        }
+        if (f.getClassName().contains(".R$")) {
+            //Field access replace NotFoundException : null:
+            //javassist.NotFoundException: .search.R$id
             return;
         }
         boolean isThis$0 = false;
@@ -87,8 +93,8 @@ public class RobustMethodExprEditor extends ExprEditor {
             return;
         }
 
-        if (f.isReader()){
-            if (f.getSignature().contains(ChangeQuickRedirect.class.getCanonicalName().replace(".","/"))){// is quickchangeredirect //
+        if (f.isReader()) {
+            if (f.getSignature().contains(ChangeQuickRedirect.class.getCanonicalName().replace(".", "/"))) {// is quickchangeredirect //
                 return;
             }
         }
@@ -104,21 +110,39 @@ public class RobustMethodExprEditor extends ExprEditor {
                 f.replace(replaceStatment);
             }
         } catch (NotFoundException e) {
-            RobustLog.log("Field access replace NotFoundException : " + replaceStatment , e);
+            RobustLog.log("Field access replace NotFoundException : " + replaceStatment, e);
 //            throw new RuntimeException(e.getMessage());
+            //Field access replace NotFoundException : null:
+            //javassist.NotFoundException: .search.R$id
         } catch (javassist.CannotCompileException e) {
             if (e.getMessage().contains("no such field:")) {
 
             } else {
-                RobustLog.log("Field access replace NotFoundException : " + replaceStatment, e);
+                if (replaceStatment.contains("($r)")) {
+                    //javassist.CannotCompileException: [source error] invalid cast
+                    //at javassist.expr.FieldAccess.replace(FieldAccess.java:218)
+                    //at com.meituan.robust.autopatch.RobustMethodExprEditor.edit(RobustMethodExprEditor.java:107)
+                    //{ if($0 instanceof SearchResultFragmentPatch){$_ =($r)((SearchResultFragmentPatch)$0).originClass.c;}else{$_ = $proceed($$);}}:
+                    try {
+                        RobustLog.log("Field access replace CannotCompileException : (LineNumber:" +f.getLineNumber()+ ") " + replaceStatment, e);
+                        f.replace("{$_ = $proceed($$); " + getLogString(f.getLineNumber() + "") + "}");
+                    } catch (Exception e2) {
+                        RobustLog.log("Field access replace Exception : " + replaceStatment, e);
+                    }
+
+                } else {
+                    RobustLog.log("Field access replace CannotCompileException : " + replaceStatment, e);
+                }
+
             }
-        } catch (Exception e){
-            RobustLog.log("Exception : " + replaceStatment,e);
+        } catch (Exception e) {
+            RobustLog.log("Exception : " + replaceStatment, e);
         }
     }
 
     @Override
     public void edit(NewArray a) throws CannotCompileException {
+        logLineNumber(a);
         if (hasRobustProxyCode) {
             if (isNeedReplaceEmpty()) {
                 return;
@@ -128,6 +152,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(NewExpr e) throws CannotCompileException {
+        logLineNumber(e);
         if (hasRobustProxyCode) {
             if (isNeedReplaceEmpty()) {
                 return;
@@ -198,7 +223,7 @@ public class RobustMethodExprEditor extends ExprEditor {
         */
     private boolean isCallProxyAccessDispatchMethod(MethodCall methodCall) {
         if (methodCall.getMethodName().equals("accessDispatch")) {
-            if (isPatchProxyClass(methodCall)){
+            if (isPatchProxyClass(methodCall)) {
                 return true;
             } else {
                 try {
@@ -216,7 +241,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     private boolean isCallProxyisSupportMethod(MethodCall methodCall) {
         if (methodCall.getMethodName().equals("isSupport")) {
-            if (isPatchProxyClass(methodCall)){
+            if (isPatchProxyClass(methodCall)) {
                 return true;
             } else {
                 try {
@@ -232,10 +257,10 @@ public class RobustMethodExprEditor extends ExprEditor {
         return false;
     }
 
-    public static boolean isPatchProxyClass(MethodCall m){
+    public static boolean isPatchProxyClass(MethodCall m) {
         String PatchProxyClassName = PatchProxy.class.getCanonicalName();
         String callMethodOnClassName = m.getClassName();
-        if (PatchProxyClassName.equals(callMethodOnClassName)){
+        if (PatchProxyClassName.equals(callMethodOnClassName)) {
             return true;
         } else {
             return false;
@@ -244,6 +269,7 @@ public class RobustMethodExprEditor extends ExprEditor {
 
     @Override
     public void edit(MethodCall m) throws CannotCompileException {
+        logLineNumber(m);
         if (AspectJUtils.isAroundBodyMethod(m.getMethodName())) {
             return;
         }
@@ -259,18 +285,18 @@ public class RobustMethodExprEditor extends ExprEditor {
                 return;
             }
             if (isNeedReplaceEmpty()) {
-                if (isCallProxyisSupportMethod(m)){
+                if (isCallProxyisSupportMethod(m)) {
                     m.replace("$_ = false ;");
                 }
                 return;
             }
         }
 
-        if (isCallProxyisSupportMethod(m)){
+        if (isCallProxyisSupportMethod(m)) {
             m.replace("$_ = false ;");
             return;
         }
-        if (isCallProxyAccessDispatchMethod(m)){
+        if (isCallProxyAccessDispatchMethod(m)) {
             return;
         }
 
@@ -331,7 +357,7 @@ public class RobustMethodExprEditor extends ExprEditor {
                 }
                 */
                 //放在assist类处理了 case : MainActivity#super.oncreate()
-    //            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
+                //            System.err.println(m.getClassName() + "," + m.getMethodName() + ", is super: " + m.isSuper());
                 m.replace(ReflectUtils.invokeSuperString(m));
                 return;
             }
@@ -502,40 +528,40 @@ public class RobustMethodExprEditor extends ExprEditor {
                 try {
                     CtClass methodTargetClass = m.getMethod().getDeclaringClass();
 //              System.err.println("is sub class of  " + methodTargetClass.getName() + ", " + sourceCla.getName());
-                        if (sourceClass.getName().equals(methodTargetClass.getName()) || patchClass.getName().equals(methodTargetClass.getName())) {
-                            if (RobustChangeInfo.isInvariantMethod(m.getMethod())) {
-                                replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
-                            }
-                            return;
-                        } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
-                            //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
-//                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
+                    if (sourceClass.getName().equals(methodTargetClass.getName()) || patchClass.getName().equals(methodTargetClass.getName())) {
+                        if (RobustChangeInfo.isInvariantMethod(m.getMethod())) {
                             replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
-                            return;
-                        } else {
-                            boolean isOuterMethod = false;
-                            try {
-                                CtClass outerCtClass = sourceClass.getDeclaringClass();
-                                if (null != outerCtClass) {
-                                    String outerClassName = outerCtClass.getName();
-                                    if (null == outerClassName || "".equals(outerClassName)) {
+                        }
+                        return;
+                    } else if (sourceClass.subclassOf(methodTargetClass) && !methodTargetClass.getName().contentEquals("java.lang.Object")) {
+                        //*** getClass , com.meituan.sample.SecondActivity is sub class Of : java.lang.Object
+//                        System.err.println("*** " + m.getMethod().getName() + " , " + sourceClass.getName() + " is sub class Of : " + methodTargetClass.getName());
+                        replaceThisToOriginClassMethodDirectly_nonstatic_nonstatic(m);
+                        return;
+                    } else {
+                        boolean isOuterMethod = false;
+                        try {
+                            CtClass outerCtClass = sourceClass.getDeclaringClass();
+                            if (null != outerCtClass) {
+                                String outerClassName = outerCtClass.getName();
+                                if (null == outerClassName || "".equals(outerClassName)) {
 
-                                    } else {
-                                        if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
-                                            //this$0.publicField
-                                            isOuterMethod = true;
-                                        }
+                                } else {
+                                    if (outerClassName.equals(m.getMethod().getDeclaringClass().getName())) {
+                                        //this$0.publicField
+                                        isOuterMethod = true;
                                     }
                                 }
-                            } catch (Exception e) {
-                                RobustLog.log("Exception", e);
                             }
-
-                            if (isOuterMethod) {
-                                replaceThisToOriginClassMethodDirectlyByCallOuterMethod(m);
-                            }
-                            return;
+                        } catch (Exception e) {
+                            RobustLog.log("Exception", e);
                         }
+
+                        if (isOuterMethod) {
+                            replaceThisToOriginClassMethodDirectlyByCallOuterMethod(m);
+                        }
+                        return;
+                    }
 
                 } catch (NotFoundException e) {
                     e.printStackTrace();
@@ -852,6 +878,15 @@ public class RobustMethodExprEditor extends ExprEditor {
             index++;
         }
         return stringBuilder.toString();
+    }
+
+    private void logLineNumber(Expr expr) {
+        RobustLog.log("expr-lineNumber:  " + expr.getLineNumber());
+    }
+
+    public static String getLogString(String value) {
+        String logValue = "android.util.Log.e(\"robust\",\"" + "robust patch : " + value + "\");";
+        return logValue;
     }
 
 }

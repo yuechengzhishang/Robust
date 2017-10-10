@@ -1,6 +1,7 @@
 package com.meituan.robust.utils;
 
 import com.meituan.robust.autopatch.Config;
+import com.meituan.robust.common.StringUtil;
 import com.meituan.robust.mapping.ClassMapping;
 import com.meituan.robust.mapping.ClassMethodMapping;
 
@@ -10,6 +11,8 @@ import org.objectweb.asm.tree.MethodNode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javassist.CtClass;
 import javassist.CtField;
@@ -36,7 +39,7 @@ public class ProguardUtils {
                 }
             }
         } catch (Exception e) {
-            RobustLog.log("Exception ",e);
+            RobustLog.log("Exception ", e);
         }
         return methodSignure.toString();
     }
@@ -139,9 +142,77 @@ public class ProguardUtils {
     public static String getMethodID(String proguardMethodLongName) {
         if (RobustProguardMapping.isProguard()) {
             String unProguardMethodLongName = getUnProguardMethodLongName(proguardMethodLongName);
-            return Config.methodMap.get(unProguardMethodLongName);
+            return getSimilarMethodID(unProguardMethodLongName);
         }
-        return Config.methodMap.get(proguardMethodLongName);
+        return getSimilarMethodID(proguardMethodLongName);
+    }
+
+    public static boolean isSimilar(String realMethodLongName,String robustMethodLongName){
+        int index1_1 = realMethodLongName.indexOf("(");
+        int index1_2 = realMethodLongName.indexOf(")");
+        int index2_1 = robustMethodLongName.indexOf("(");
+        int index2_2 = robustMethodLongName.indexOf(")");
+        String classNameAndMethodName1 = realMethodLongName.substring(0,index1_1);
+        String classNameAndMethodName2 = robustMethodLongName.substring(0,index2_1);
+        if (!classNameAndMethodName1.equals(classNameAndMethodName2)){
+            return false;
+        }
+        realMethodLongName = realMethodLongName.substring(index1_1,index1_2).replace("(","").replace(")","").trim();
+        robustMethodLongName = robustMethodLongName.substring(index2_1,index2_2).replace("(","").replace(")","").trim();
+
+        String OBJSTRING = "java.lang.Object";
+        String unProguardMethodLongNamePattern = realMethodLongName.replace("$","").replace(".","\\.").replace(OBJSTRING.replace(".","\\."),".*");
+        boolean isPattern = false;
+        try {
+            Pattern pattern = Pattern.compile(unProguardMethodLongNamePattern);
+            Matcher matcher = pattern.matcher(robustMethodLongName);
+            isPattern = matcher.matches();
+        } catch (Exception e){
+
+        }
+        return isPattern;
+    }
+
+    public static void main(String[] args){
+//        Config.methodMap = JavaUtils.getMapFromZippedFile("/Users/hedingxu/workspace-meituan/robustpatch/app-patch/robust/old/methodsMap.robust");
+//        String unProguardMethodLongName = "com.sankuai.meituan.search.result.SearchResultFragment.onLoadFinished(android.support.v4.content.Loader,java.lang.Object,java.lang.Exception)";
+//        String realLongName = "com.sankuai.meituan.search.result.SearchResultFragment.onLoadFinished(android.support.v4.content.Loader,com.sankuai.meituan.search.result.model.SearchResult,java.lang.Exception)";
+//        String methodId = getSimilarMethodID(unProguardMethodLongName);
+//        System.err.println("methodId: " + methodId);
+    }
+
+    public static String getSimilarMethodID(String unProguardMethodLongName) {
+        String methodID = Config.methodMap.get(unProguardMethodLongName);
+        if (null == methodID || "".equals(methodID)) {
+            String OBJSTRING = "java.lang.Object";
+            if (unProguardMethodLongName.contains(OBJSTRING)) {
+                List<String> similarUnProguardMethodLongNameList = new ArrayList<String>();
+                for (String unProguardMethodLongNameTemp : Config.methodMap.keySet()) {
+                    boolean similar = isSimilar(unProguardMethodLongName,unProguardMethodLongNameTemp);
+                    if (similar) {
+                        similarUnProguardMethodLongNameList.add(unProguardMethodLongNameTemp);
+                    }
+                }
+
+                if (similarUnProguardMethodLongNameList.size() == 1) {
+                    //get first MD5
+                    //find 相似度最高的方法MD5
+                    String similarUnProguardMethodLongName = similarUnProguardMethodLongNameList.get(0);
+                    RobustLog.log("change methodLongName from " + unProguardMethodLongName + " to " + similarUnProguardMethodLongName);
+                    methodID = Config.methodMap.get(similarUnProguardMethodLongName);
+                } else if (similarUnProguardMethodLongNameList.size() > 1){
+                    //get first MD5
+                    //find 相似度最高的方法MD5
+                    String similarUnProguardMethodLongName = similarUnProguardMethodLongNameList.get(0);
+                    RobustLog.log("change methodLongName from " + unProguardMethodLongName + " to " + similarUnProguardMethodLongName);
+                    methodID = Config.methodMap.get(similarUnProguardMethodLongName);
+                    RobustLog.log("Error: similarUnProguardMethodLongNameList size > 1 :" + similarUnProguardMethodLongNameList.size());
+                } else if (similarUnProguardMethodLongNameList.size() == 0){
+                    RobustLog.log("Error: similarUnProguardMethodLongNameList size == 0 ");
+                }
+            }
+        }
+        return methodID;
     }
 
     public static String getUnProguardMethodName(MethodCall methodCall) {
@@ -151,7 +222,7 @@ public class ProguardUtils {
             try {
                 ctMethod = methodCall.getMethod();
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
             if (null == ctMethod) {
                 RobustLog.log("ctMethod is null", new RuntimeException("ctMethod is null ,info :" + methodCall.getClassName() + " " + methodCall.getMethodName() + " " + methodCall.getSignature()));
@@ -160,7 +231,7 @@ public class ProguardUtils {
                 try {
                     methodSignure = JavaUtils.getJavaMethodSignure(ctMethod);
                 } catch (NotFoundException e) {
-                    RobustLog.log("NotFoundException ",e);
+                    RobustLog.log("NotFoundException ", e);
                 }
                 String modifiedClassName = methodCall.getClassName();
                 String patchClassName = new String(modifiedClassName);
@@ -210,7 +281,7 @@ public class ProguardUtils {
             try {
                 lambdaCtClass = classPool.getCtClass(lambdaClassName);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
 
             if (null == lambdaCtClass) {
@@ -221,7 +292,7 @@ public class ProguardUtils {
             try {
                 lambdaCtMethod = lambdaCtClass.getMethod(proguardMethodName, proguardMethodSignature);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
             if (null == lambdaCtMethod) {
                 RobustLog.log("null == lambdaCtMethod 226");
@@ -231,7 +302,7 @@ public class ProguardUtils {
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
 
 
@@ -261,12 +332,12 @@ public class ProguardUtils {
 //        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
         boolean isAccess = methodCall.getMethodName().startsWith("access$");// access$100 + access$lambda$oncreate3
 
-        if (isAccess){
+        if (isAccess) {
             return true;
         }
-        if (RobustProguardMapping.isProguard()){
+        if (RobustProguardMapping.isProguard()) {
             String unProguardMethodName = ProguardUtils.getUnProguardMethodName(methodCall);
-            if (unProguardMethodName.startsWith("access$")){
+            if (unProguardMethodName.startsWith("access$")) {
                 isAccess = true;
             }
         }
@@ -281,12 +352,12 @@ public class ProguardUtils {
 //        boolean isLambdaAccess = methodCall.getMethodName().contains("access$lambda$");
         boolean isAccess = methodCall.getMethodName().startsWith("lambda$");// access$100 + access$lambda$oncreate3
 
-        if (isAccess){
+        if (isAccess) {
             return true;
         }
-        if (RobustProguardMapping.isProguard()){
+        if (RobustProguardMapping.isProguard()) {
             String unProguardMethodName = ProguardUtils.getUnProguardMethodName(methodCall);
-            if (unProguardMethodName.startsWith("lambda$")){
+            if (unProguardMethodName.startsWith("lambda$")) {
                 isAccess = true;
             }
         }
@@ -296,30 +367,30 @@ public class ProguardUtils {
         return false;
     }
 
-    public static boolean isAccess$Method(ClassNode classNode, MethodNode methodNode){
-        if (!ProguardUtils.isProguard()){
+    public static boolean isAccess$Method(ClassNode classNode, MethodNode methodNode) {
+        if (!ProguardUtils.isProguard()) {
             return methodNode.name.startsWith("access$");
         }
 
-        String dotClassName = classNode.name.replace("/",".");
+        String dotClassName = classNode.name.replace("/", ".");
         String proguardMethodName = methodNode.name;
         String proguardMethodSignature = methodNode.desc;
 
         CtClass ctClass = null;
         try {
             ctClass = Config.classPool.get(dotClassName);
-            for (CtMethod ctMethod :ctClass.getDeclaredMethods()){
+            for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
 
             }
         } catch (Exception e) {
-            RobustLog.log("Exception in 296",e);
+            RobustLog.log("Exception in 296", e);
         }
 
         CtMethod lambdaCtMethod = null;
         try {
             lambdaCtMethod = ctClass.getMethod(proguardMethodName, proguardMethodSignature);
         } catch (NotFoundException e) {
-            RobustLog.log("NotFoundException ",e);
+            RobustLog.log("NotFoundException ", e);
         }
         if (null == lambdaCtMethod) {
             RobustLog.log("null == lambdaCtMethod 226");
@@ -330,7 +401,7 @@ public class ProguardUtils {
         try {
             methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
         } catch (NotFoundException e) {
-            RobustLog.log("NotFoundException ",e);
+            RobustLog.log("NotFoundException ", e);
         }
 
         String methodLongName = dotClassName + "." + methodSignure;
@@ -347,30 +418,30 @@ public class ProguardUtils {
         return false;
     }
 
-    public static boolean isLambda$Method(ClassNode classNode, MethodNode methodNode){
-        if (!ProguardUtils.isProguard()){
+    public static boolean isLambda$Method(ClassNode classNode, MethodNode methodNode) {
+        if (!ProguardUtils.isProguard()) {
             return methodNode.name.startsWith("lambda$");
         }
 
-        String dotClassName = classNode.name.replace("/",".");
+        String dotClassName = classNode.name.replace("/", ".");
         String proguardMethodName = methodNode.name;
         String proguardMethodSignature = methodNode.desc;
 
         CtClass ctClass = null;
         try {
             ctClass = Config.classPool.get(dotClassName);
-            for (CtMethod ctMethod :ctClass.getDeclaredMethods()){
+            for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
 
             }
         } catch (Exception e) {
-            RobustLog.log("Exception in 296",e);
+            RobustLog.log("Exception in 296", e);
         }
 
         CtMethod lambdaCtMethod = null;
         try {
             lambdaCtMethod = ctClass.getMethod(proguardMethodName, proguardMethodSignature);
         } catch (NotFoundException e) {
-            RobustLog.log("NotFoundException ",e);
+            RobustLog.log("NotFoundException ", e);
         }
         if (null == lambdaCtMethod) {
             RobustLog.log("null == lambdaCtMethod 226");
@@ -381,7 +452,7 @@ public class ProguardUtils {
         try {
             methodSignure = JavaUtils.getJavaMethodSignure(lambdaCtMethod);
         } catch (NotFoundException e) {
-            RobustLog.log("NotFoundException ",e);
+            RobustLog.log("NotFoundException ", e);
         }
 
         String methodLongName = dotClassName + "." + methodSignure;
@@ -400,11 +471,11 @@ public class ProguardUtils {
 
 
     public static boolean isAccess$Method(MethodCall methodCall) {
-        if (isAccessMethod2(methodCall)){
+        if (isAccessMethod2(methodCall)) {
             return true;
         }
 
-        if (!RobustProguardMapping.isProguard()){
+        if (!RobustProguardMapping.isProguard()) {
             return methodCall.getMethodName().startsWith("access$");
         }
 
@@ -413,13 +484,13 @@ public class ProguardUtils {
         try {
             CtMethod callCtMethod = methodCall.getMethod();
             originClassName = callCtMethod.getDeclaringClass().getName();
-            HashMap<String,String> customModifiedClasses = CustomModifiedClassUtils.getCustomModifiedClasses();
+            HashMap<String, String> customModifiedClasses = CustomModifiedClassUtils.getCustomModifiedClasses();
             patchClassName = customModifiedClasses.get(originClassName);
-            if (null == patchClassName){
+            if (null == patchClassName) {
                 patchClassName = originClassName;
             }
-        } catch (Exception e){
-            RobustLog.log("get ctmethod from method call null",e);
+        } catch (Exception e) {
+            RobustLog.log("get ctmethod from method call null", e);
         }
 
         String callClassName = methodCall.getClassName();
@@ -442,7 +513,7 @@ public class ProguardUtils {
             try {
                 innerCtClass = classPool.getCtClass(callClassName);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
 
             if (null == innerCtClass) {
@@ -453,7 +524,7 @@ public class ProguardUtils {
             try {
                 accessCtMethod = innerCtClass.getMethod(proguardMethodName, proguardMethodSignature);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
             if (null == accessCtMethod) {
                 RobustLog.log("null == lambdaCtMethod 226");
@@ -463,7 +534,7 @@ public class ProguardUtils {
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(accessCtMethod);
             } catch (Exception e) {
-                RobustLog.log("Exception " + methodCall.getClassName() + " " + methodCall.getMethodName() + " " + methodCall.getLineNumber(),e);
+                RobustLog.log("Exception " + methodCall.getClassName() + " " + methodCall.getMethodName() + " " + methodCall.getLineNumber(), e);
                 return false;
             }
 
@@ -488,11 +559,11 @@ public class ProguardUtils {
     }
 
     public static boolean isLambda$Method(MethodCall methodCall) {
-        if (isLambdaMethod2(methodCall)){
+        if (isLambdaMethod2(methodCall)) {
             return true;
         }
 
-        if (!RobustProguardMapping.isProguard()){
+        if (!RobustProguardMapping.isProguard()) {
             return methodCall.getMethodName().startsWith("lambda$");
         }
 
@@ -501,13 +572,13 @@ public class ProguardUtils {
         try {
             CtMethod callCtMethod = methodCall.getMethod();
             originClassName = callCtMethod.getDeclaringClass().getName();
-            HashMap<String,String> customModifiedClasses = CustomModifiedClassUtils.getCustomModifiedClasses();
+            HashMap<String, String> customModifiedClasses = CustomModifiedClassUtils.getCustomModifiedClasses();
             patchClassName = customModifiedClasses.get(originClassName);
-            if (null == patchClassName){
+            if (null == patchClassName) {
                 patchClassName = originClassName;
             }
-        } catch (Exception e){
-            RobustLog.log("get ctmethod from method call null",e);
+        } catch (Exception e) {
+            RobustLog.log("get ctmethod from method call null", e);
         }
 
         String callClassName = methodCall.getClassName();
@@ -530,7 +601,7 @@ public class ProguardUtils {
             try {
                 innerCtClass = classPool.getCtClass(callClassName);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
 
             if (null == innerCtClass) {
@@ -541,7 +612,7 @@ public class ProguardUtils {
             try {
                 accessCtMethod = innerCtClass.getMethod(proguardMethodName, proguardMethodSignature);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
             if (null == accessCtMethod) {
                 RobustLog.log("null == lambdaCtMethod 226");
@@ -551,7 +622,7 @@ public class ProguardUtils {
             try {
                 methodSignure = JavaUtils.getJavaMethodSignure(accessCtMethod);
             } catch (NotFoundException e) {
-                RobustLog.log("NotFoundException ",e);
+                RobustLog.log("NotFoundException ", e);
             }
 
 
@@ -652,8 +723,7 @@ public class ProguardUtils {
     }
 
 
-
-//                    if (ProguardUtils.isProguard()){
+    //                    if (ProguardUtils.isProguard()){
 //                        lambdaClassName1 = ProguardUtils.getLambdaClassNameFromLine(line1);
 //                        lambdaClassName2 = ProguardUtils.getLambdaClassNameFromLine(line2);
 //                    } else {
@@ -692,16 +762,16 @@ public class ProguardUtils {
         return lambdaClassName2;
     }
 
-    public static String getAnonymousClassNameFromLine(String line){
+    public static String getAnonymousClassNameFromLine(String line) {
 //        new-instance
         String tempLine = new String(line);
-        if (tempLine.contains("new-instance ")){
-            if (tempLine.contains(",")){
-                if (tempLine.contains("L")){
-                    if (tempLine.contains(";")){
+        if (tempLine.contains("new-instance ")) {
+            if (tempLine.contains(",")) {
+                if (tempLine.contains("L")) {
+                    if (tempLine.contains(";")) {
                         int start = tempLine.indexOf("L");
                         int end = tempLine.indexOf(";");
-                        String proguardClassName = tempLine.substring(start+1,end);
+                        String proguardClassName = tempLine.substring(start + 1, end);
                         return proguardClassName;
                     }
                 }
@@ -710,17 +780,17 @@ public class ProguardUtils {
         return null;
     }
 
-    public static boolean mayAnonymousClassNameFromLine(String line){
+    public static boolean mayAnonymousClassNameFromLine(String line) {
         //        new-instance
         String tempLine = new String(line);
-        if (tempLine.contains("new-instance ")){
-            if (tempLine.contains(",")){
-                if (tempLine.contains("L")){
-                    if (tempLine.contains(";")){
+        if (tempLine.contains("new-instance ")) {
+            if (tempLine.contains(",")) {
+                if (tempLine.contains("L")) {
+                    if (tempLine.contains(";")) {
                         int start = tempLine.indexOf("L");
                         int end = tempLine.indexOf(";");
 //                        String proguardClassName = tempLine.substring(start+1,end);
-                        return end > start+1;
+                        return end > start + 1;
                     }
                 }
             }
@@ -728,33 +798,34 @@ public class ProguardUtils {
         return false;
     }
 
-    public static boolean isHasNewAnonymousClass(String line1,String line2){
-        if (mayAnonymousClassNameFromLine(line1) && hasAnonymousClassNameFromLine2(line2)){
+    public static boolean isHasNewAnonymousClass(String line1, String line2) {
+        if (mayAnonymousClassNameFromLine(line1) && hasAnonymousClassNameFromLine2(line2)) {
             return true;
         }
         return false;
     }
-    public static boolean hasAnonymousClassNameFromLine2(String line2){
-        if (mayAnonymousClassNameFromLine(line2)){
+
+    public static boolean hasAnonymousClassNameFromLine2(String line2) {
+        if (mayAnonymousClassNameFromLine(line2)) {
             String proguardAnonymousDotClass = getAnonymousClassNameFromLine2(line2);
-            if (ProguardUtils.isProguard()){
-                proguardAnonymousDotClass  = RobustProguardMapping.getUnProguardName(proguardAnonymousDotClass);
+            if (ProguardUtils.isProguard()) {
+                proguardAnonymousDotClass = RobustProguardMapping.getUnProguardName(proguardAnonymousDotClass);
             }
             return AnonymousLambdaUtils.isAnonymousInnerClass_$1(proguardAnonymousDotClass);
         }
         return false;
     }
 
-    public static String getAnonymousClassNameFromLine2(String line2){
+    public static String getAnonymousClassNameFromLine2(String line2) {
 //        new-instance
         String tempLine = new String(line2);
-        if (tempLine.contains("new-instance ")){
-            if (tempLine.contains(",")){
-                if (tempLine.contains("L")){
-                    if (tempLine.contains(";")){
+        if (tempLine.contains("new-instance ")) {
+            if (tempLine.contains(",")) {
+                if (tempLine.contains("L")) {
+                    if (tempLine.contains(";")) {
                         int start = tempLine.indexOf("L");
                         int end = tempLine.indexOf(";");
-                        String proguardDotClassName = tempLine.substring(start+1,end).replace("/",".");
+                        String proguardDotClassName = tempLine.substring(start + 1, end).replace("/", ".");
                         return proguardDotClassName;
                     }
                 }
@@ -764,14 +835,14 @@ public class ProguardUtils {
     }
 
 
-    public static boolean isClassNameHas$(String customInnerClassName){
+    public static boolean isClassNameHas$(String customInnerClassName) {
         if (ProguardUtils.isProguard()) {
             customInnerClassName = RobustProguardMapping.getUnProguardName(customInnerClassName);
         }
         return customInnerClassName.contains("$");
     }
 
-    public static boolean isSubClass(String subClassName,String outerClassName){
+    public static boolean isSubClass(String subClassName, String outerClassName) {
         if (ProguardUtils.isProguard()) {
             subClassName = RobustProguardMapping.getUnProguardName(subClassName);
             outerClassName = RobustProguardMapping.getUnProguardName(outerClassName);
@@ -779,7 +850,7 @@ public class ProguardUtils {
         return subClassName.startsWith(outerClassName);
     }
 
-    public static String getLambdaClassOuterClassDotName(String lambdaDotClassName){
+    public static String getLambdaClassOuterClassDotName(String lambdaDotClassName) {
         String unProguardLambdaName = lambdaDotClassName;
         if (ProguardUtils.isProguard()) {
             unProguardLambdaName = RobustProguardMapping.getUnProguardName(lambdaDotClassName);
@@ -793,7 +864,7 @@ public class ProguardUtils {
         return proguardOuterClassDotName;
     }
 
-    public static String getUnProguardClassName(String dotClassName){
+    public static String getUnProguardClassName(String dotClassName) {
         String unProguardName = dotClassName;
         if (ProguardUtils.isProguard()) {
             unProguardName = RobustProguardMapping.getUnProguardName(dotClassName);
@@ -801,23 +872,24 @@ public class ProguardUtils {
         return unProguardName;
     }
 
-    public static boolean hasAnonymousInit(String line1 ,String line2){
-        return hasAnonymousInitLine(line1)&&hasAnonymousInitLine(line2);
+    public static boolean hasAnonymousInit(String line1, String line2) {
+        return hasAnonymousInitLine(line1) && hasAnonymousInitLine(line2);
     }
 
-    public static boolean hasAnonymousInitLine(String line){
-        return  null != getAnonymousClassNameByInitString(line);
+    public static boolean hasAnonymousInitLine(String line) {
+        return null != getAnonymousClassNameByInitString(line);
     }
+
     //invoke-direct {v1, p0}, Lcom/robust/sample/MainActivity$1;-><init>(
-    public static String getAnonymousClassNameByInitString(String line){
+    public static String getAnonymousClassNameByInitString(String line) {
         String tempLine = new String(line);
-        if (tempLine.contains("invoke-direct ")){
-            if (tempLine.contains(",")){
-                if (tempLine.contains("L")){
-                    if (tempLine.contains(";-><init>(")){
+        if (tempLine.contains("invoke-direct ")) {
+            if (tempLine.contains(",")) {
+                if (tempLine.contains("L")) {
+                    if (tempLine.contains(";-><init>(")) {
                         int start = tempLine.indexOf("L");
                         int end = tempLine.indexOf(";-><init>(");
-                        String proguardDotClassName = tempLine.substring(start+1,end).replace("/",".");
+                        String proguardDotClassName = tempLine.substring(start + 1, end).replace("/", ".");
                         return proguardDotClassName;
                     }
                 }
@@ -826,16 +898,16 @@ public class ProguardUtils {
         return null;
     }
 
-    public static boolean isAspectJField(CtField ctField){
+    public static boolean isAspectJField(CtField ctField) {
         try {
             String preFix = "org.aspectj.lang.JoinPoint";
             String proguardName = ctField.getType().getName();
             String unProguardName = ProguardUtils.getUnProguardClassName(proguardName);
-            if (unProguardName.startsWith(preFix)){
+            if (unProguardName.startsWith(preFix)) {
                 return true;
             }
         } catch (NotFoundException e) {
-            RobustLog.log("NotFoundException",e);
+            RobustLog.log("NotFoundException", e);
         }
         return false;
     }

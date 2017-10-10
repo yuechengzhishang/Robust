@@ -1,6 +1,5 @@
 package com.meituan.robust.change;
 
-import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -33,7 +32,12 @@ public class RobustCodeChangeChecker {
     private static final MethodNodeComparator METHOD_COMPARATOR = new MethodNodeComparator();
 
     private static final Comparator<FieldNode> FIELD_COMPARATOR = new FieldComparator();
-    private static final Comparator<String> STRING_COMPARATOR = Objects::equal;
+    private static final Comparator<String> STRING_COMPARATOR = new Comparator<String>(){
+        @Override
+        public boolean areEqual(String first, String second) {
+            return first.equals(second);
+        }
+    };
 
     public interface ClassBytesProvider {
         byte[] load() throws IOException;
