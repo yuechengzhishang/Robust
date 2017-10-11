@@ -123,12 +123,12 @@ public class RobustMethodExprEditor extends ExprEditor {
                     //at javassist.expr.FieldAccess.replace(FieldAccess.java:218)
                     //at com.meituan.robust.autopatch.RobustMethodExprEditor.edit(RobustMethodExprEditor.java:107)
                     //{ if($0 instanceof SearchResultFragmentPatch){$_ =($r)((SearchResultFragmentPatch)$0).originClass.c;}else{$_ = $proceed($$);}}:
-                    try {
-                        RobustLog.log("Field access replace CannotCompileException : (LineNumber:" +f.getLineNumber()+ ") " + replaceStatment, e);
-                        f.replace("{$_ = $proceed($$); " + getLogString(f.getLineNumber() + "") + "}");
-                    } catch (Exception e2) {
-                        RobustLog.log("Field access replace Exception : " + replaceStatment, e);
-                    }
+//                    try {
+//                        RobustLog.log("Field access replace CannotCompileException : (LineNumber:" +f.getLineNumber()+ ") " + replaceStatment, e);
+//                        f.replace("{$_ = $proceed($$); " + getLogString(f.getLineNumber() + "") + "}");
+//                    } catch (Exception e2) {
+//                        RobustLog.log("Field access replace Exception : " + replaceStatment, e);
+//                    }
 
                 } else {
                     RobustLog.log("Field access replace CannotCompileException : " + replaceStatment, e);
@@ -881,7 +881,9 @@ public class RobustMethodExprEditor extends ExprEditor {
     }
 
     private void logLineNumber(Expr expr) {
-        RobustLog.log("expr-lineNumber:  " + expr.getLineNumber());
+//        if (Constants.isLogging){
+//            RobustLog.log("expr-lineNumber:  " + expr.getLineNumber());
+//        }
     }
 
     public static String getLogString(String value) {

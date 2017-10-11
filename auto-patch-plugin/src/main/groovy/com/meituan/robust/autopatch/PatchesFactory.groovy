@@ -116,6 +116,12 @@ class PatchesFactory {
                     method.instrument(
                             new RobustMethodExprEditor(modifiedClass, temPatchClass, method)
                     );
+
+                    if (Constants.isLogging) {
+                        String proguardMethodLongName = JavaUtils.getJavaMethodSignure(method);
+                        RobustLogMethodExprEditor logMethodExprEditor =  new RobustLogMethodExprEditor(ProguardUtils.getUnProguardMethodLongName(proguardMethodLongName));
+                        method.instrument(logMethodExprEditor);
+                    }
                 }
             }
         }
